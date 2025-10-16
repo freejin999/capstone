@@ -1,0 +1,302 @@
+<!doctype html>
+<html>
+    <head>
+        <title>login</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="x-UA-Compatible" content="ie=edge">
+        <style>
+            /* 전체 컨테이너 스타일 */
+            .container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+            }
+
+            /* 이미지 스타일 */
+            .img {
+                width: 300px;
+                height: 200px;
+                bottom: -70px;
+                text-align: center;
+                position: relative;
+            }
+
+            .img img {
+                width: 95%;
+                height: 100%;
+            }
+
+            .img p {
+                font-family: 'YDYool';
+                font-size: 25px;
+            }
+
+            /* main 스타일 */
+            .main {
+                width: 600px;
+                height: 600px;
+                border: 1px solid lightgray; 
+                overflow: hidden;
+                position: relative;
+            }
+
+            .login {
+                width: 410px;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+            }
+
+            .login > ul {
+                padding: 40px 0 33px; 
+            }
+
+            .login > ul li {
+                padding: 0 0 12px;
+                list-style: none;
+                text-align: left;
+            }
+
+            /* 체크박스 항목에만 위쪽 여백 추가 */
+            .login > ul li.checkbox-item {
+                padding-top: 20px; /* 위쪽 여백 추가 */
+            }
+
+            .login > ul li input[type="text"],
+            .login > ul li input[type="password"] {
+                width: 100%;
+                height: 46px;
+                box-sizing: border-box;
+                text-indent: 8px; /* 텍스트 왼쪽 여백 */
+                border: none; /* 기존 테두리 제거 */
+                border-bottom: 1px solid gray; /* 밑줄 추가 */
+                outline: none; /* 선택 시 기본 테두리 제거 */
+                font-size: 16px;
+            }
+
+            .login > ul li input::-webkit-input-placeholder {
+                font-size: 16px;
+                color: black;
+                text-indent: 0; /* placeholder 텍스트 왼쪽 정렬 */
+            }
+
+            .login > ul li input::-webkit-input-placeholder {
+                font-size: 16px;
+                color: black;
+                text-indent: 16px;
+            }
+
+            .login > ul li input[type="checkbox"] {
+                display: none;
+            }
+
+            /* 커스텀 체크박스 스타일 */
+            .login > ul li label {
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                border: 1px solid gray;
+                position: relative;
+                margin-right: 10px;
+                cursor: pointer;
+                vertical-align: middle;
+            }
+
+            .login > ul li input[type="checkbox"]:checked + label {
+                background-color: steelblue;
+                border-color: steelblue;
+            }
+
+            .login > ul li input[type="checkbox"]:checked + label::after {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 12px;
+                height: 12px;
+                background-color: white;
+                border-radius: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            .login > ul li label + span {
+                vertical-align: middle;
+                margin-top: 20px;
+            }
+
+            .info {
+                margin-top: 20px;
+            }
+
+            .lo button {
+                width: 100%;
+                height: 56px;
+                line-height: 56px;
+                background: #F2E8DC;
+                font-size: 18px;
+                color: black;
+                border-style: none;
+                margin-top: 50px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: background-color 0.3s ease, transform 0.3s ease;
+            } 
+
+            .lo button:hover {
+            background-color: #CEC7C0; /* 호버 시 색상 변화 */
+            transform: translateY(-1px); /* 버튼 위로 이동 효과 */
+            }
+
+            .lo button:active {
+            transform: translateY(2px); /* 클릭 시 눌리는 효과 */
+            }
+
+
+            .qr button {
+                width: 100%;
+                height: 56px;
+                line-height: 56px;
+                background: lightgray;
+                font-size: 18px;
+                color: black;
+                border-style: none;
+                border-radius: 10px;
+            } 
+
+            .divider {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: -10px;
+                margin-top: 15px;
+            }
+
+            .divider hr {
+                width: 40%;
+                border: none;
+                border-top: 1px solid #000;
+            }
+
+            .divider span {
+                padding: 0 10px;
+                font-size: 14px;
+                color: black;
+            }
+
+            .login div {
+                padding: 0 0 45px;
+            }
+
+            .links {
+                display: flex;
+                justify-content: space-between;
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .links .left {
+                flex: 1;
+                text-align: left;
+            }
+
+            .links .right {
+                text-align: right;
+            }
+
+            .links .separator {
+                margin: 0 5px;
+                color: lightgray;
+            }
+
+            .links a {
+                font-size: 14px;
+                text-decoration: none;
+                color: black;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="img">
+                <a href="메인페이지.html">
+                <img src="책바다로고.png" alt="로고">
+                </a>
+                <p>푸딩의 발자국</p>
+            </div>
+            <div class="main">
+                <section class="login">
+                    <ul>
+                        <li>
+                            <input type="text" placeholder="아이디, 이메일, 전화번호" id="username" name="username" required>
+                        </li>
+                        <li>
+                            <input type="password" placeholder="비밀번호" id="password" name="password" required>
+                        </li>
+                        <p id="errorMessage" style="color:red; display:none; text-align: left;">
+                            아이디 또는 비밀번호가 잘못 되었습니다.<br> 아이디와 비밀번호를 정확히 입력해 주세요.
+                        </p>
+                        <li class="checkbox-item">
+                            <input type="checkbox" id="chk_id">
+                            <label for="chk_id"></label>
+                            <span class="info">간편 로그인 정보 저장</span>
+                        </li>
+                        <li class="lo"><button type="submit" id="loginButton">로그인</button></li>
+                    </ul>
+                    <div>
+                        <ul class="links">
+                            <li class="left"><a href="">회원가입</a></li>
+                            <li class="right"><a href="">아이디 찾기</a></li>
+                            <li class="right separator">|</li>
+                            <li class="right"><a href="">비밀번호 찾기</a></li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <script>
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const loginButton = document.getElementById('loginButton');
+                const usernameInput = document.getElementById('username');
+                const passwordInput = document.getElementById('password');
+                const errorMessage = document.getElementById('errorMessage');
+
+                // 특정 아이디와 비밀번호 설정
+                const correctUsername = 'testuser';  // 예시 아이디
+                const correctPassword = 'password123';  // 예시 비밀번호
+
+                loginButton.addEventListener('click', (event) => {
+                    event.preventDefault();  // 폼 제출을 막기 위해 preventDefault 사용
+
+                    const username = usernameInput.value;
+                    const password = passwordInput.value;
+
+                    if (username === correctUsername && password === correctPassword) {
+                        // 로그인 성공
+                        localStorage.setItem('isLoggedIn', 'true'); // 로그인 상태 저장
+                        sessionStorage.setItem('previousPage', window.location.href); // 이전 페이지 저장
+                        alert('로그인 되었습니다.');
+                        window.location.href = '메인페이지.html';  // 로그인 후 메인 페이지로 이동
+                    } else {
+                        // 로그인 실패
+                        errorMessage.style.display = 'block'; // 오류 메시지 표시
+                    }
+                });
+            });
+
+            
+        </script>
+
+        
+
+    </body>
+</html>
