@@ -35,26 +35,38 @@ export default function RegisterPage() {
         }
         // 이메일 형식 검사 (간단하게)
         if (!/\S+@\S+\.\S+/.test(formData.email)) {
-             setError('유효한 이메일 주소를 입력해주세요.');
-             return;
+            setError('유효한 이메일 주소를 입력해주세요.');
+            return;
         }
 
         setIsSubmitting(true);
 
-        // 🌟 실제로는 여기에 백엔드 API 호출 로직이 들어갑니다.
+        // 🌟 실제 백엔드 API 호출 로직으로 수정 🌟
         try {
-            console.log('--- 회원가입 데이터 ---');
-            console.log('아이디:', formData.username);
-            console.log('이메일:', formData.email);
-            console.log('닉네임:', formData.nickname);
-            // 비밀번호는 보안상 로그 출력 X
+            // API 호출 시 confirmPassword는 제외하고 보냅니다.
+            const { username, email, password, nickname } = formData;
+            
+            const response = await fetch('http://localhost:3001/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username,
+                    email,
+                    password,
+                    nickname
+                })
+            });
 
-            // API 호출 시뮬레이션 (2초 대기)
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            const result = await response.json();
 
-            // 가입 성공 가정
-            alert('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
-            navigate('/login'); // 로그인 페이지로 이동
+            if (response.ok) {
+                // 가입 성공
+                alert('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
+                navigate('/login'); // 로그인 페이지로 이동
+            } else {
+                // 가입 실패 (서버에서 보낸 에러 메시지 표시)
+                setError(result.message || '회원가입에 실패했습니다.');
+            }
 
         } catch (apiError) {
             console.error('회원가입 API 오류:', apiError);
