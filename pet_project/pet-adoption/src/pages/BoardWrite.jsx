@@ -6,10 +6,9 @@ export default function BoardWrite() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
-    category: '자유게시판',
+    category: '자유게시판', // 💡 기본값
     author: '익명',
     content: '',
-    date: new Date().toISOString().split('T')[0]
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -19,7 +18,7 @@ export default function BoardWrite() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value // 💡 'category'를 포함한 모든 변경사항이 여기서 업데이트됩니다.
     }));
   };
 
@@ -45,7 +44,8 @@ export default function BoardWrite() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        // 💡 선택된 'category'가 포함된 formData가 전송됩니다.
+        body: JSON.stringify(formData), 
       });
 
       if (response.ok) {

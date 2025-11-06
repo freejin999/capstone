@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Carousel from './Carousel'; // 👈 캐러셀 컴포넌트 임포트
+import Carousel from '../components/Carousel'; // 👈 캐러셀 컴포넌트 임포트
 
 // --- Placeholder Components ---
 const HandPlaceholder = ({ text = "손 모양" }) => (

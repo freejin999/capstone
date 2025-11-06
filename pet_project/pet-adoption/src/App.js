@@ -1,19 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// 컴포넌트 임포트
-import Navigation from './Navigation.jsx';
-import Footer from './Footer.jsx';
-import Home from './Home.jsx';
-import PetAdoptionSite from './PetAdoptionSite.jsx';
-import BoardWebsite from './BoardWebsite.jsx';
-import BoardWrite from './BoardWrite.jsx';
-import BoardDetail from './BoardDetail.jsx';
-import ProfileManagement from './ProfileManagement.jsx';
-import PetProductReview from './PetProductReview.jsx';
-import PetDiary from './PetDiary.jsx'; // 👈 일기 컴포넌트
-import LoginPage from './LoginPage.jsx';
-import RegisterPage from './RegisterPage.jsx';
+// 컴포넌트 임포트 (폴더 구조를 'components'와 'pages'로 분리했다고 가정합니다)
+import Navigation from './components/Navigation.jsx';
+import Footer from './components/Footer.jsx';
+import Home from './pages/Home.jsx';
+import PetAdoptionSite from './pages/PetAdoptionSite.jsx';
+import BoardWebsite from './pages/BoardWebsite.jsx';
+import BoardWrite from './pages/BoardWrite.jsx';
+import BoardDetail from './pages/BoardDetail.jsx';
+import BoardEdit from './pages/BoardEdit.jsx';
+import ProfileManagement from './pages/ProfileManagement.jsx';
+import PetProductReview from './pages/PetProductReview.jsx';
+import PetDiary from './pages/PetDiary.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
 // MyPage 임포트는 ProfileManagement와 경로가 겹치므로 제거하거나 주석 처리합니다.
 // import MyPage from './MyPage.jsx'; 
 
@@ -57,6 +58,7 @@ function App() {
                     <Route path="/board" element={<BoardWebsite />} />
                     <Route path="/board/write" element={<BoardWrite />} />
                     <Route path="/board/:id" element={<BoardDetail />} />
+                    <Route path="/board/edit/:id" element={<BoardEdit />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/login" element={<LoginPage handleLogin={handleLogin} />} />
 
@@ -100,4 +102,3 @@ function App() {
 }
 
 export default App;
-

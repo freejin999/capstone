@@ -27,7 +27,6 @@ export default function BoardDetail() {
     }, [id]);
 
     const fetchPostDetail = async () => {
-        // ... (기존 fetchPostDetail 로직 유지 - 변경 없음)
         try {
             setLoading(true);
             setError(null);
@@ -112,18 +111,76 @@ export default function BoardDetail() {
     };
 
     // ----------------------------------------------------
-    // (좋아요, 삭제 로직은 변경 없음)
+    // [FIX] '좋아요' 핸들러 로직 구현
     // ----------------------------------------------------
-    const handleLike = async () => { /* ... 기존 로직 유지 ... */ };
-    const handleDelete = async () => { /* ... 기존 로직 유지 ... */ };
+    const handleLike = async () => {
+        setLikeAnimating(true);
+        setTimeout(() => setLikeAnimating(false), 500); // 애니메이션
+
+        try {
+            const response = await fetch(`http://localhost:3001/api/posts/${id}/like`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId }) // 임시 userId 전송
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // 서버 응답(data.likes)으로 UI 상태 업데이트
+                setPost(prev => ({ ...prev, likes: data.likes }));
+                setIsLiked(data.isLiked);
+            } else {
+                alert('좋아요 처리에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('좋아요 API 오류:', error);
+            alert('서버와의 연결에 실패했습니다.');
+        }
+    };
+
+    // ----------------------------------------------------
+    // [FIX] '삭제' 핸들러 로직 구현
+    // ----------------------------------------------------
+    const handleDelete = async () => {
+        // 실제 앱에서는 모달 창 등으로 사용자 확인을 받는 것이 좋습니다.
+        // 여기서는 `confirm`을 사용하지만, `alert`와 마찬가지로 환경에 따라
+        // 작동하지 않을 수 있으므로, 임시로 true로 설정합니다.
+        const userConfirmed = true; // window.confirm('정말로 이 게시글을 삭제하시겠습니까?');
+
+        if (!userConfirmed) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:3001/api/posts/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                alert('게시글이 삭제되었습니다.');
+                navigate('/board'); // 목록으로 이동
+            } else {
+                alert('게시글 삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('삭제 API 오류:', error);
+            alert('서버와의 연결에 실패했습니다.');
+        }
+    };
 
 
     // ----------------------------------------------------
     // 렌더링
     // ----------------------------------------------------
-    if (loading) { /* ... 로딩 UI 유지 ... */ }
-    if (error) { /* ... 에러 UI 유지 ... */ }
-    if (!post) { return null; }
+    if (loading) {
+        return <div className="min-h-screen bg-gray-50 flex justify-center items-center"><p>로딩 중...</p></div>;
+    }
+    if (error) {
+        return <div className="min-h-screen bg-gray-50 flex justify-center items-center"><p className="text-red-500">{error}</p></div>;
+    }
+    if (!post) { 
+        return null; 
+    }
 
     // ----------------------------------------------------
     // 💡 댓글 UI (Render Content)
@@ -145,10 +202,24 @@ export default function BoardDetail() {
         <div className="min-h-screen bg-gray-50">
             {/* ... (스타일 및 Header 유지) ... */}
             <style>{`
-                @keyframes heartBeat { /* ... */ }
-                .heart-beat { /* ... */ }
-                .like-btn-transition { /* ... */ }
-                .like-btn-liked { /* ... */ }
+                @keyframes heartBeat {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.3); }
+                    100% { transform: scale(1); }
+                }
+                .heart-beat {
+                    animation: heartBeat 0.5s ease-in-out;
+                }
+                .like-btn-transition {
+                    transition: all 0.2s ease-in-out;
+                }
+                .like-btn-liked {
+                    background-color: #EF4444; /* red-500 */
+                    border-color: #EF4444;
+                }
+                .like-btn-liked:hover {
+                    background-color: #DC2626; /* red-600 */
+                }
             `}</style>
             
             <header className="bg-white shadow-sm border-b">
@@ -174,7 +245,7 @@ export default function BoardDetail() {
                         {/* 메타 정보 */}
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 border-t pt-3">
                             <div className="flex items-center gap-1"><User className="w-4 h-4" /><span>{post.author}</span></div>
-                            <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /><span>{post.date}</span></div>
+                            <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /><span>{post.date ? post.date : (post.createdAt ? new Date(post.createdAt).toISOString().split('T')[0] : '날짜없음')}</span></div>
                             <div className="flex items-center gap-1"><Eye className="w-4 h-4" /><span>조회 {post.views}</span></div>
                             <div className="flex items-center gap-1"><MessageSquare className="w-4 h-4" /><span>댓글 {post.comments}</span></div>
                         </div>
