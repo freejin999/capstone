@@ -5,7 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 /**
  * 로그인 페이지 컴포넌트
  * @param {object} props
- * @param {function} props.handleLogin - App.js에서 받은 로그인 상태 변경 함수
+ * @param {function} props.handleLogin - App.js에서 받은 로그인 상태 변경 함수 (user 객체를 받음)
  */
 function LoginPage({ handleLogin }) {
     const navigate = useNavigate();
@@ -30,12 +30,16 @@ function LoginPage({ handleLogin }) {
                 body: JSON.stringify({ username, password })
             });
 
-            const result = await response.json();
+            const result = await response.json(); // 🌟 response.json()을 'result' 변수에 저장
 
             if (response.ok) {
                 // ✅ 로그인 성공
                 console.log('로그인 성공:', result.message);
-                handleLogin(); // App.js의 상태를 true로 만듦
+                
+                // 🌟 [핵심 수정] 🌟
+                // App.js의 handleLogin에 서버로부터 받은 'user' 객체를 전달합니다.
+                handleLogin(result.user); 
+                
                 navigate('/'); // 로그인 완료 후 메인 페이지로 이동
             } else {
                 // 🚨 로그인 실패 (서버에서 보낸 에러 메시지 표시)

@@ -39,15 +39,11 @@ const adoptionPets = [
     {"id":1,"name":"복돌이","species":"개","breed":"믹스","age":3,"gender":"남","size":"중형","region":"서울시 강남구","image":"https://placehold.co/400x400/ff7f50/ffffff?text=Bokdol", "description": "사람을 너무 좋아하는 활발한 성격의 강아지입니다."},
     {"id":2,"name":"나비","species":"개","breed":"시츄","age":5,"gender":"여","size":"소형","region":"서울시 송파구","image":"https://placehold.co/400x400/9acd32/ffffff?text=Nabi", "description": "조용하고 온순한 성격입니다."},
     {"id":3,"name":"호랑이","species":"고양이","breed":"코숏","age":2,"gender":"남","size":"중형","region":"경기도 성남시","image":"https://placehold.co/400x400/1e90ff/ffffff?text=Horang", "description": "사람을 잘 따르는 친화력 좋은 고양이입니다."},
-    {"id":4,"name":"초코","species":"개","breed":"푸들","age":4,"gender":"여","size":"소형","region":"서울시 마포구","image":"https://placehold.co/400x400/ffa07a/ffffff?text=Choco", "description": "영리하고 사교적인 성격의 푸들입니다."},
-    {"id":5,"name":"구름","species":"고양이","breed":"터키시앙고라","age":1,"gender":"여","size":"중형","region":"서울시 강서구","image":"https://placehold.co/400x400/ff4500/ffffff?text=Gureum", "description": "새하얀 털을 가진 아름다운 고양이입니다."},
-    {"id":6,"name":"백구","species":"개","breed":"진돗개","age":6,"gender":"남","size":"대형","region":"경기도 고양시","image":"https://placehold.co/400x400/7b68ee/ffffff?text=Baekgu", "description": "충직하고 주인을 잘 따르는 진돗개입니다."},
 ];
 // 리뷰 더미 데이터 (reviews API용)
 const reviews = [
     { id: 1, productName: "프리미엄 강아지 사료", category: "사료", rating: 5, author: "행복한댕댕이", date: "2024-01-20", content: "우리 강아지가 정말 잘 먹어요!", image: "https://placehold.co/300x300/FFB6C1/ffffff?text=Premium+Food", likes: 42, comments: 0 },
     { id: 2, productName: "고양이 자동 급식기", category: "급식기", rating: 4, author: "냥집사", date: "2024-01-19", content: "출장이 잦은 저에게 딱이에요.", image: "https://placehold.co/300x300/87CEEB/ffffff?text=Auto+Feeder", likes: 28, comments: 0 },
-    { id: 3, productName: "반려견 목욕 샴푸", category: "미용", rating: 5, author: "깨끗이", date: "2024-01-18", content: "향도 좋고 거품도 잘 나요.", image: "https://placehold.co/300x300/98FB98/ffffff?text=Pet+Shampoo", likes: 35, comments: 0 },
 ];
 
 
@@ -83,29 +79,30 @@ app.get('/api/reviews', (req, res) => {
 
 
 // ----------------------------------------------------
-// (B) 🚨 사용자 인증 API (회원가입 / 로그인)
+// (B) 사용자 인증 API (회원가입 / 로그인)
 // ----------------------------------------------------
 
-// [NEW] 1. 회원가입 API (POST /api/register)
+// 1. 회원가입 API (POST /api/register)
 app.post('/api/register', async (req, res) => {
     const { username, password, email, nickname } = req.body;
 
-    // (1) 유효성 검사
     if (!username || !password || !email || !nickname) {
         return res.status(400).json({ message: '모든 필드를 입력해주세요.' });
     }
 
     try {
-        // (2) 아이디(username) 중복 확인
-        const [existingUsers] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+        const [existingUsers] = await pool.query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email]);
         if (existingUsers.length > 0) {
-            return res.status(409).json({ message: '이미 사용 중인 아이디입니다.' }); // 409: Conflict
+            if (existingUsers[0].username === username) {
+                return res.status(409).json({ message: '이미 사용 중인 아이디입니다.' }); // 409: Conflict
+            }
+            if (existingUsers[0].email === email) {
+                return res.status(409).json({ message: '이미 사용 중인 이메일입니다.' });
+            }
         }
         
-        // (3) 비밀번호 암호화 (bcryptjs 사용)
-        const hashedPassword = await bcrypt.hash(password, 10); // 10: salt rounds
+        const hashedPassword = await bcrypt.hash(password, 10); 
 
-        // (4) DB에 사용자 저장
         const sql = `
             INSERT INTO users (username, password, email, nickname) 
             VALUES (?, ?, ?, ?)
@@ -122,7 +119,7 @@ app.post('/api/register', async (req, res) => {
 });
 
 
-// [NEW] 2. 로그인 API (POST /api/login)
+// 2. 로그인 API (POST /api/login)
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -131,30 +128,23 @@ app.post('/api/login', async (req, res) => {
     }
 
     try {
-        // (1) 아이디(username)로 사용자 찾기
         const [users] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
         
         if (users.length === 0) {
-            // 해당 아이디가 없음
-            return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' }); // 401: Unauthorized
+            return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' }); 
         }
 
         const user = users[0];
-
-        // (2) 비밀번호 비교 (암호화된 DB 비밀번호와 대조)
         const isPasswordMatch = await bcrypt.compare(password, user.password);
 
         if (!isPasswordMatch) {
-            // 비밀번호 불일치
             return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' });
         }
         
-        // (3) 로그인 성공
-        // (실제 서비스에서는 JWT 토큰 등을 발급해야 합니다)
         console.log(`✅ 사용자 로그인 성공 (ID: ${user.username})`);
         res.json({ 
             message: '로그인 성공!',
-            user: { // 프론트엔드에서 사용할 사용자 정보 전달
+            user: { 
                 id: user.id,
                 username: user.username,
                 nickname: user.nickname,
@@ -173,6 +163,7 @@ app.post('/api/login', async (req, res) => {
 // (C) 게시판 API (posts)
 // ----------------------------------------------------
 
+// ( ... 기존 게시판 API 코드 ... )
 // 2. 게시판 API (목록 읽기 - GET)
 app.get('/api/posts', async (req, res) => {
     console.log('GET /api/posts 요청 수신');
@@ -263,7 +254,7 @@ app.post('/api/posts', async (req, res) => {
 // 5. 게시판 API (좋아요 토글 - PUT)
 app.put('/api/posts/:id/like', async (req, res) => {
     const postId = parseInt(req.params.id);
-    const { userId = 'user_default' } = req.body;
+    const { userId = 'user_default' } = req.body; // 🚨 실제 userId로 변경 필요
 
     if (isNaN(postId)) { return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' }); }
     if (!userId) { return res.status(400).json({ message: '사용자 ID가 필요합니다.' }); }
@@ -280,11 +271,11 @@ app.put('/api/posts/:id/like', async (req, res) => {
         let isLiked = false;
         const userIndex = likedUsers.indexOf(userId);
 
-        if (userIndex === -1) { // 좋아요 추가
+        if (userIndex === -1) { 
             likedUsers.push(userId);
             likes = (likes || 0) + 1;
             isLiked = true;
-        } else { // 좋아요 취소
+        } else { 
             likedUsers.splice(userIndex, 1);
             likes = Math.max(0, (likes || 1) - 1);
             isLiked = false;
@@ -397,6 +388,113 @@ app.post('/api/posts/:postId/comments', async (req, res) => {
 });
 
 
+// ----------------------------------------------------
+// (E) 🚨 사용자/마이페이지 API (NEW)
+// ----------------------------------------------------
+
+// 11. [NEW] '내가 쓴 글' 목록 조회 (GET /api/users/:username/posts)
+app.get('/api/users/:username/posts', async (req, res) => {
+    const { username } = req.params;
+    
+    try {
+        // 닉네임이 아닌 'username'(아이디) 기준으로 조회
+        // 🚨 'author' 컬럼에 'username'이 저장된다고 가정합니다.
+        // 만약 'nickname'으로 저장했다면: WHERE p.author = (SELECT nickname FROM users WHERE username = ?)
+        const sql = `
+            SELECT p.*, COUNT(c.id) AS comments 
+            FROM posts p
+            LEFT JOIN comments c ON p.id = c.postId
+            WHERE p.author = ? 
+            GROUP BY p.id
+            ORDER BY p.createdAt DESC;
+        `;
+        const [rows] = await pool.query(sql, [username]);
+        res.json(rows);
+    } catch (error) {
+        console.error('DB 조회 중 오류 발생 (GET /api/users/:username/posts):', error);
+        res.status(500).json({ message: '서버 오류: ' });
+    }
+});
+
+// 12. [NEW] 닉네임 중복 확인 (POST /api/users/check-nickname)
+app.post('/api/users/check-nickname', async (req, res) => {
+    const { nickname } = req.body;
+    try {
+        const [rows] = await pool.query('SELECT * FROM users WHERE nickname = ?', [nickname]);
+        if (rows.length > 0) {
+            res.status(409).json({ message: '이미 사용 중인 닉네임입니다.' });
+        } else {
+            res.json({ message: '사용 가능한 닉네임입니다.' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: '서버 오류: 닉네임 확인에 실패했습니다.' });
+    }
+});
+
+// 13. [NEW] 프로필(닉네임) 수정 (PUT /api/users/profile)
+app.put('/api/users/profile', async (req, res) => {
+    const { userId, nickname } = req.body;
+    if (!userId || !nickname) {
+        return res.status(400).json({ message: '사용자 ID와 닉네임이 필요합니다.' });
+    }
+    try {
+        await pool.query('UPDATE users SET nickname = ? WHERE id = ?', [nickname, userId]);
+        res.json({ message: '닉네임이 변경되었습니다.' });
+    } catch (error) {
+        res.status(500).json({ message: '서버 오류: 닉네임 변경에 실패했습니다.' });
+    }
+});
+
+// 14. [NEW] 비밀번호 변경 (PUT /api/users/password)
+app.put('/api/users/password', async (req, res) => {
+    const { userId, currentPassword, newPassword } = req.body;
+    if (!userId || !currentPassword || !newPassword) {
+        return res.status(400).json({ message: '모든 필드를 입력해주세요.' });
+    }
+    try {
+        const [users] = await pool.query('SELECT password FROM users WHERE id = ?', [userId]);
+        if (users.length === 0) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+        
+        const user = users[0];
+        const isPasswordMatch = await bcrypt.compare(currentPassword, user.password);
+        
+        if (!isPasswordMatch) {
+            return res.status(401).json({ message: '현재 비밀번호가 일치하지 않습니다.' });
+        }
+        
+        const newHashedPassword = await bcrypt.hash(newPassword, 10);
+        await pool.query('UPDATE users SET password = ? WHERE id = ?', [newHashedPassword, userId]);
+        
+        res.json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
+    } catch (error) {
+        res.status(500).json({ message: '서버 오류: 비밀번호 변경에 실패했습니다.' });
+    }
+});
+
+// 15. [NEW] 회원 탈퇴 (DELETE /api/users/account)
+app.delete('/api/users/account', async (req, res) => {
+    const { userId } = req.body;
+    if (!userId) {
+        return res.status(400).json({ message: '사용자 ID가 필요합니다.' });
+    }
+    try {
+        // 🚨 TODO: 연결된 게시글/댓글을 어떻게 처리할지 정책 결정 필요
+        // (예: author를 '탈퇴한 회원'으로 변경, 또는 ON DELETE SET NULL 등)
+        // 현재는 'users' 테이블에서만 삭제합니다.
+        
+        const [result] = await pool.query('DELETE FROM users WHERE id = ?', [userId]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+        res.json({ message: '회원 탈퇴가 완료되었습니다.' });
+    } catch (error) {
+        res.status(500).json({ message: '서버 오류: 회원 탈퇴에 실패했습니다.' });
+    }
+});
+
+
 /* ====================================================
  * * 6. DB 초기화 및 서버 시작 (가장 아래에 위치)
  * * ==================================================== */
@@ -452,7 +550,7 @@ async function initializeDatabase() {
         `);
         console.log('ℹ️ comments 테이블 확인/생성 완료.');
 
-        // 3. [NEW] 🚨 users 테이블 생성 (없으면) - 회원가입/로그인용
+        // 3. users 테이블 생성 (없으면)
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -466,11 +564,11 @@ async function initializeDatabase() {
         console.log('ℹ️ users 테이블 확인/생성 완료.');
 
 
-        // 4. [중요] posts 테이블에 빠진 컬럼들 안전하게 추가
+        // 4. posts 테이블에 빠진 컬럼들 안전하게 추가
         await safeAddColumn('posts', 'category', "VARCHAR(50) DEFAULT '자유게시판'");
         await safeAddColumn('posts', 'views', "INT DEFAULT 0");
         await safeAddColumn('posts', 'likes', "INT DEFAULT 0");
-        await safeAddColumn('posts', 'comments', "INT DEFAULT 0"); // 🚨 'comments' 컬럼 추가
+        await safeAddColumn('posts', 'comments', "INT DEFAULT 0"); 
         await safeAddColumn('posts', 'isNotice', "BOOLEAN DEFAULT FALSE");
         await safeAddColumn('posts', 'likedUsers', "TEXT");
 

@@ -2,29 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, ThumbsUp, MessageSquare, Calendar, User, Trash2, Edit } from 'lucide-react';
 
-export default function BoardDetail() {
+// 1. App.js로부터 'currentUser'를 props로 받습니다.
+export default function BoardDetail({ currentUser }) {
     const { id } = useParams();
     const navigate = useNavigate();
     
     const [post, setPost] = useState(null);
-    const [comments, setComments] = useState([]); // 💡 댓글 목록 상태
-    const [newCommentText, setNewCommentText] = useState(''); // 💡 새 댓글 상태
+    const [comments, setComments] = useState([]);
+    const [newCommentText, setNewCommentText] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isLiked, setIsLiked] = useState(false);
     const [likeAnimating, setLikeAnimating] = useState(false);
     
-    // 임시 사용자 ID (DB에 저장된 author 필드와 연동되어야 함)
-    const currentUserId = 'user_abc123'; 
-    const currentUserAuthor = '댓글러101'; // 임시 닉네임
+    // 2. 임시 ID/Author 변수 (currentUserId, currentUserAuthor) 제거
 
     // ----------------------------------------------------
     // 🔥 데이터 로드 (게시글 상세 + 댓글)
     // ----------------------------------------------------
     useEffect(() => {
+        // (useEffect는 currentUser가 있든 없든 실행되어야 하므로 여기서 확인하지 않습니다)
         fetchPostDetail();
-        fetchComments(); // 💡 댓글 목록 로드
-    }, [id]);
+        fetchComments(); 
+    }, [id]); // 3. useEffect 의존성에서 currentUser 제거 (새로고침 시 post 먼저 로드)
+
+    // 4. fetchPostDetail은 currentUser가 바뀔 때마다 다시 호출 (좋아요 상태 갱신)
+    useEffect(() => {
+        if (post) { // 게시글이 로드된 *이후에*
+            // 5. 좋아요 상태 초기화 (currentUser가 있을 때만 실행)
+            if (currentUser && post.likedUsers && post.likedUsers.includes(currentUser.username)) {
+                setIsLiked(true);
+            } else {
+                setIsLiked(false);
+            }
+        }
+    }, [post, currentUser]); // post 또는 currentUser가 변경될 때마다 실행
 
     const fetchPostDetail = async () => {
         try {
@@ -36,13 +48,7 @@ export default function BoardDetail() {
             if (response.ok) {
                 const data = await response.json();
                 setPost(data);
-                
-                // 좋아요 상태 초기화 (서버 데이터 기반)
-                if (data.likedUsers && data.likedUsers.includes(currentUserId)) {
-                    setIsLiked(true);
-                } else {
-                    setIsLiked(false);
-                }
+                // 6. 좋아요 상태 초기화 로직은 별도 useEffect로 분리
             } else if (response.status === 404) {
                 setError('게시글을 찾을 수 없습니다.');
             } else {
@@ -56,7 +62,6 @@ export default function BoardDetail() {
         }
     };
     
-    // 💡 댓글 목록 가져오기 함수 (8. GET /api/posts/:postId/comments)
     const fetchComments = async () => {
         try {
             const response = await fetch(`http://localhost:3001/api/posts/${id}/comments`);
@@ -72,10 +77,18 @@ export default function BoardDetail() {
     };
 
     // ----------------------------------------------------
-    // 💡 댓글 작성 처리 (9. POST /api/posts/:postId/comments)
+    // 💡 댓글 작성 처리 (currentUser 연동)
     // ----------------------------------------------------
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
+        
+        // 7. [보안] currentUser가 없으면(비로그인) 댓글 작성 차단
+        if (!currentUser) {
+            alert('댓글을 작성하려면 로그인이 필요합니다.');
+            navigate('/login');
+            return;
+        }
+        
         if (!newCommentText.trim()) {
             alert('댓글 내용을 입력해주세요.');
             return;
@@ -87,7 +100,8 @@ export default function BoardDetail() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     content: newCommentText, 
-                    author: currentUserAuthor 
+                    // 8. author를 임시 닉네임이 아닌, 실제 로그인한 유저의 '닉네임'으로 전송
+                    author: currentUser.nickname 
                 }),
             });
 
@@ -111,9 +125,16 @@ export default function BoardDetail() {
     };
 
     // ----------------------------------------------------
-    // [FIX] '좋아요' 핸들러 로직 구현
+    // 💡 '좋아요' 핸들러 (currentUser 연동)
     // ----------------------------------------------------
     const handleLike = async () => {
+        // 9. [보안] currentUser가 없으면(비로그인) 좋아요 차단
+        if (!currentUser) {
+            alert('좋아요를 누르려면 로그인이 필요합니다.');
+            navigate('/login');
+            return;
+        }
+        
         setLikeAnimating(true);
         setTimeout(() => setLikeAnimating(false), 500); // 애니메이션
 
@@ -121,7 +142,8 @@ export default function BoardDetail() {
             const response = await fetch(`http://localhost:3001/api/posts/${id}/like`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: currentUserId }) // 임시 userId 전송
+                // 10. userId를 임시 ID가 아닌, 실제 로그인한 유저의 'username'(고유 ID)으로 전송
+                body: JSON.stringify({ userId: currentUser.username }) 
             });
 
             if (response.ok) {
@@ -139,12 +161,22 @@ export default function BoardDetail() {
     };
 
     // ----------------------------------------------------
-    // [FIX] '삭제' 핸들러 로직 구현
+    // 💡 '삭제' 핸들러 (currentUser 연동)
     // ----------------------------------------------------
     const handleDelete = async () => {
-        // 실제 앱에서는 모달 창 등으로 사용자 확인을 받는 것이 좋습니다.
-        // 여기서는 `confirm`을 사용하지만, `alert`와 마찬가지로 환경에 따라
-        // 작동하지 않을 수 있으므로, 임시로 true로 설정합니다.
+        
+        // 11. [보안] 권한 검사 (currentUser가 없거나, 글 작성자가 아니면 차단)
+        if (!currentUser) {
+            alert('삭제할 권한이 없습니다. (로그인 필요)');
+            return;
+        }
+        if (currentUser.username !== post.author) {
+            alert('본인이 작성한 글만 삭제할 수 있습니다.');
+            return;
+        }
+
+        // 12. 🚨 alert() 대신 커스텀 UI/모달을 권장합니다.
+        // 현재는 confirm이 작동하지 않을 수 있으므로, 임시로 true로 설정합니다.
         const userConfirmed = true; // window.confirm('정말로 이 게시글을 삭제하시겠습니까?');
 
         if (!userConfirmed) {
@@ -168,10 +200,7 @@ export default function BoardDetail() {
         }
     };
 
-
-    // ----------------------------------------------------
-    // 렌더링
-    // ----------------------------------------------------
+    // ( ... 렌더링 로직 (loading, error, !post)은 동일 ... )
     if (loading) {
         return <div className="min-h-screen bg-gray-50 flex justify-center items-center"><p>로딩 중...</p></div>;
     }
@@ -190,7 +219,6 @@ export default function BoardDetail() {
             <div className="flex justify-between items-center text-sm mb-1">
                 <span className="font-semibold text-gray-800">{comment.author}</span>
                 <span className="text-gray-500">
-                    {/* MySQL DateTime 포맷을 YYYY-MM-DD로 변환 */}
                     {new Date(comment.createdAt).toISOString().split('T')[0]}
                 </span>
             </div>
@@ -234,23 +262,21 @@ export default function BoardDetail() {
                 <article className="bg-white rounded-lg shadow-sm overflow-hidden">
                     {/* ... (게시글 헤더, 본문 유지) ... */}
                     <div className="border-b p-6">
-                        {/* 카테고리 배지 */}
                         <div className="mb-3">
                             <span className={`inline-block px-3 py-1 rounded text-sm font-medium ${post.isNotice ? 'bg-red-500 text-white' : 'bg-blue-100 text-blue-700'}`}>
                                 {post.category}
                             </span>
                         </div>
-                        {/* 제목 */}
                         <h1 className="text-3xl font-bold text-gray-900 mb-4">{post.title}</h1>
-                        {/* 메타 정보 */}
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 border-t pt-3">
+                            {/* 13. 작성자(author)가 username이므로, 닉네임 표시가 필요하면 JOIN 필요 (일단 author 표시) */}
                             <div className="flex items-center gap-1"><User className="w-4 h-4" /><span>{post.author}</span></div>
                             <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /><span>{post.date ? post.date : (post.createdAt ? new Date(post.createdAt).toISOString().split('T')[0] : '날짜없음')}</span></div>
                             <div className="flex items-center gap-1"><Eye className="w-4 h-4" /><span>조회 {post.views}</span></div>
                             <div className="flex items-center gap-1"><MessageSquare className="w-4 h-4" /><span>댓글 {post.comments}</span></div>
                         </div>
                     </div>
-                    {/* 게시글 본문 */}
+                    
                     <div className="p-6">
                         <div className="prose max-w-none">
                             <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{post.content}</p>
@@ -259,7 +285,16 @@ export default function BoardDetail() {
 
                     {/* 좋아요 버튼 */}
                     <div className="border-t p-6 flex justify-center">
-                        <button onClick={handleLike} className={`flex items-center gap-2 px-8 py-3 rounded-lg font-semibold like-btn-transition transition ${isLiked ? 'like-btn-liked text-white shadow-xl' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'}`}>
+                        <button 
+                            onClick={handleLike} 
+                            // 14. 비로그인 시 버튼 비활성화
+                            disabled={!currentUser || likeAnimating}
+                            className={`flex items-center gap-2 px-8 py-3 rounded-lg font-semibold like-btn-transition transition ${
+                                isLiked 
+                                    ? 'like-btn-liked text-white shadow-xl' 
+                                    : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
                             <ThumbsUp className={`w-5 h-5 ${likeAnimating ? 'heart-beat' : ''}`} fill={isLiked ? 'currentColor' : 'none'}/>
                             <span className="text-lg">{isLiked ? '좋아요 취소' : '좋아요'} ({post.likes})</span>
                         </button>
@@ -277,16 +312,21 @@ export default function BoardDetail() {
                                 rows="3"
                                 value={newCommentText}
                                 onChange={(e) => setNewCommentText(e.target.value)}
-                                placeholder="따뜻한 댓글을 남겨주세요."
+                                placeholder={currentUser ? "따뜻한 댓글을 남겨주세요." : "댓글을 작성하려면 로그인이 필요합니다."}
                                 className="w-full p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none mb-3"
+                                // 15. 비로그인 시 입력창 비활성화
+                                disabled={!currentUser}
                             />
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-gray-500">
-                                    작성자: {currentUserAuthor}
+                                    {/* 16. 작성자를 임시 닉네임이 아닌, 실제 로그인한 유저의 '닉네임'으로 표시 */}
+                                    작성자: {currentUser ? currentUser.nickname : '로그인 필요'}
                                 </span>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                                    // 17. 비로그인 시 버튼 비활성화
+                                    disabled={!currentUser || !newCommentText.trim()}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     댓글 등록
                                 </button>
@@ -306,17 +346,25 @@ export default function BoardDetail() {
                     </div>
                 </article>
 
-                {/* 하단 버튼 (수정/삭제) */}
-                <div className="mt-6 flex justify-end">
-                    <div className="flex gap-3">
-                        <button onClick={() => navigate(`/board/edit/${id}`)} className="px-6 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition flex items-center gap-2">
-                            <Edit className="w-4 h-4" />수정
-                        </button>
-                        <button onClick={handleDelete} className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2">
-                            <Trash2 className="w-4 h-4" />삭제
-                        </button>
+                {/* 18. [보안] 🌟 하단 버튼 (수정/삭제) - 본인 글일 때만 렌더링 */}
+                {currentUser && post.author === currentUser.username && (
+                    <div className="mt-6 flex justify-end">
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => navigate(`/board/edit/${id}`)} 
+                                className="px-6 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition flex items-center gap-2"
+                            >
+                                <Edit className="w-4 h-4" />수정
+                            </button>
+                            <button 
+                                onClick={handleDelete} 
+                                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />삭제
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
             </main>
         </div>
     );
