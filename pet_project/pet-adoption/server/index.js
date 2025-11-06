@@ -18,13 +18,6 @@ const pool = mysql.createPool({
 });
 
 // ----------------------------------------------------
-// [삭제] ⬇️ (async () => { ... })();
-// 서버 시작 시 실행되던 기존 DB 초기화 블록은 삭제하고,
-// 파일 맨 아래의 startServer() 함수로 대체합니다.
-// ----------------------------------------------------
-
-
-// ----------------------------------------------------
 // 임시 인메모리 데이터 (DB 연동되지 않은 API들을 위한 더미 데이터)
 // ----------------------------------------------------
 // 입양 공고 더미 데이터 (adoption API용)
@@ -41,7 +34,11 @@ const reviews = [
     { id: 1, productName: "프리미엄 강아지 사료", category: "사료", rating: 5, author: "행복한댕댕이", date: "2024-01-20", content: "우리 강아지가 정말 잘 먹어요!", image: "https://placehold.co/300x300/FFB6C1/ffffff?text=Premium+Food", likes: 42, comments: 0 },
     { id: 2, productName: "고양이 자동 급식기", category: "급식기", rating: 4, author: "냥집사", date: "2024-01-19", content: "출장이 잦은 저에게 딱이에요.", image: "https://placehold.co/300x300/87CEEB/ffffff?text=Auto+Feeder", likes: 28, comments: 0 },
     { id: 3, productName: "반려견 목욕 샴푸", category: "미용", rating: 5, author: "깨끗이", date: "2024-01-18", content: "향도 좋고 거품도 잘 나요.", image: "https://placehold.co/300x300/98FB98/ffffff?text=Pet+Shampoo", likes: 35, comments: 0 },
-    // ... (이하 더미 데이터 동일) ...
+    { id: 4, productName: "고양이 스크래쳐", category: "장난감", rating: 5, author: "긁적이집사", date: "2024-01-17", content: "고양이가 너무 좋아해서 가구를 안 긁어요!", image: "https://placehold.co/300x300/DDA0DD/ffffff?text=Cat+Scratcher", likes: 56, comments: 0 },
+    { id: 5, productName: "강아지 산책 가방", category: "외출용품", rating: 4, author: "산책러버", date: "2024-01-16", content: "소형견에게 딱 맞아요.", image: "https://placehold.co/300x300/F0E68C/ffffff?text=Pet+Carrier", likes: 31, comments: 0 },
+    { id: 6, productName: "고양이 자동 화장실", category: "위생용품", rating: 5, author: "편한집사", date: "2024-01-15", content: "청소가 너무 편해졌어요.", image: "https://placehold.co/300x300/FFD700/ffffff?text=Auto+Litter", likes: 67, comments: 0 },
+    { id: 7, productName: "강아지 치석제거 장난감", category: "장난감", rating: 4, author: "건강지킴이", date: "2024-01-14", content: "놀면서 양치 효과까지.", image: "https://placehold.co/300x300/FFA07A/ffffff?text=Dental+Toy", likes: 23, comments: 0 },
+    { id: 8, productName: "고양이 영양 간식", category: "간식", rating: 5, author: "맛있냥", date: "2024-01-13", content: "기호성이 정말 좋아요.", image: "https://placehold.co/300x300/E6E6FA/ffffff?text=Cat+Treats", likes: 45, comments: 0 },
 ];
 
 // 미들웨어 설정
@@ -81,7 +78,6 @@ app.get('/api/adoption/:id', (req, res) => {
 
 // ====================================================
 // 💡 게시판 API (MySQL DB 연동)
-// (이하 모든 API 로직은 기존과 동일합니다)
 // ====================================================
 
 // ----------------------------------------------------
@@ -354,7 +350,8 @@ app.post('/api/posts/:postId/comments', async (req, res) => {
         const [newCommentRows] = await pool.query('SELECT * FROM comments WHERE id = ?', [newCommentId]);
 
         // 게시글의 댓글 수 업데이트 (DB에서 직접)
-        await pool.query('UPDATE posts SET comments = comments + 1 WHERE id = ?', [postId]);
+        // [수정] 댓글 수 집계는 목록/상세보기에서 LEFT JOIN으로 하므로 이 로직은 제거 가능
+        // await pool.query('UPDATE posts SET comments = comments + 1 WHERE id = ?', [postId]);
 
         console.log(`✅ 게시글 ${postId}에 새로운 댓글 (ID: ${newCommentId}) DB 저장됨.`);
         res.status(201).json({ message: '댓글이 성공적으로 작성되었습니다.', comment: newCommentRows[0] });
@@ -373,39 +370,58 @@ app.get('/api/reviews', (req, res) => {
     res.json(reviews);
 });
 
+
 // ----------------------------------------------------
-// [추가] 🚀 서버 시작 로직
+// [수정] DB 초기화 및 서버 시작 로직 (가장 아래로 이동)
 // ----------------------------------------------------
 
 /**
- * 서버가 시작되기 전에 DB 연결을 확인하고,
- * 필요한 테이블과 컬럼이 모두 존재하는지 확인/생성합니다.
+ * [HELPER] DB에 컬럼이 없으면 추가하는 함수
+ * @param {string} tableName - 테이블 이름
+ * @param {string} columnName - 추가할 컬럼 이름
+ * @param {string} columnDefinition - 컬럼 정의 (예: VARCHAR(255) NOT NULL)
+ */
+async function safeAddColumn(tableName, columnName, columnDefinition) {
+    try {
+        // 컬럼 추가 시도
+        const alterSql = `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`;
+        await pool.query(alterSql);
+        console.log(`✅ '${columnName}' 컬럼이 성공적으로 추가되었습니다.`);
+    } catch (error) {
+        // [중요] 에러가 "Duplicate column name" (ER_DUP_FIELDNAME)이면,
+        // 이미 컬럼이 존재한다는 뜻이므로, 이 에러는 무시합니다.
+        if (error.code === 'ER_DUP_FIELDNAME') {
+            console.log(`ℹ️ '${columnName}' 컬럼이 이미 존재합니다. (초기화 건너뜀)`);
+        } else {
+            // 그 외의 다른 에러라면 (ex: ER_PARSE_ERROR, ER_NO_SUCH_TABLE)
+            // 서버를 중지시켜야 하므로 에러를 다시 던집니다.
+            console.error(`❌ '${columnName}' 컬럼 추가 중 오류 발생:`, error.sqlMessage || error.message);
+            throw error; // 서버 시작을 중지시킴
+        }
+    }
+}
+
+/**
+ * [MAIN] DB를 초기화하고 필요한 테이블/컬럼을 확인하는 함수
  */
 async function initializeDatabase() {
     try {
-        // 1. DB 연결 테스트
         await pool.query('SELECT 1 + 1 AS solution');
         console.log('✅ MySQL DB 연결 성공');
 
-        // 2. 'posts' 테이블 생성 (없으면)
-        // (기존 코드에 있던 모든 컬럼 정의 포함)
+        // 1. posts 테이블 생성 (없으면)
         await pool.query(`
             CREATE TABLE IF NOT EXISTS posts (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 title VARCHAR(255) NOT NULL,
                 content TEXT NOT NULL,
                 author VARCHAR(100) DEFAULT '익명사용자',
-                category VARCHAR(50) DEFAULT '자유게시판',
-                views INT DEFAULT 0,
-                likes INT DEFAULT 0,
-                comments INT DEFAULT 0,
-                isNotice BOOLEAN DEFAULT FALSE,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log("ℹ️ 'posts' 테이블 확인/생성 완료.");
+        console.log('ℹ️ posts 테이블 확인/생성 완료.');
 
-        // 3. 'comments' 테이블 생성 (없으면)
+        // 2. comments 테이블 생성 (없으면)
         await pool.query(`
             CREATE TABLE IF NOT EXISTS comments (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -416,41 +432,30 @@ async function initializeDatabase() {
                 FOREIGN KEY (postId) REFERENCES posts(id) ON DELETE CASCADE
             );
         `);
-        console.log("ℹ️ 'comments' 테이블 확인/생성 완료.");
+        console.log('ℹ️ comments 테이블 확인/생성 완료.');
 
-        // 4. [중요] 'likedUsers' 컬럼 추가 시도 (올바른 방식)
-        try {
-            const alterSql = "ALTER TABLE posts ADD COLUMN likedUsers TEXT";
-            await pool.query(alterSql);
-            console.log("✅ 'likedUsers' 컬럼이 성공적으로 추가되었습니다.");
-        } catch (error)
-        {
-            // 만약 에러 코드가 'ER_DUP_FIELDNAME' (중복된 컬럼 이름)이면,
-            // 이미 컬럼이 존재한다는 뜻이므로, 이 에러는 성공으로 간주하고 무시합니다.
-            if (error.code === 'ER_DUP_FIELDNAME') {
-                console.log("ℹ️ 'likedUsers' 컬럼이 이미 존재합니다. (초기화 건너뜀)");
-            } else {
-                // 그 외의 다른 에러라면 (ex: ER_NO_SUCH_TABLE)
-                // 서버를 중지시켜야 하므로 에러를 다시 던집니다.
-                throw error;
-            }
-        }
-        
-        console.log('✅ 모든 DB 테이블 및 컬럼 구조 확인/생성 완료');
+        // 3. [중요] posts 테이블에 빠진 컬럼들 안전하게 추가
+        await safeAddColumn('posts', 'category', "VARCHAR(50) DEFAULT '자유게시판'");
+        await safeAddColumn('posts', 'views', "INT DEFAULT 0");
+        await safeAddColumn('posts', 'likes', "INT DEFAULT 0");
+        await safeAddColumn('posts', 'comments', "INT DEFAULT 0"); // 🚨 'comments' 컬럼 추가
+        await safeAddColumn('posts', 'isNotice', "BOOLEAN DEFAULT FALSE");
+        await safeAddColumn('posts', 'likedUsers', "TEXT");
+
+        console.log('✅ 모든 테이블과 컬럼 구조가 최신 상태입니다.');
 
     } catch (error) {
-        // DB 초기화 과정에서 심각한 오류 발생 시
-        console.error('❌ DB 연결 또는 테이블 생성/수정 중 오류 발생. DB 상태를 확인하세요:', error);
-        throw error; // 이 에러는 startServer 함수에서 잡힙니다.
+        console.error('❌ DB 초기화 중 치명적인 오류 발생:', error);
+        throw error; // 에러를 다시 던져서 서버 시작을 막음
     }
 }
 
 /**
- * DB 초기화가 성공한 후에만 Express 서버를 실행합니다.
+ * [MAIN] 서버 실행 로직
  */
 async function startServer() {
     try {
-        // 1. DB 초기화/검사 먼저 실행 (await로 완료될 때까지 대기)
+        // 1. DB 초기화/검사 먼저 실행 (await로 대기)
         await initializeDatabase();
         
         // 2. DB 초기화 성공 시 서버 실행
@@ -464,5 +469,5 @@ async function startServer() {
     }
 }
 
-// [추가] 🚀 서버 시작 함수 호출
+// [M] 서버 시작 함수 호출
 startServer();
