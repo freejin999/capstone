@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // 🌟 1. useEffect 임포트
+import React, { useState, useEffect } from 'react'; // 1. useEffect 임포트
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // 컴포넌트 임포트 (폴더 구조를 'components'와 'pages'로 분리했다고 가정합니다)
@@ -15,6 +15,9 @@ import PetProductReview from './pages/PetProductReview.jsx';
 import PetDiary from './pages/PetDiary.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
+// 🌟 [추가] 일기 쓰기 및 상세보기 컴포넌트 임포트
+import PetDiaryWrite from './pages/PetDiaryWrite.jsx';
+import PetDiaryDetail from './pages/PetDiaryDetail.jsx';
 
 
 // -------------------------------------------------------------------
@@ -114,12 +117,29 @@ function App() {
                     />
 
 
-                    {/* 👇 반려동물 일기 경로에 PrivateRoute 적용 */}
+                    {/* 👇 [수정] 반려동물 일기 경로 (목록/쓰기/상세) */}
                     <Route 
                         path="/diary" 
                         element={
                             <PrivateRoute currentUser={currentUser}>
-                                <PetDiary />
+                                {/* 🌟 PetDiary에도 currentUser 전달 (내 일기 목록 조회용) */}
+                                <PetDiary currentUser={currentUser} />
+                            </PrivateRoute>
+                        } 
+                    />
+                    <Route 
+                        path="/diary/write" 
+                        element={
+                            <PrivateRoute currentUser={currentUser}>
+                                <PetDiaryWrite currentUser={currentUser} />
+                            </PrivateRoute>
+                        } 
+                    />
+                    <Route 
+                        path="/diary/:id" 
+                        element={
+                            <PrivateRoute currentUser={currentUser}>
+                                <PetDiaryDetail currentUser={currentUser} />
                             </PrivateRoute>
                         } 
                     /> 
