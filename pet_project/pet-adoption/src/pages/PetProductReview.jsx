@@ -62,10 +62,11 @@ export default function PetProductReview({ currentUser }) {
         setSelectedRating('전체');
     };
     
-    // 7. 🌟 [추가] 삭제 핸들러
-    const handleDelete = async (e, reviewId, reviewAuthor) => {
-        e.stopPropagation(); // 카드 전체 클릭 방지
+    // 7. 🌟 [핵심 수정] handleDelete 함수에서 'e' 파라미터 제거
+    const handleDelete = async (reviewId, reviewAuthor) => {
+        // e.stopPropagation(); // 👈 [제거]
         
+        // [보안] 본인 확인
         if (!currentUser || currentUser.username !== reviewAuthor) {
             alert('삭제할 권한이 없습니다.');
             return;
@@ -77,7 +78,6 @@ export default function PetProductReview({ currentUser }) {
                 const response = await fetch(`http://localhost:3001/api/reviews/${reviewId}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
-                    // [보안] 본인 인증을 위해 userId를 body에 담아 전송
                     body: JSON.stringify({ userId: currentUser.id })
                 });
 
@@ -99,16 +99,11 @@ export default function PetProductReview({ currentUser }) {
 
     // 필터링 로직
     const filteredReviews = reviews.filter(review => {
-        // 9. 🌟 [수정] 0점 리뷰도 처리 (parseInt가 "0점" -> 0)
         const ratingValue = selectedRating !== '전체' ? parseInt(selectedRating[0]) : null;
-        
-        // 10. 🌟 [수정] review.rating이 0일 때도 비교가 되도록 수정 (ratingValue가 null일 때 true)
         const matchesRating = selectedRating === '전체' || review.rating === ratingValue;
-        
         const matchesCategory = selectedCategory === '전체' || review.category === selectedCategory;
         
         const productNameMatch = review.productName?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
-        // 11. 🌟 [수정] authorNickname도 검색 대상에 포함
         const authorMatch = review.authorNickname?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
         const contentMatch = review.content?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
         const matchesSearch = productNameMatch || contentMatch || authorMatch;
@@ -126,7 +121,7 @@ export default function PetProductReview({ currentUser }) {
         ));
     };
 
-    // 로딩 중
+    // (로딩 및 에러 UI는 변경 없음)
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -137,15 +132,13 @@ export default function PetProductReview({ currentUser }) {
             </div>
         );
     }
-
-    // 에러 발생 시
     if (error) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center p-8 bg-white shadow-lg rounded-lg">
                     <p className="text-red-600 text-lg mb-4">{error}</p>
                     <button
-                        onClick={fetchReviews} // 재시도 버튼
+                        onClick={fetchReviews} 
                         className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
                     >
                         다시 시도
@@ -154,6 +147,7 @@ export default function PetProductReview({ currentUser }) {
             </div>
         );
     }
+
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
@@ -164,7 +158,6 @@ export default function PetProductReview({ currentUser }) {
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">펫 용품 리뷰</h1>
                         <p className="text-gray-600">반려동물 용품에 대한 솔직한 후기를 확인하세요</p>
                     </div>
-                    {/* 12. 🌟 [추가] '새 리뷰 작성' 버튼 (로그인한 경우에만 보임) */}
                     {currentUser && (
                         <Link 
                             to="/reviews/write"
@@ -184,7 +177,6 @@ export default function PetProductReview({ currentUser }) {
                             type="text"
                             placeholder="제품명, 리뷰 내용, 작성자 닉네임으로 검색하세요"
                             value={searchTerm}
-                            // 13. 🌟 [수정] onChange 핸들러 변경
                             onChange={handleSearchChange} 
                             className="w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
@@ -200,7 +192,6 @@ export default function PetProductReview({ currentUser }) {
                             {categories.map(category => (
                                 <button
                                     key={category}
-                                    // 14. 🌟 [수정] onClick 핸들러 변경
                                     onClick={() => handleCategoryClick(category)}
                                     className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                                         selectedCategory === category
@@ -221,7 +212,6 @@ export default function PetProductReview({ currentUser }) {
                             {ratings.map(rating => (
                                 <button
                                     key={rating}
-                                    // 15. 🌟 [수정] onClick 핸들러 변경
                                     onClick={() => handleRatingClick(rating)}
                                     className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                                         selectedRating === rating
@@ -240,7 +230,6 @@ export default function PetProductReview({ currentUser }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredReviews.length > 0 ? (
                         filteredReviews.map(review => {
-                            // 16. 🌟 [추가] 본인 글인지 확인 (author는 username)
                             const isOwner = currentUser && currentUser.username === review.author;
 
                             return (
@@ -264,12 +253,9 @@ export default function PetProductReview({ currentUser }) {
 
                                         {/* 리뷰 내용 */}
                                         <div className="p-4">
-                                            {/* 제품명 */}
                                             <h3 className="text-lg font-bold text-gray-900 mb-2">
                                                 {review.productName}
                                             </h3>
-
-                                            {/* 별점 */}
                                             <div className="flex items-center gap-2 mb-3">
                                                 <div className="flex">
                                                     {renderStars(review.rating)}
@@ -278,8 +264,6 @@ export default function PetProductReview({ currentUser }) {
                                                     {review.rating}.0
                                                 </span>
                                             </div>
-
-                                            {/* 리뷰 내용 */}
                                             <p className="text-gray-600 text-sm mb-4 line-clamp-3">
                                                 {review.content}
                                             </p>
@@ -290,7 +274,6 @@ export default function PetProductReview({ currentUser }) {
                                     <div className="p-4 border-t">
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-2">
-                                                {/* 17. 🌟 [수정] author(username) 대신 authorNickname(닉네임) 표시 */}
                                                 <span className="text-sm text-gray-500 font-semibold">{review.authorNickname || review.author}</span>
                                                 <span className="text-gray-300">•</span>
                                                 <span className="text-sm text-gray-500">{new Date(review.createdAt).toLocaleDateString('ko-KR')}</span>
@@ -301,7 +284,7 @@ export default function PetProductReview({ currentUser }) {
                                             </div>
                                         </div>
 
-                                        {/* 18. 🌟 [추가] 수정/삭제 버튼 (본인 글일 때만) */}
+                                        {/* 수정/삭제 버튼 */}
                                         {isOwner && (
                                             <div className="flex gap-2 justify-end">
                                                 <Link 
@@ -311,9 +294,11 @@ export default function PetProductReview({ currentUser }) {
                                                     <Edit className="w-3 h-3" />수정
                                                 </Link>
                                                 <button 
+                                                    // 🌟 [핵심 수정] 
+                                                    // onClick 핸들러가 'e'를 전달하지 않고, handleDelete만 올바르게 호출하도록 수정
                                                     onClick={(e) => {
-                                                        e.stopPropagation(); // 🌟 카드 전체 클릭 방지
-                                                        handleDelete(review.id, review.author);
+                                                        e.stopPropagation(); // 👈 onClick 핸들러가 e.stopPropagation()을 호출
+                                                        handleDelete(review.id, review.author); // 👈 handleDelete는 e 없이 호출
                                                     }}
                                                     className="px-3 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700 transition flex items-center gap-1"
                                                 >
