@@ -40,11 +40,7 @@ const adoptionPets = [
     {"id":2,"name":"나비","species":"개","breed":"시츄","age":5,"gender":"여","size":"소형","region":"서울시 송파구","image":"https://placehold.co/400x400/9acd32/ffffff?text=Nabi", "description": "조용하고 온순한 성격입니다."},
     {"id":3,"name":"호랑이","species":"고양이","breed":"코숏","age":2,"gender":"남","size":"중형","region":"경기도 성남시","image":"https://placehold.co/400x400/1e90ff/ffffff?text=Horang", "description": "사람을 잘 따르는 친화력 좋은 고양이입니다."},
 ];
-// 리뷰 더미 데이터 (reviews API용)
-const reviews = [
-    { id: 1, productName: "프리미엄 강아지 사료", category: "사료", rating: 5, author: "행복한댕댕이", date: "2024-01-20", content: "우리 강아지가 정말 잘 먹어요!", image: "https://placehold.co/300x300/FFB6C1/ffffff?text=Premium+Food", likes: 42, comments: 0 },
-    { id: 2, productName: "고양이 자동 급식기", category: "급식기", rating: 4, author: "냥집사", date: "2024-01-19", content: "출장이 잦은 저에게 딱이에요.", image: "https://placehold.co/300x300/87CEEB/ffffff?text=Auto+Feeder", likes: 28, comments: 0 },
-];
+// 🚨 리뷰 더미 데이터는 이제 DB를 사용하므로 'reviews' 변수 (const reviews = [...])를 삭제합니다.
 
 
 /* ====================================================
@@ -72,10 +68,8 @@ app.get('/api/adoption/:id', (req, res) => {
     res.json(pet);
 });
 
-app.get('/api/reviews', (req, res) => {
-    console.log('GET /api/reviews 요청 수신');
-    res.json(reviews);
-});
+// 🚨 (G) 섹션으로 이동됨
+// app.get('/api/reviews', (req, res) => { ... });
 
 
 // ----------------------------------------------------
@@ -85,11 +79,9 @@ app.get('/api/reviews', (req, res) => {
 // 1. 회원가입 API (POST /api/register)
 app.post('/api/register', async (req, res) => {
     const { username, password, email, nickname } = req.body;
-
     if (!username || !password || !email || !nickname) {
         return res.status(400).json({ message: '모든 필드를 입력해주세요.' });
     }
-
     try {
         const [existingUsers] = await pool.query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email]);
         if (existingUsers.length > 0) {
@@ -100,18 +92,14 @@ app.post('/api/register', async (req, res) => {
                 return res.status(409).json({ message: '이미 사용 중인 이메일입니다.' });
             }
         }
-        
         const hashedPassword = await bcrypt.hash(password, 10); 
-
         const sql = `
             INSERT INTO users (username, password, email, nickname) 
             VALUES (?, ?, ?, ?)
         `;
         await pool.query(sql, [username, hashedPassword, email, nickname]);
-
         console.log(`✅ 새 사용자 회원가입 완료 (ID: ${username})`);
         res.status(201).json({ message: '회원가입이 성공적으로 완료되었습니다.' });
-
     } catch (error) {
         console.error('DB 삽입 중 오류 발생 (POST /api/register):', error);
         res.status(500).json({ message: '서버 오류: 회원가입에 실패했습니다.' });
@@ -122,25 +110,19 @@ app.post('/api/register', async (req, res) => {
 // 2. 로그인 API (POST /api/login)
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
-
     if (!username || !password) {
         return res.status(400).json({ message: '아이디와 비밀번호를 입력해주세요.' });
     }
-
     try {
         const [users] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
-        
         if (users.length === 0) {
             return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' }); 
         }
-
         const user = users[0];
         const isPasswordMatch = await bcrypt.compare(password, user.password);
-
         if (!isPasswordMatch) {
             return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' });
         }
-        
         console.log(`✅ 사용자 로그인 성공 (ID: ${user.username})`);
         res.json({ 
             message: '로그인 성공!',
@@ -151,7 +133,6 @@ app.post('/api/login', async (req, res) => {
                 email: user.email
             }
         });
-
     } catch (error) {
         console.error('DB 조회 중 오류 발생 (POST /api/login):', error);
         res.status(500).json({ message: '서버 오류: 로그인에 실패했습니다.' });
@@ -162,8 +143,6 @@ app.post('/api/login', async (req, res) => {
 // ----------------------------------------------------
 // (C) 게시판 API (posts)
 // ----------------------------------------------------
-
-// 2. 게시판 API (목록 읽기 - GET)
 app.get('/api/posts', async (req, res) => {
     console.log('GET /api/posts 요청 수신');
     try {
@@ -175,7 +154,6 @@ app.get('/api/posts', async (req, res) => {
             ORDER BY p.createdAt DESC;
         `;
         const [rows] = await pool.query(sql);
-        
         const postsWithParsedLikes = rows.map(post => ({
             ...post,
             likedUsers: post.likedUsers ? JSON.parse(post.likedUsers) : []
@@ -187,16 +165,13 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
-// 3. 게시판 API (상세 조회 - GET)
 app.get('/api/posts/:id', async (req, res) => {
     const postId = parseInt(req.params.id);
     if (isNaN(postId)) {
         return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
     }
-    
     try {
         await pool.query('UPDATE posts SET views = views + 1 WHERE id = ?', [postId]);
-
         const sql = `
             SELECT p.*, COUNT(c.id) AS comments 
             FROM posts p
@@ -205,14 +180,11 @@ app.get('/api/posts/:id', async (req, res) => {
             GROUP BY p.id;
         `;
         const [rows] = await pool.query(sql, [postId]);
-
         if (rows.length === 0) {
             return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
         }
-        
         const post = rows[0];
         post.likedUsers = post.likedUsers ? JSON.parse(post.likedUsers) : [];
-        
         res.json(post);
     } catch (error) {
         console.error('DB 조회/업데이트 중 오류 발생 (GET /api/posts/:id):', error);
@@ -220,26 +192,20 @@ app.get('/api/posts/:id', async (req, res) => {
     }
 });
 
-// 4. 게시판 API (글쓰기 - POST)
 app.post('/api/posts', async (req, res) => {
     const { title, content, author = '익명사용자', category = '자유게시판' } = req.body;
-
     if (!title || !content) {
         return res.status(400).json({ message: '제목과 내용을 입력해야 합니다.' });
     }
-
     const sql = `
         INSERT INTO posts (title, content, author, category, likedUsers) 
         VALUES (?, ?, ?, ?, ?)
     `;
     const initialLikedUsers = JSON.stringify([]); 
-
     try {
         const [result] = await pool.query(sql, [title, content, author, category, initialLikedUsers]);
         const newPostId = result.insertId;
-        
         const [newPostRows] = await pool.query('SELECT * FROM posts WHERE id = ?', [newPostId]);
-        
         res.status(201).json({ 
             message: '게시글이 성공적으로 등록되었습니다.', 
             post: newPostRows[0] 
@@ -250,26 +216,20 @@ app.post('/api/posts', async (req, res) => {
     }
 });
 
-// 5. 게시판 API (좋아요 토글 - PUT)
 app.put('/api/posts/:id/like', async (req, res) => {
     const postId = parseInt(req.params.id);
     const { userId } = req.body; 
-
     if (isNaN(postId)) { return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' }); }
     if (!userId) { return res.status(400).json({ message: '사용자 ID가 필요합니다.' }); }
-
     try {
         const [rows] = await pool.query('SELECT likes, likedUsers FROM posts WHERE id = ?', [postId]);
         if (rows.length === 0) {
             return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
         }
-
         let { likes, likedUsers } = rows[0];
         likedUsers = likedUsers ? JSON.parse(likedUsers) : []; 
-
         let isLiked = false;
         const userIndex = likedUsers.indexOf(userId);
-
         if (userIndex === -1) { 
             likedUsers.push(userId);
             likes = (likes || 0) + 1;
@@ -279,9 +239,7 @@ app.put('/api/posts/:id/like', async (req, res) => {
             likes = Math.max(0, (likes || 1) - 1);
             isLiked = false;
         }
-
         await pool.query('UPDATE posts SET likes = ?, likedUsers = ? WHERE id = ?', [likes, JSON.stringify(likedUsers), postId]);
-
         res.json({ likes: likes, isLiked: isLiked, message: `좋아요가 ${isLiked ? '반영' : '취소'}되었습니다.` });
     } catch (error) {
         console.error('DB 업데이트 중 오류 발생 (PUT /api/posts/:id/like):', error);
@@ -289,34 +247,26 @@ app.put('/api/posts/:id/like', async (req, res) => {
     }
 });
 
-// 6. 게시판 API (게시글 수정 - PUT)
 app.put('/api/posts/:id', async (req, res) => {
     const postId = parseInt(req.params.id);
     const { title, content, category } = req.body;
-
     if (isNaN(postId)) { return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' }); }
-
     const fieldsToUpdate = {};
     if (title !== undefined) fieldsToUpdate.title = title;
     if (content !== undefined) fieldsToUpdate.content = content;
     if (category !== undefined) fieldsToUpdate.category = category;
-    
     if (Object.keys(fieldsToUpdate).length === 0) {
         return res.status(400).json({ message: '수정할 내용이 없습니다.' });
     }
-
     const setClause = Object.keys(fieldsToUpdate).map(key => `${key} = ?`).join(', ');
     const sql = `UPDATE posts SET ${setClause} WHERE id = ?`;
     const values = [...Object.values(fieldsToUpdate), postId];
-
     try {
         const [result] = await pool.query(sql, values);
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: '게시글을 찾을 수 없거나 수정된 내용이 없습니다.' });
         }
-        
         const [updatedPostRows] = await pool.query('SELECT * FROM posts WHERE id = ?', [postId]);
-        
         res.json({ post: updatedPostRows[0], message: '게시글이 수정되었습니다.' });
     } catch (error) {
         console.error('DB 업데이트 중 오류 발생 (PUT /api/posts/:id):', error);
@@ -324,11 +274,9 @@ app.put('/api/posts/:id', async (req, res) => {
     }
 });
 
-// 7. 게시판 API (게시글 삭제 - DELETE)
 app.delete('/api/posts/:id', async (req, res) => {
     const postId = parseInt(req.params.id);
     if (isNaN(postId)) { return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' }); }
-
     try {
         const [result] = await pool.query('DELETE FROM posts WHERE id = ?', [postId]);
         if (result.affectedRows === 0) {
@@ -345,12 +293,9 @@ app.delete('/api/posts/:id', async (req, res) => {
 // ----------------------------------------------------
 // (D) 댓글 API (comments)
 // ----------------------------------------------------
-
-// 9. 댓글 목록 조회 (GET /api/posts/:postId/comments)
 app.get('/api/posts/:postId/comments', async (req, res) => {
     const postId = parseInt(req.params.postId);
     if (isNaN(postId)) { return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' }); }
-
     try {
         const sql = 'SELECT * FROM comments WHERE postId = ? ORDER BY createdAt DESC';
         const [rows] = await pool.query(sql, [postId]);
@@ -361,23 +306,18 @@ app.get('/api/posts/:postId/comments', async (req, res) => {
     }
 });
 
-// 10. 댓글 작성 (POST /api/posts/:postId/comments)
 app.post('/api/posts/:postId/comments', async (req, res) => {
     const postId = parseInt(req.params.postId);
-    const { content, author = '익명사용자' } = req.body; // 🚨 author는 로그인 닉네임으로 받아야 함
-
+    const { content, author = '익명사용자' } = req.body; 
     if (isNaN(postId)) { return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' }); }
     if (!content || content.trim().length === 0) {
         return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
     }
-
     const sql = 'INSERT INTO comments (postId, author, content) VALUES (?, ?, ?)';
     try {
         const [result] = await pool.query(sql, [postId, author, content]);
         const newCommentId = result.insertId;
-        
         const [newCommentRows] = await pool.query('SELECT * FROM comments WHERE id = ?', [newCommentId]);
-        
         console.log(`✅ 게시글 ${postId}에 새로운 댓글 (ID: ${newCommentId}) DB 저장됨.`);
         res.status(201).json({ message: '댓글이 성공적으로 작성되었습니다.', comment: newCommentRows[0] });
     } catch (error) {
@@ -390,11 +330,8 @@ app.post('/api/posts/:postId/comments', async (req, res) => {
 // ----------------------------------------------------
 // (E) 사용자/마이페이지 API
 // ----------------------------------------------------
-
-// 11. '내가 쓴 글' 목록 조회 (GET /api/users/:username/posts)
 app.get('/api/users/:username/posts', async (req, res) => {
     const { username } = req.params;
-    
     try {
         const sql = `
             SELECT p.*, COUNT(c.id) AS comments 
@@ -412,7 +349,6 @@ app.get('/api/users/:username/posts', async (req, res) => {
     }
 });
 
-// 12. 닉네임 중복 확인 (POST /api/users/check-nickname)
 app.post('/api/users/check-nickname', async (req, res) => {
     const { nickname } = req.body;
     try {
@@ -427,7 +363,6 @@ app.post('/api/users/check-nickname', async (req, res) => {
     }
 });
 
-// 13. 프로필(닉네임) 수정 (PUT /api/users/profile)
 app.put('/api/users/profile', async (req, res) => {
     const { userId, nickname } = req.body;
     if (!userId || !nickname) {
@@ -441,7 +376,6 @@ app.put('/api/users/profile', async (req, res) => {
     }
 });
 
-// 14. 비밀번호 변경 (PUT /api/users/password)
 app.put('/api/users/password', async (req, res) => {
     const { userId, currentPassword, newPassword } = req.body;
     if (!userId || !currentPassword || !newPassword) {
@@ -452,32 +386,25 @@ app.put('/api/users/password', async (req, res) => {
         if (users.length === 0) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        
         const user = users[0];
         const isPasswordMatch = await bcrypt.compare(currentPassword, user.password);
-        
         if (!isPasswordMatch) {
             return res.status(401).json({ message: '현재 비밀번호가 일치하지 않습니다.' });
         }
-        
         const newHashedPassword = await bcrypt.hash(newPassword, 10);
         await pool.query('UPDATE users SET password = ? WHERE id = ?', [newHashedPassword, userId]);
-        
         res.json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
     } catch (error) {
         res.status(500).json({ message: '서버 오류: 비밀번호 변경에 실패했습니다.' });
     }
 });
 
-// 15. 회원 탈퇴 (DELETE /api/users/account)
 app.delete('/api/users/account', async (req, res) => {
     const { userId } = req.body;
     if (!userId) {
         return res.status(400).json({ message: '사용자 ID가 필요합니다.' });
     }
     try {
-        // 🚨 TODO: 연결된 게시글/댓글을 어떻게 처리할지 정책 결정 필요
-        
         const [result] = await pool.query('DELETE FROM users WHERE id = ?', [userId]);
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
@@ -490,26 +417,18 @@ app.delete('/api/users/account', async (req, res) => {
 
 
 // ----------------------------------------------------
-// (F) 🚨 반려동물 일기 API (NEW)
+// (F) 반려동물 일기 API
 // ----------------------------------------------------
-
-// 16. [NEW] '내 일기' 목록 조회 (GET /api/diaries/:username)
-// 🚨 'username'이 아닌 'userId' (숫자 ID)로 조회하는 것이 더 좋습니다.
-// 🚨 PetDiary.jsx가 currentUser.username을 보내므로 일단 username 기준으로 구현
 app.get('/api/diaries/:username', async (req, res) => {
     const { username } = req.params;
     try {
-        // 1. username으로 userId를 찾습니다.
         const [users] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
         if (users.length === 0) {
             return res.status(404).json({ message: "사용자를 찾을 수 없습니다." });
         }
         const userId = users[0].id;
-
-        // 2. 찾은 userId로 일기를 조회합니다.
         const sql = 'SELECT * FROM diaries WHERE userId = ? ORDER BY createdAt DESC';
         const [diaries] = await pool.query(sql, [userId]);
-        
         res.json(diaries);
     } catch (error) {
         console.error('DB 조회 중 오류 발생 (GET /api/diaries/:username):', error);
@@ -517,17 +436,14 @@ app.get('/api/diaries/:username', async (req, res) => {
     }
 });
 
-// 17. [NEW] '일기' 상세 조회 (GET /api/diaries/entry/:id)
 app.get('/api/diaries/entry/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const sql = 'SELECT * FROM diaries WHERE id = ?';
         const [diaries] = await pool.query(sql, [id]);
-        
         if (diaries.length === 0) {
             return res.status(404).json({ message: "일기를 찾을 수 없습니다." });
         }
-        
         res.json(diaries[0]);
     } catch (error) {
         console.error('DB 조회 중 오류 발생 (GET /api/diaries/entry/:id):', error);
@@ -535,25 +451,176 @@ app.get('/api/diaries/entry/:id', async (req, res) => {
     }
 });
 
-// 18. [NEW] '일기' 작성 (POST /api/diaries)
 app.post('/api/diaries', async (req, res) => {
     const { title, mood, content, userId } = req.body;
-    
     if (!title || !mood || !content || !userId) {
         return res.status(400).json({ message: "모든 필드(title, mood, content, userId)가 필요합니다." });
     }
-
     try {
         const sql = `
             INSERT INTO diaries (title, mood, content, userId) 
             VALUES (?, ?, ?, ?)
         `;
         const [result] = await pool.query(sql, [title, mood, content, userId]);
-        
         res.status(201).json({ message: '일기가 성공적으로 등록되었습니다.', diaryId: result.insertId });
     } catch (error) {
         console.error('DB 삽입 중 오류 발생 (POST /api/diaries):', error);
         res.status(500).json({ message: '서버 오류: 일기 등록에 실패했습니다.' });
+    }
+});
+
+app.put('/api/diaries/:id', async (req, res) => {
+    const { id } = req.params; 
+    const { title, mood, content, userId } = req.body; 
+    if (!title || !mood || !content || !userId) {
+        return res.status(400).json({ message: "모든 필드(title, mood, content, userId)가 필요합니다." });
+    }
+    try {
+        const sql = `
+            UPDATE diaries 
+            SET title = ?, mood = ?, content = ? 
+            WHERE id = ? AND userId = ?
+        `;
+        const [result] = await pool.query(sql, [title, mood, content, id, userId]);
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ message: '일기를 수정할 권한이 없거나 해당 일기를 찾을 수 없습니다.' });
+        }
+        res.json({ message: '일기가 성공적으로 수정되었습니다.' });
+    } catch (error) {
+        console.error('DB 업데이트 중 오류 발생 (PUT /api/diaries/:id):', error);
+        res.status(500).json({ message: '서버 오류: 일기 수정에 실패했습니다.' });
+    }
+});
+
+app.delete('/api/diaries/:id', async (req, res) => {
+    const { id } = req.params; 
+    const { userId } = req.body; 
+    if (!userId) {
+        return res.status(400).json({ message: '본인 확인을 위한 사용자 ID가 필요합니다.' });
+    }
+    try {
+        const sql = 'DELETE FROM diaries WHERE id = ? AND userId = ?';
+        const [result] = await pool.query(sql, [id, userId]);
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ message: '일기를 삭제할 권한이 없거나 해당 일기를 찾을 수 없습니다.' });
+        }
+        res.json({ message: '일기가 성공적으로 삭제되었습니다.' });
+    } catch (error) {
+        console.error('DB 삭제 중 오류 발생 (DELETE /api/diaries/:id):', error);
+        res.status(500).json({ message: '서버 오류: 일기 삭제에 실패했습니다.' });
+    }
+});
+
+
+// ----------------------------------------------------
+// (G) 펫 용품 리뷰 API
+// ----------------------------------------------------
+
+// [수정] 8. 리뷰 목록 (GET /api/reviews) - DB 연동
+app.get('/api/reviews', async (req, res) => {
+    console.log('GET /api/reviews 요청 수신 (DB)');
+    try {
+        const sql = `
+            SELECT r.*, u.nickname AS authorNickname 
+            FROM reviews r
+            LEFT JOIN users u ON r.userId = u.id
+            ORDER BY r.createdAt DESC
+        `;
+        const [rows] = await pool.query(sql);
+        res.json(rows);
+    } catch (error) {
+        console.error('DB 조회 중 오류 발생 (GET /api/reviews):', error);
+        res.status(500).json({ message: '서버 오류: 리뷰 목록을 불러오지 못했습니다.' });
+    }
+});
+
+// 21. 리뷰 1개 조회 (GET /api/reviews/entry/:id) - 수정용
+app.get('/api/reviews/entry/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const sql = 'SELECT * FROM reviews WHERE id = ?';
+        const [reviews] = await pool.query(sql, [id]);
+        if (reviews.length === 0) {
+            return res.status(404).json({ message: "리뷰를 찾을 수 없습니다." });
+        }
+        res.json(reviews[0]);
+    } catch (error) {
+        console.error('DB 조회 중 오류 발생 (GET /api/reviews/entry/:id):', error);
+        res.status(500).json({ message: '서버 오류: 리뷰를 불러오지 못했습니다.' });
+    }
+});
+
+// 22. 리뷰 작성 (POST /api/reviews)
+app.post('/api/reviews', async (req, res) => {
+    const { productName, category, rating, content, image, authorUsername, authorNickname, userId } = req.body;
+
+    // 🌟 [수정] 유효성 검사 로직 변경 (rating: 0 허용, image: null 허용)
+    if (!productName || !category || !content || !authorUsername || !userId || !authorNickname || (rating === null || rating === undefined)) {
+        console.warn('누락된 필드:', { productName, category, rating, content, authorUsername, authorNickname, userId });
+        return res.status(400).json({ message: "필수 필드가 누락되었습니다." });
+    }
+
+    try {
+        const sql = `
+            INSERT INTO reviews (productName, category, rating, content, image, author, authorNickname, userId)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        const [result] = await pool.query(sql, [productName, category, rating, content, image || null, authorUsername, authorNickname, userId]);
+        res.status(201).json({ message: '리뷰가 성공적으로 등록되었습니다.', reviewId: result.insertId });
+    } catch (error) {
+        console.error('DB 삽입 중 오류 발생 (POST /api/reviews):', error);
+        res.status(500).json({ message: '서버 오류: 리뷰 등록에 실패했습니다.' });
+    }
+});
+
+// 23. 리뷰 수정 (PUT /api/reviews/:id)
+app.put('/api/reviews/:id', async (req, res) => {
+    const { id } = req.params;
+    const { productName, category, rating, content, image, userId } = req.body;
+
+    // 🌟 [수정] 유효성 검사 로직 변경 (rating: 0 허용)
+    if (!productName || !category || !content || !userId || (rating === null || rating === undefined)) {
+        return res.status(400).json({ message: "필수 필드가 누락되었습니다." });
+    }
+
+    try {
+        const sql = `
+            UPDATE reviews 
+            SET productName = ?, category = ?, rating = ?, content = ?, image = ?
+            WHERE id = ? AND userId = ?
+        `;
+        const [result] = await pool.query(sql, [productName, category, rating, content, image || null, id, userId]);
+        
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ message: '리뷰를 수정할 권한이 없거나 해당 리뷰를 찾을 수 없습니다.' });
+        }
+        res.json({ message: '리뷰가 성공적으로 수정되었습니다.' });
+    } catch (error) {
+        console.error('DB 업데이트 중 오류 발생 (PUT /api/reviews/:id):', error);
+        res.status(500).json({ message: '서버 오류: 리뷰 수정에 실패했습니다.' });
+    }
+});
+
+// 24. 리뷰 삭제 (DELETE /api/reviews/:id)
+app.delete('/api/reviews/:id', async (req, res) => {
+    const { id } = req.params;
+    const { userId } = req.body; 
+
+    if (!userId) {
+        return res.status(400).json({ message: '본인 확인을 위한 사용자 ID가 필요합니다.' });
+    }
+
+    try {
+        const sql = 'DELETE FROM reviews WHERE id = ? AND userId = ?';
+        const [result] = await pool.query(sql, [id, userId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ message: '리뷰를 삭제할 권한이 없거나 해당 리뷰를 찾을 수 없습니다.' });
+        }
+        res.json({ message: '리뷰가 성공적으로 삭제되었습니다.' });
+    } catch (error) {
+        console.error('DB 삭제 중 오류 발생 (DELETE /api/reviews/:id):', error);
+        res.status(500).json({ message: '서버 오류: 리뷰 삭제에 실패했습니다.' });
     }
 });
 
@@ -626,7 +693,7 @@ async function initializeDatabase() {
         `);
         console.log('ℹ️ users 테이블 확인/생성 완료.');
 
-        // 4. [NEW] 🚨 diaries 테이블 생성 (없으면) - 반려동물 일기용
+        // 4. diaries 테이블 생성 (없으면)
         await pool.query(`
             CREATE TABLE IF NOT EXISTS diaries (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -640,8 +707,27 @@ async function initializeDatabase() {
         `);
         console.log('ℹ️ diaries 테이블 확인/생성 완료.');
 
+        // 5. [수정] reviews 테이블 생성 (없으면)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS reviews (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                userId INT NOT NULL,
+                author VARCHAR(100) NOT NULL, 
+                authorNickname VARCHAR(100) NOT NULL, 
+                productName VARCHAR(255) NOT NULL,
+                category VARCHAR(100) NOT NULL,
+                rating INT NOT NULL,
+                content TEXT NOT NULL,
+                image VARCHAR(512),
+                likes INT DEFAULT 0,
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+            );
+        `);
+        console.log('ℹ️ reviews 테이블 확인/생성 완료.');
 
-        // 5. [중요] posts 테이블에 빠진 컬럼들 안전하게 추가
+
+        // 6. [중요] posts 테이블에 빠진 컬럼들 안전하게 추가
         await safeAddColumn('posts', 'category', "VARCHAR(50) DEFAULT '자유게시판'");
         await safeAddColumn('posts', 'views', "INT DEFAULT 0");
         await safeAddColumn('posts', 'likes', "INT DEFAULT 0");

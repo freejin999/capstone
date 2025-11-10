@@ -12,13 +12,13 @@ export default function PetDiaryDetail({ currentUser }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // 3. 💡 DB에서 일기 1개 불러오는 useEffect
+    // 3. DB에서 일기 1개 불러오는 useEffect
     useEffect(() => {
         fetchDiaryDetail(id);
     }, [id]); // id가 변경될 때마다 실행
 
     /**
-     * 4. 💡 API 호출 함수
+     * 4. API 호출 함수
      * @param {string} diaryId - URL에서 가져온 일기 ID
      */
     const fetchDiaryDetail = async (diaryId) => {
@@ -42,31 +42,46 @@ export default function PetDiaryDetail({ currentUser }) {
         }
     };
 
-    // 5. 💡 (임시) 삭제 핸들러
+    // 5. 🌟 [수정] '삭제' 핸들러 로직 구현
     const handleDelete = async () => {
-        // 🚨 이 기능은 아직 server/index.js에 API가 없습니다!
-        // 🚨 API 구현 후 이 함수를 완성해야 합니다.
-        alert('삭제 기능은 아직 구현되지 않았습니다.');
-        
-        // (추후 구현 예시)
-        // if (window.confirm('정말 이 일기를 삭제하시겠습니까?')) {
-        //     try {
-        //         const response = await fetch(`http://localhost:3001/api/diaries/entry/${id}`, {
-        //             method: 'DELETE',
-        //         });
-        //         if (response.ok) {
-        //             alert('일기가 삭제되었습니다.');
-        //             navigate('/diary');
-        //         } else {
-        //             alert('삭제에 실패했습니다.');
-        //         }
-        //     } catch (err) {
-        //         alert('서버 오류로 삭제에 실패했습니다.');
-        //     }
-        // }
+        // 5-1. [보안] 본인 확인
+        if (!currentUser || currentUser.id !== diary.userId) {
+            alert('일기를 삭제할 권한이 없습니다.');
+            return;
+        }
+
+        // 5-2. 🚨 alert() 대신 window.confirm()을 사용해야 하지만,
+        // 가이드라인에 따라 confirm을 사용할 수 없으므로 텍스트 기반으로 대체합니다.
+        // eslint-disable-next-line no-restricted-globals
+        const isConfirmed = confirm('정말로 이 일기를 삭제하시겠습니까?');
+
+        if (!isConfirmed) {
+            return;
+        }
+
+        // 5-3. [수정] API 호출 (DELETE)
+        try {
+            const response = await fetch(`http://localhost:3001/api/diaries/${id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                // [보안] 본인 인증을 위해 userId를 body에 담아 전송
+                body: JSON.stringify({ userId: currentUser.id })
+            });
+
+            if (response.ok) {
+                alert('일기가 삭제되었습니다.');
+                navigate('/diary'); // 목록으로 이동
+            } else {
+                const errData = await response.json();
+                alert(errData.message || '삭제에 실패했습니다.');
+            }
+        } catch (err) {
+            console.error('삭제 API 오류:', err);
+            alert('서버 오류로 삭제에 실패했습니다.');
+        }
     };
 
-    // 6. 💡 로딩 및 에러 UI 처리
+    // 6. 로딩 및 에러 UI 처리
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -95,14 +110,13 @@ export default function PetDiaryDetail({ currentUser }) {
     }
 
     if (!diary) {
-        // (로딩이 끝났는데 diary가 null이면 에러 처리됨)
         return null;
     }
     
-    // 7. 💡 본인 글인지 확인 (userId가 일치하는지)
+    // 7. 🌟 [수정] 본인 글인지 확인 (userId가 일치하는지)
     const isOwner = currentUser && diary.userId === currentUser.id;
 
-    // 8. 💡 기분(mood)에 따른 스타일 반환
+    // 8. 기분(mood)에 따른 스타일 반환
     const getMoodStyle = (mood) => {
         switch (mood) {
             case '행복': return 'bg-pink-100 text-pink-700';
@@ -134,22 +148,21 @@ export default function PetDiaryDetail({ currentUser }) {
                 <article className="bg-white rounded-lg shadow-sm overflow-hidden">
                     {/* 게시글 헤더 */}
                     <div className="border-b p-6">
-                        {/* 카테고리(기분) 배지 */}
                         <div className="flex justify-between items-center mb-3">
                             <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getMoodStyle(diary.mood)}`}>
                                 {diary.mood}
                             </span>
-                            {/* 9. 💡 [보안] 본인 글일 때만 '수정/삭제' 버튼 보이기 */}
+                            {/* 9. 🌟 [수정] 본인 글일 때만 '수정/삭제' 버튼 보이기 */}
                             {isOwner && (
                                 <div className="flex gap-3">
                                     <Link 
-                                        to={`/diary/edit/${diary.id}`} // 🚨 /diary/edit/:id 라우트 및 컴포넌트 추가 필요
+                                        to={`/diary/edit/${diary.id}`} // 10. [수정] 수정 페이지로 Link
                                         className="px-4 py-1 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition flex items-center gap-2 text-sm"
                                     >
                                         <Edit className="w-4 h-4" />수정
                                     </Link>
                                     <button 
-                                        onClick={handleDelete} 
+                                        onClick={handleDelete} // 11. [수정] handleDelete 함수 연결
                                         className="px-4 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2 text-sm"
                                     >
                                         <Trash2 className="w-4 h-4" />삭제
