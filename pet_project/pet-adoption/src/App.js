@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'; 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// 🌟 components/와 pages/ 폴더 구조를 기준으로 임포트합니다.
+// 🌟 [수정] components/와 pages/ 폴더 구조를 기준으로 임포트합니다.
 import Navigation from './components/Navigation.jsx';
 import Footer from './components/Footer.jsx';
 import Home from './pages/Home.jsx';
@@ -20,12 +20,17 @@ import PetDiaryDetail from './pages/PetDiaryDetail.jsx';
 import PetDiaryEdit from './pages/PetDiaryEdit.jsx'; 
 import PetProductReviewWrite from './pages/PetProductReviewWrite.jsx';
 import PetProductReviewEdit from './pages/PetProductReviewEdit.jsx';
+// 🌟 [추가] 입양 공고 상세/작성/수정 페이지 임포트
+import PetAdoptionDetail from './pages/PetAdoptionDetail.jsx';
+import PetAdoptionWrite from './pages/PetAdoptionWrite.jsx';
+import PetAdoptionEdit from './pages/PetAdoptionEdit.jsx';
 
 
 // -------------------------------------------------------------------
 // PrivateRoute 컴포넌트 (currentUser 객체를 받도록 수정)
 // -------------------------------------------------------------------
 function PrivateRoute({ currentUser, children }) {
+    // currentUser 객체가 있으면(true) 자식 컴포넌트(children)를, 없으면(null) /login으로 이동
     return currentUser ? children : <Navigate to="/login" replace />;
 }
 
@@ -49,6 +54,7 @@ const getInitialUser = () => {
 
 function App() {
     
+    // useState의 초기값으로 getInitialUser() 함수를 실행
     const [currentUser, setCurrentUser] = useState(getInitialUser()); 
 
     /**
@@ -84,10 +90,35 @@ function App() {
                     <Route path="/" element={<Home currentUser={currentUser} />} />
                     
                     {/* 공개 페이지 */}
-                    <Route path="/adoption" element={<PetAdoptionSite />} />
                     <Route path="/board" element={<BoardWebsite />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/login" element={<LoginPage handleLogin={handleLogin} />} />
+
+                    {/* 입양 공고 라우트 (상세/작성/수정 추가) */}
+                    <Route 
+                        path="/adoption" 
+                        element={<PetAdoptionSite currentUser={currentUser} />} 
+                    />
+                    <Route 
+                        path="/adoption/write" 
+                        element={
+                            <PrivateRoute currentUser={currentUser}>
+                                <PetAdoptionWrite currentUser={currentUser} />
+                            </PrivateRoute>
+                        } 
+                    />
+                    <Route 
+                        path="/adoption/edit/:id" 
+                        element={
+                            <PrivateRoute currentUser={currentUser}>
+                                <PetAdoptionEdit currentUser={currentUser} />
+                            </PrivateRoute>
+                        } 
+                    />
+                    <Route 
+                        path="/adoption/:id" 
+                        element={<PetAdoptionDetail currentUser={currentUser} />} 
+                    />
 
                     {/* 펫 용품 리뷰 (목록/쓰기/수정) */}
                     <Route 

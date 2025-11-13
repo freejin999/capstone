@@ -34,12 +34,7 @@ app.use(express.json()); // JSON 요청 본문(body) 파싱
 /* ====================================================
  * * 4. 임시 더미 데이터 (DB 미연동 API용)
  * * ==================================================== */
-// 입양 공고 더미 데이터 (adoption API용)
-const adoptionPets = [
-    {"id":1,"name":"복돌이","species":"개","breed":"믹스","age":3,"gender":"남","size":"중형","region":"서울시 강남구","image":"https://placehold.co/400x400/ff7f50/ffffff?text=Bokdol", "description": "사람을 너무 좋아하는 활발한 성격의 강아지입니다."},
-    {"id":2,"name":"나비","species":"개","breed":"시츄","age":5,"gender":"여","size":"소형","region":"서울시 송파구","image":"https://placehold.co/400x400/9acd32/ffffff?text=Nabi", "description": "조용하고 온순한 성격입니다."},
-    {"id":3,"name":"호랑이","species":"고양이","breed":"코숏","age":2,"gender":"남","size":"중형","region":"경기도 성남시","image":"https://placehold.co/400x400/1e90ff/ffffff?text=Horang", "description": "사람을 잘 따르는 친화력 좋은 고양이입니다."},
-];
+// 🚨 [수정] 입양 공고는 이제 DB를 사용하므로 더미 데이터(adoptionPets)를 삭제합니다.
 // 🚨 리뷰 더미 데이터는 이제 DB를 사용하므로 'reviews' 변수 (const reviews = [...])를 삭제합니다.
 
 
@@ -48,28 +43,11 @@ const adoptionPets = [
  * * ==================================================== */
 
 // ----------------------------------------------------
-// (A) 테스트 및 DB 미연동 API
+// (A) 테스트 API
 // ----------------------------------------------------
 app.get('/', (req, res) => {
     res.send('Node.js 서버가 MySQL DB와 함께 성공적으로 실행 중입니다! 🎉');
 });
-
-app.get('/api/adoption', (req, res) => {
-    console.log('GET /api/adoption 요청 수신');
-    res.json(adoptionPets);
-});
-
-app.get('/api/adoption/:id', (req, res) => {
-    const petId = parseInt(req.params.id);
-    const pet = adoptionPets.find(p => p.id === petId);
-    if (!pet) {
-        return res.status(404).json({ message: '해당 동물을 찾을 수 없습니다.' });
-    }
-    res.json(pet);
-});
-
-// 🚨 (G) 섹션으로 이동됨
-// app.get('/api/reviews', (req, res) => { ... });
 
 
 // ----------------------------------------------------
@@ -554,7 +532,7 @@ app.get('/api/reviews/entry/:id', async (req, res) => {
 app.post('/api/reviews', async (req, res) => {
     const { productName, category, rating, content, image, authorUsername, authorNickname, userId } = req.body;
 
-    // 🌟 [수정] 유효성 검사 로직 변경 (rating: 0 허용, image: null 허용)
+    // 🌟 [수정] 유효성 검사 로직 변경 (rating: 0 허용)
     if (!productName || !category || !content || !authorUsername || !userId || !authorNickname || (rating === null || rating === undefined)) {
         console.warn('누락된 필드:', { productName, category, rating, content, authorUsername, authorNickname, userId });
         return res.status(400).json({ message: "필수 필드가 누락되었습니다." });
@@ -621,6 +599,161 @@ app.delete('/api/reviews/:id', async (req, res) => {
     } catch (error) {
         console.error('DB 삭제 중 오류 발생 (DELETE /api/reviews/:id):', error);
         res.status(500).json({ message: '서버 오류: 리뷰 삭제에 실패했습니다.' });
+    }
+});
+
+
+// ----------------------------------------------------
+// (H) 🚨 입양 공고 API (NEW)
+// ----------------------------------------------------
+
+// [수정] 1. 입양 공고 목록 (GET /api/adoption) - DB 연동
+app.get('/api/adoption', async (req, res) => {
+    console.log('GET /api/adoption 요청 수신 (DB)');
+    try {
+        // 🌟 [수정] 작성자 닉네임(authorNickname)도 JOIN
+        const sql = `
+            SELECT a.*, u.nickname AS authorNickname
+            FROM adoption_posts a
+            LEFT JOIN users u ON a.userId = u.id
+            ORDER BY a.createdAt DESC
+        `;
+        const [rows] = await pool.query(sql);
+        res.json(rows);
+    } catch (error) {
+        console.error('DB 조회 중 오류 발생 (GET /api/adoption):', error);
+        res.status(500).json({ message: '서버 오류: 공고 목록을 불러오지 못했습니다.' });
+    }
+});
+
+// [수정] 1-2. 입양 공고 상세 (GET /api/adoption/:id) - DB 연동
+app.get('/api/adoption/:id', async (req, res) => {
+    const { id } = req.params;
+    console.log(`GET /api/adoption/${id} 요청 수신 (DB)`);
+    try {
+        // 🌟 [수정] 작성자 닉네임(authorNickname)도 JOIN
+        const sql = `
+            SELECT a.*, u.nickname AS authorNickname
+            FROM adoption_posts a
+            LEFT JOIN users u ON a.userId = u.id
+            WHERE a.id = ?
+        `;
+        const [posts] = await pool.query(sql, [id]);
+        if (posts.length === 0) {
+            return res.status(404).json({ message: "공고를 찾을 수 없습니다." });
+        }
+        res.json(posts[0]);
+    } catch (error) {
+        console.error('DB 조회 중 오류 발생 (GET /api/adoption/:id):', error);
+        res.status(500).json({ message: '서버 오류: 공고를 불러오지 못했습니다.' });
+    }
+});
+
+// 25. [NEW] 입양 공고 작성 (POST /api/adoption)
+app.post('/api/adoption', async (req, res) => {
+    // 🌟 [수정] authorNickname 추가
+    const { name, species, breed, age, gender, size, region, description, image, userId, author, authorNickname } = req.body;
+    
+    if (!name || !species || !breed || !age || !gender || !size || !region || !description || !userId || !author || !authorNickname) {
+        return res.status(400).json({ message: "필수 필드가 누락되었습니다." });
+    }
+    try {
+        const sql = `
+            INSERT INTO adoption_posts (name, species, breed, age, gender, size, region, description, image, userId, author, authorNickname, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '입양가능')
+        `;
+        const [result] = await pool.query(sql, [name, species, breed, age, gender, size, region, description, image || null, userId, author, authorNickname]);
+        res.status(201).json({ message: '입양 공고가 성공적으로 등록되었습니다.', postId: result.insertId });
+    } catch (error) {
+        console.error('DB 삽입 중 오류 발생 (POST /api/adoption):', error);
+        res.status(500).json({ message: '서버 오류: 공고 등록에 실패했습니다.' });
+    }
+});
+
+// 26. [NEW] 입양 공고 수정 (PUT /api/adoption/:id)
+app.put('/api/adoption/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, species, breed, age, gender, size, region, description, image, status, userId } = req.body;
+
+    if (!name || !species || !breed || !age || !gender || !size || !region || !description || !status || !userId) {
+        return res.status(400).json({ message: "필수 필드가 누락되었습니다." });
+    }
+    try {
+        const sql = `
+            UPDATE adoption_posts 
+            SET name = ?, species = ?, breed = ?, age = ?, gender = ?, size = ?, region = ?, description = ?, image = ?, status = ?
+            WHERE id = ? AND userId = ?
+        `;
+        const [result] = await pool.query(sql, [name, species, breed, age, gender, size, region, description, image || null, status, id, userId]);
+        
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ message: '공고를 수정할 권한이 없거나 해당 공고를 찾을 수 없습니다.' });
+        }
+        res.json({ message: '공고가 성공적으로 수정되었습니다.' });
+    } catch (error) {
+        console.error('DB 업데이트 중 오류 발생 (PUT /api/adoption/:id):', error);
+        res.status(500).json({ message: '서버 오류: 공고 수정에 실패했습니다.' });
+    }
+});
+
+// 27. [NEW] 입양 공고 삭제 (DELETE /api/adoption/:id)
+app.delete('/api/adoption/:id', async (req, res) => {
+    const { id } = req.params;
+    const { userId } = req.body; 
+    if (!userId) {
+        return res.status(400).json({ message: '본인 확인을 위한 사용자 ID가 필요합니다.' });
+    }
+    try {
+        const sql = 'DELETE FROM adoption_posts WHERE id = ? AND userId = ?';
+        const [result] = await pool.query(sql, [id, userId]);
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ message: '공고를 삭제할 권한이 없거나 해당 공고를 찾을 수 없습니다.' });
+        }
+        res.json({ message: '공고가 성공적으로 삭제되었습니다.' });
+    } catch (error) {
+        console.error('DB 삭제 중 오류 발생 (DELETE /api/adoption/:id):', error);
+        res.status(500).json({ message: '서버 오류: 공고 삭제에 실패했습니다.' });
+    }
+});
+
+// 28. [NEW] 입양 신청 (POST /api/adoption/apply)
+app.post('/api/adoption/apply', async (req, res) => {
+    const { postId, userId, username, petName } = req.body;
+    if (!postId || !userId || !username || !petName) {
+        return res.status(400).json({ message: "신청 정보가 누락되었습니다." });
+    }
+    try {
+        const sql = `
+            INSERT INTO adoption_applications (postId, userId, username, petName, status)
+            VALUES (?, ?, ?, ?, '신청완료')
+        `;
+        await pool.query(sql, [postId, userId, username, petName]);
+        res.status(201).json({ message: '입양 신청이 완료되었습니다.' });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ message: '이미 이 공고에 입양 신청을 하셨습니다.' });
+        }
+        console.error('DB 삽입 중 오류 발생 (POST /api/adoption/apply):', error);
+        res.status(500).json({ message: '서버 오류: 입양 신청에 실패했습니다.' });
+    }
+});
+
+// 29. [NEW] '내 입양 신청 내역' 조회 (GET /api/applications/:username)
+app.get('/api/applications/:username', async (req, res) => {
+    const { username } = req.params;
+    try {
+        const sql = `
+            SELECT a.*, p.region AS shelter, p.image AS petImage
+            FROM adoption_applications a
+            JOIN adoption_posts p ON a.postId = p.id
+            WHERE a.username = ?
+            ORDER BY a.createdAt DESC
+        `;
+        const [applications] = await pool.query(sql, [username]);
+        res.json(applications);
+    } catch (error) {
+        console.error('DB 조회 중 오류 발생 (GET /api/applications/:username):', error);
+        res.status(500).json({ message: '서버 오류: 신청 내역을 불러오지 못했습니다.' });
     }
 });
 
@@ -707,7 +840,7 @@ async function initializeDatabase() {
         `);
         console.log('ℹ️ diaries 테이블 확인/생성 완료.');
 
-        // 5. [수정] reviews 테이블 생성 (없으면)
+        // 5. reviews 테이블 생성 (없으면)
         await pool.query(`
             CREATE TABLE IF NOT EXISTS reviews (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -725,15 +858,59 @@ async function initializeDatabase() {
             );
         `);
         console.log('ℹ️ reviews 테이블 확인/생성 완료.');
+        
+        // 6. [NEW] adoption_posts 테이블 생성 (입양 공고용)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS adoption_posts (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                userId INT NOT NULL,
+                author VARCHAR(100) NOT NULL, 
+                authorNickname VARCHAR(100) NOT NULL,
+                name VARCHAR(100) NOT NULL,
+                species VARCHAR(50),
+                breed VARCHAR(100),
+                age INT,
+                gender VARCHAR(10),
+                size VARCHAR(20),
+                region VARCHAR(255),
+                description TEXT NOT NULL,
+                image VARCHAR(512),
+                status VARCHAR(50) DEFAULT '입양가능',
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+            );
+        `);
+        console.log('ℹ️ adoption_posts 테이블 확인/생성 완료.');
+
+        // 7. [NEW] adoption_applications 테이블 생성 (입양 신청용)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS adoption_applications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                postId INT NOT NULL,
+                userId INT NOT NULL,
+                username VARCHAR(100) NOT NULL,
+                petName VARCHAR(100) NOT NULL,
+                status VARCHAR(50) DEFAULT '신청완료',
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (postId) REFERENCES adoption_posts(id) ON DELETE CASCADE,
+                FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+                UNIQUE KEY unique_application (postId, userId)
+            );
+        `);
+        console.log('ℹ️ adoption_applications 테이블 확인/생성 완료.');
 
 
-        // 6. [중요] posts 테이블에 빠진 컬럼들 안전하게 추가
+        // 8. [중요] posts 테이블에 빠진 컬럼들 안전하게 추가
         await safeAddColumn('posts', 'category', "VARCHAR(50) DEFAULT '자유게시판'");
         await safeAddColumn('posts', 'views', "INT DEFAULT 0");
         await safeAddColumn('posts', 'likes', "INT DEFAULT 0");
         await safeAddColumn('posts', 'comments', "INT DEFAULT 0"); 
         await safeAddColumn('posts', 'isNotice', "BOOLEAN DEFAULT FALSE");
         await safeAddColumn('posts', 'likedUsers', "TEXT");
+
+        // 9. [NEW] adoption_posts에 authorNickname 컬럼 추가 (이전 버전에 빠졌을 경우 대비)
+        await safeAddColumn('adoption_posts', 'authorNickname', "VARCHAR(100) NOT NULL");
+
 
         console.log('✅ 모든 테이블과 컬럼 구조가 최신 상태입니다.');
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, ClipboardList, BookOpen, Key, Mail, Edit, Trash2, Calendar, LogOut, Check, X } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom'; // 🌟 useNavigate, Link 임포트
+import { User, ClipboardList, BookOpen, Key, Mail, Edit, Trash2, Calendar, LogOut, Check, X, AlertCircle } from 'lucide-react';
 
 // ===============================================
 // 💡 1. 회원 정보 관리 탭 (ProfileContent)
@@ -51,12 +51,12 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
             });
             const data = await response.json();
             if (response.ok) {
-                setMessage({ type: 'success', text: '닉네임이 성공적으로 변경되었습니다. 다시 로그인해주세요.' });
+                setMessage({ type: 'success', text: '닉네임이 성공적으로 변경되었습니다. 갱신을 위해 3초 후 다시 로그인해주세요.' });
                 // 중요: 닉네임 변경 시 세션/토큰 정보 갱신을 위해 로그아웃 처리
                 setTimeout(() => {
                     handleLogout();
                     navigate('/login');
-                }, 2000);
+                }, 3000); // 3초 대기
             } else {
                 setMessage({ type: 'error', text: data.message || '닉네임 변경에 실패했습니다.' });
             }
@@ -91,14 +91,14 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
             });
             const data = await response.json();
             if (response.ok) {
-                setMessage({ type: 'success', text: '비밀번호가 변경되었습니다. 다시 로그인해주세요.' });
+                setMessage({ type: 'success', text: '비밀번호가 변경되었습니다. 3초 후 다시 로그인해주세요.' });
                 setCurrentPassword('');
                 setNewPassword('');
                 setConfirmPassword('');
                 setTimeout(() => {
                     handleLogout();
                     navigate('/login');
-                }, 2000);
+                }, 3000); // 3초 대기
             } else {
                 setMessage({ type: 'error', text: data.message || '비밀번호 변경에 실패했습니다.' });
             }
@@ -109,12 +109,8 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
 
     // 회원 탈퇴
     const handleAccountDelete = async () => {
-        // 🚨 alert() 대신 window.confirm()을 사용해야 하지만, 
-        // 가이드라인에 따라 confirm을 사용할 수 없으므로 텍스트 기반으로 대체합니다.
-        // 실제 운영 시에는 '비밀번호'를 한 번 더 입력받는 모달창을 띄우는 것이 좋습니다.
-        
         // eslint-disable-next-line no-restricted-globals
-        const isConfirmed = confirm(`정말로 회원 탈퇴를 진행하시겠습니까?\n'${currentUser.username}' 계정의 모든 정보가 삭제되며 복구할 수 없습니다.`);
+        const isConfirmed = confirm(`정말로 회원 탈퇴를 진행하시겠습니까?\n'${currentUser.username}' 계정의 모든 정보(게시글, 댓글, 신청내역)가 삭제되며 복구할 수 없습니다.`);
 
         if (isConfirmed) {
             try {
@@ -141,10 +137,12 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
         <div className="space-y-8">
             {/* 메시지 알림창 */}
             {message.text && (
-                <div className={`p-4 rounded-lg ${
+                <div className={`p-4 rounded-lg flex items-center gap-2 ${
                     message.type === 'success' ? 'bg-green-100 text-green-800' :
                     message.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
                 }`}>
+                    {message.type === 'success' && <Check className="w-5 h-5" />}
+                    {message.type === 'error' && <AlertCircle className="w-5 h-5" />}
                     {message.text}
                 </div>
             )}
@@ -249,7 +247,7 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
             <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
                  <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 pb-2 border-b"><Trash2 className="w-5 h-5 text-gray-500"/> 회원 탈퇴</h2>
                  <p className="text-gray-600 text-sm">
-                    회원 탈퇴 시 작성하신 모든 게시글과 댓글, 입양 신청 내역이 영구적으로 삭제되며 복구할 수 없습니다.
+                   회원 탈퇴 시 작성하신 모든 게시글과 댓글, 입양 신청 내역이 영구적으로 삭제되며 복구할 수 없습니다.
                  </p>
                  <div className="flex justify-end pt-4 border-t">
                     <button 
@@ -267,30 +265,46 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
 // ===============================================
 // 💡 2. 입양 신청 내역 탭 (ApplicationContent)
 // ===============================================
-const ApplicationContent = () => {
+const ApplicationContent = ({ currentUser }) => { // 🌟 currentUser 받기
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null); // 🌟 에러 상태 추가
+    const navigate = useNavigate(); // 🌟 navigate 훅 사용
 
-    // ⚠️ TODO: 입양 신청 내역 API 연동 필요
-    // 현재는 더미 데이터를 사용합니다.
+    // 🌟 [수정] 더미 데이터 대신 API 연동
     useEffect(() => {
-        setLoading(true);
-        // [임시] 더미 데이터
-        const mockApplications = [
-            { id: 101, petName: '나비 (Shih Tzu)', date: '2024-09-01', status: '심사 중', shelter: '강남 보호소' },
-            { id: 102, petName: '초코 (Poodle)', date: '2024-08-15', status: '승인 완료', shelter: '송파 보호소' },
-            { id: 103, petName: '복돌이 (Mix)', date: '2024-07-20', status: '반려', shelter: '성남 보호소' },
-        ];
-        setApplications(mockApplications);
-        setLoading(false);
-    }, []);
+        if (!currentUser?.username) return;
+
+        const fetchApplications = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                // 🌟 서버 API 호출 (server/index.js에 구현된 API)
+                const response = await fetch(`http://localhost:3001/api/applications/${currentUser.username}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setApplications(data);
+                } else {
+                    setError('신청 내역을 불러오는 데 실패했습니다.');
+                }
+            } catch (err) {
+                setError('서버 연결에 실패했습니다.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchApplications();
+    }, [currentUser.username]);
 
     return (
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 pb-2 border-b"><ClipboardList className="w-5 h-5 text-blue-600"/> 입양 신청 내역</h2>
         
         {loading ? (
-            <p className="text-gray-500 text-center py-4">불러오는 중...</p>
+            <p className="text-gray-500 text-center py-4">신청 내역을 불러오는 중...</p>
+        ) : error ? (
+            <p className="text-red-500 text-center py-4">{error}</p>
         ) : applications.length === 0 ? (
             <p className="text-gray-500 text-center py-4">입양 신청 내역이 없습니다.</p>
         ) : (
@@ -299,17 +313,19 @@ const ApplicationContent = () => {
                 <div 
                     key={app.id} 
                     className="p-4 border rounded-lg flex justify-between items-center hover:bg-blue-50 transition cursor-pointer"
-                    onClick={() => alert(`입양 신청서 ID ${app.id}의 상세 정보를 보여줍니다. (연동 필요)`)}
+                    // 🌟 클릭 시 해당 공고 상세 페이지로 이동
+                    onClick={() => navigate(`/adoption/${app.postId}`)}
                 >
                     <div>
                         <p className="font-semibold text-gray-800">{app.petName}</p>
                         <div className="flex items-center text-sm text-gray-500 mt-1 gap-4">
-                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3"/> 신청일: {app.date}</span>
+                            {/* 🌟 날짜 포맷팅 수정 */}
+                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3"/> 신청일: {new Date(app.createdAt).toLocaleDateString('ko-KR')}</span>
                             <span className="flex items-center gap-1">보호소: {app.shelter}</span>
                         </div>
                     </div>
                     <span className={`px-3 py-1 text-sm rounded-full font-medium ${
-                        app.status === '심사 중' ? 'bg-yellow-200 text-yellow-800' :
+                        app.status === '심사 중' || app.status === '신청완료' ? 'bg-yellow-200 text-yellow-800' :
                         app.status === '승인 완료' ? 'bg-green-200 text-green-800' :
                         'bg-red-200 text-red-800'
                     }`}>
@@ -365,13 +381,18 @@ const ActivityContent = ({ currentUser }) => {
             try {
                 const response = await fetch(`http://localhost:3001/api/posts/${postId}`, {
                     method: 'DELETE',
+                    // 🌟 [보안] 본인 확인용 ID 전송 (BoardDetail.jsx와 로직 통일)
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id }) // 🌟 서버가 userId를 요구할 경우
                 });
                 if (response.ok) {
                     // UI에서 즉시 삭제
                     setMyPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
                     alert('게시글이 삭제되었습니다.');
                 } else {
-                    alert('게시글 삭제에 실패했습니다.');
+                    // 🌟 [수정] 서버에서 보낸 에러 메시지 표시
+                    const errData = await response.json();
+                    alert(errData.message || '게시글 삭제에 실패했습니다.');
                 }
             } catch (err) {
                 alert('게시글 삭제 중 오류가 발생했습니다.');
@@ -406,7 +427,7 @@ const ActivityContent = ({ currentUser }) => {
                                 <tr key={post.id} className="hover:bg-gray-50 transition">
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{post.category}</td>
                                     <td 
-                                        className="px-4 py-4 text-sm font-medium text-blue-600 cursor-pointer"
+                                        className="px-4 py-4 text-sm font-medium text-blue-600 cursor-pointer hover:underline"
                                         onClick={() => navigate(`/board/${post.id}`)}
                                     >
                                         {post.title}
@@ -500,6 +521,7 @@ export default function ProfileManagement({ currentUser, handleLogout }) {
         // 🌟 ProfileContent에 currentUser와 handleLogout 전달
         return <ProfileContent currentUser={currentUser} handleLogout={handleLogout} />;
       case 'application':
+        // 🌟 ApplicationContent에 currentUser 전달
         return <ApplicationContent currentUser={currentUser} />;
       case 'activity':
         // 🌟 ActivityContent에 currentUser 전달
