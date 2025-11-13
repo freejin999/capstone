@@ -1,0 +1,486 @@
+/* ===============================================
+ * 🌟 몽글몽글 테마 (전역 설정)
+ * =============================================== */
+:root {
+    /* 🌟 [수정] 요청하신 새 컬러 팔레트 적용 */
+    --brand-primary: #735048;       /* (수정) 중간-어두운 갈색 (메인 버튼/텍스트) */
+    --brand-primary-dark: #594C3C;    /* (수정) 가장 어두운 갈색 (호버/진한 텍스트) */
+    --brand-primary-light: #F2E2CE;  /* (수정) 중간 베이지 (활성 탭 배경) */
+    --brand-primary-text: #735048;   /* (수정) 중간-어두운 갈색 (헤더 텍스트) */
+    
+    /* (수정) 몽글몽글한 느낌을 위한 악센트/배경 */
+    --bg-main: #F2EDE4;             /* (수정) 가장 밝은 베이지 (전체 배경) */
+    --bg-card: #ffffff;            /* (유지) 카드는 흰색으로 유지 (대비) */
+    --border-color: #F2CBBD;       /* (수정) 피치/핑크색 (테두리) */
+    --border-color-light: #F2E2CE;  /* (수정) 중간 베이지 (연한 테두리) */
+
+    /* (유지) 기능성 색상 (에러, 성공, 정보) - 이 색상들은 유지하는 것이 좋습니다. */
+    --brand-danger: #e11d48; /* rose-600 */
+    --brand-danger-bg: #fff1f2; /* rose-50 */
+    --brand-danger-border: #fecdd3; /* rose-200 */
+    --brand-danger-text: #9f1239; /* rose-900 */
+    
+    --brand-success-bg: #ecfdf5; /* emerald-50 */
+    --brand-success-text: #065f46; /* emerald-800 */
+    --brand-success-border: #a7f3d0; /* emerald-200 */
+    
+    --brand-info-bg: #f0f9ff; /* sky-50 */
+    --brand-info-text: #0c4a6e; /* sky-800 */
+    --brand-info-border: #bae6fd; /* sky-200 */
+
+    --text-primary: #374151; /* gray-700 */
+    --text-light: #6b7280; /* gray-500 */
+}
+
+/* ===============================================
+ * 1. 메인 레이아웃
+ * =============================================== */
+.profile-page-wrapper {
+    background-color: var(--bg-main); /* 🌟 새 배경색 적용 */
+    min-height: 100vh;
+    padding: 3rem 1rem;
+    box-sizing: border-box; 
+}
+
+.profile-page-wrapper *, .profile-page-wrapper *:before, .profile-page-wrapper *:after {
+    box-sizing: inherit; 
+}
+
+/* 로딩 상태 */
+.profile-page-wrapper.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border-top: 4px solid var(--brand-primary); /* 🌟 새 테마색 적용 */
+    border-right: 4px solid transparent;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.profile-container {
+    max-width: 56rem; 
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.profile-header {
+    font-size: 2.25rem; 
+    font-weight: 800; 
+    margin-bottom: 2rem;
+    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+    border-bottom: 1px solid var(--border-color); /* 🌟 새 테마색 적용 */
+    padding-bottom: 1rem;
+}
+
+/* ===============================================
+ * 2. 탭 메뉴
+ * =============================================== */
+.profile-tabs-container {
+    display: flex;
+    margin-bottom: 2rem;
+    background-color: var(--bg-card);
+    border-radius: 16px; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    padding: 0.5rem;
+    gap: 0.5rem; 
+    overflow-x: auto;
+}
+
+.tab-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem; 
+    font-weight: 600; 
+    white-space: nowrap;
+    border-radius: 12px; 
+    color: var(--text-light);
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+.tab-item .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.tab-item:hover {
+    background-color: var(--bg-main); /* 🌟 새 테마색 적용 */
+    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+}
+
+.tab-item.active {
+    background-color: var(--brand-primary-light); /* 🌟 새 테마색 적용 */
+    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+}
+
+/* ===============================================
+ * 3. 공통 카드 및 폼 요소
+ * =============================================== */
+.profile-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem; 
+}
+
+.profile-card {
+    background-color: var(--bg-card);
+    padding: 2rem;
+    border-radius: 16px; 
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; 
+}
+
+.card-header {
+    font-size: 1.5rem; 
+    font-weight: 700; 
+    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color-light); /* 🌟 새 테마색 적용 */
+}
+
+.icon-main {
+    width: 1.5rem; 
+    height: 1.5rem;
+}
+.icon-main.icon-amber { color: var(--brand-primary); } /* 🌟 새 테마색 적용 */
+.icon-main.icon-danger { color: var(--brand-danger); } /* (유지) */
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+}
+
+.form-input,
+.form-input-readonly {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db; 
+    border-radius: 12px; 
+    transition: all 0.2s ease;
+    font-family: inherit; 
+    font-size: 1rem;
+}
+.form-input:focus,
+.form-input.danger-focus:focus {
+    border-color: var(--brand-primary); /* 🌟 새 테마색 적용 */
+    box-shadow: 0 0 0 2px var(--brand-primary-light); /* 🌟 새 테마색 적용 */
+    outline: none;
+}
+.form-input.danger-focus:focus {
+    border-color: var(--brand-danger);
+    box-shadow: 0 0 0 2px var(--brand-danger-bg);
+}
+
+.form-input-readonly {
+    background-color: #f3f4f6; 
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.icon-sm { width: 1.25rem; height: 1.25rem; color: #9ca3af; }
+
+.form-row {
+    display: flex;
+    gap: 0.75rem;
+}
+.form-row .flex-1 { flex: 1; }
+
+.card-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color-light); /* 🌟 새 테마색 적용 */
+}
+.card-footer.danger { border-top-color: var(--brand-danger-border); } /* (유지) */
+
+/* 버튼 */
+.button {
+    padding: 0.5rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+.button:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+.button.primary {
+    background-color: var(--brand-primary); /* 🌟 새 테마색 적용 */
+    color: white;
+}
+.button.primary:hover { background-color: var(--brand-primary-dark); } /* 🌟 새 테마색 적용 */
+
+.button.danger {
+    background-color: var(--brand-danger);
+    color: white;
+}
+.button.danger:hover { background-color: #be123c; } 
+
+.button.secondary-light {
+    background-color: var(--brand-primary-light); /* 🌟 새 테마색 적용 */
+    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+    font-size: 0.875rem;
+}
+.button.secondary-light:hover { 
+    /* background-color: var(--border-color); */ /* 👈 [수정] 핑크/피치 색상 제거 */
+    background-color: #e4d2bc; /* 👈 [추가] '살짝 진한' 베이지색(페이지 배경색)으로 변경 */
+}
+
+/* 회원 탈퇴 카드 */
+.profile-card.danger-light {
+    background-color: var(--brand-danger-bg);
+    box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.03);
+}
+.card-header.danger-light-text {
+    color: var(--brand-danger-text);
+    border-bottom-color: var(--brand-danger-border);
+}
+.icon-main.icon-danger-light { color: var(--brand-danger-text); }
+.card-description.danger {
+    color: var(--brand-danger-text);
+    font-size: 0.875rem;
+}
+.card-footer-text {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 1rem;
+}
+.button-link-danger {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    font-weight: 500;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+.button-link-danger:hover {
+    color: var(--brand-danger);
+    text-decoration: underline;
+}
+
+/* 메시지 박스 (기능색 유지) */
+.message-box {
+    padding: 1rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid;
+}
+.message-box .icon { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+.message-box.success {
+    background-color: var(--brand-success-bg);
+    color: var(--brand-success-text);
+    border-color: var(--brand-success-border);
+}
+.message-box.error {
+    background-color: var(--brand-danger-bg);
+    color: var(--brand-danger-text);
+    border-color: var(--brand-danger-border);
+}
+.message-box.info {
+    background-color: var(--brand-info-bg);
+    color: var(--brand-info-text);
+    border-color: var(--brand-info-border);
+}
+
+
+/* ===============================================
+ * 4. 입양 신청 내역 (ApplicationContent)
+ * =============================================== */
+.card-placeholder {
+    color: var(--text-light);
+    text-align: center;
+    padding: 1.5rem 0;
+}
+.card-placeholder.error { color: var(--brand-danger); }
+
+.application-list {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.application-card {
+    padding: 1.25rem;
+    background-color: var(--bg-main); /* 🌟 새 테마색 적용 */
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.application-card:hover {
+    background-color: var(--brand-primary-light); /* 🌟 새 테마색 적용 */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+.application-pet-name {
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+}
+.application-meta {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #4b5563; 
+    margin-top: 0.5rem;
+    gap: 1rem;
+    flex-wrap: wrap; 
+}
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.icon-xs { width: 0.75rem; height: 0.75rem; }
+
+/* 상태 배지 (기능색 유지) */
+.status-badge {
+    padding: 0.25rem 1rem;
+    font-size: 0.875rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    white-space: nowrap; 
+}
+.status-pending { background-color: #fef08a; color: #a16207; } 
+.status-success { background-color: #dcfce7; color: #166534; } 
+.status-danger { background-color: #fee2e2; color: #991b1b; } 
+
+
+/* ===============================================
+ * 5. 나의 게시글 (ActivityContent)
+ * =============================================== */
+.activity-table-wrapper {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+.activity-table {
+    min-width: 100%;
+    border-collapse: collapse; 
+    width: 100%; 
+}
+.activity-table thead {
+    background-color: var(--bg-main); /* 🌟 새 테마색 적용 */
+}
+.activity-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.activity-table th.text-center { text-align: center; }
+
+.activity-table tbody tr {
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f3f4f6; 
+}
+.activity-table tbody tr:last-child {
+    border-bottom: none; 
+}
+.activity-table tbody tr:hover {
+    background-color: var(--bg-main); /* 🌟 새 테마색 적용 */
+}
+.activity-table td {
+    padding: 1rem;
+    white-space: nowrap;
+    font-size: 0.875rem;
+    color: var(--text-light);
+    vertical-align: middle; 
+}
+.activity-table td.text-center { text-align: center; }
+
+.table-link {
+    font-weight: 500;
+    color: var(--brand-primary-dark); /* 🌟 새 테마색 적용 */
+    cursor: pointer;
+}
+.table-link:hover {
+    color: var(--brand-primary); /* 🌟 새 테마색 적용 */
+    text-decoration: underline;
+}
+
+.table-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+.action-button {
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+.action-button .icon-xs { width: 1rem; height: 1rem; }
+.action-button.edit { color: var(--brand-primary); } /* 🌟 새 테마색 적용 */
+.action-button.edit:hover { color: var(--brand-primary-dark); } /* 🌟 새 테마색 적용 */
+.action-button.delete { color: var(--brand-danger); }
+.action-button.delete:hover { color: #b91c1c; } 
+
+/* 모바일용 테이블 (반응형) */
+@media (max-width: 768px) {
+    .activity-table thead {
+        display: none;
+    }
+    .activity-table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color-light); /* 🌟 새 테마색 적용 */
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .activity-table td {
+        display: block;
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        white-space: normal;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .activity-table td:last-child { border-bottom: none; }
+    .activity-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        width: calc(50% - 2rem);
+        text-align: left;
+        font-weight: 600;
+        color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+    }
+    .activity-table td.text-center { text-align: right; }
+    .table-actions { justify-content: flex-end; }
+}

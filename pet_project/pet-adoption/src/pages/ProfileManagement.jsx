@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // 🌟 useNavigate, Link 임포트
+import { useNavigate, Link } from 'react-router-dom'; 
 import { User, ClipboardList, BookOpen, Key, Mail, Edit, Trash2, Calendar, LogOut, Check, X, AlertCircle } from 'lucide-react';
+import './ProfileManagement.css'; // 🌟 [추가] 몽글몽글 디자인 CSS 파일 임포트
 
 // ===============================================
 // 💡 1. 회원 정보 관리 탭 (ProfileContent)
 // ===============================================
-const ProfileContent = ({ currentUser, handleLogout }) => {
-    const navigate = useNavigate();
+// 🌟 [수정] 메인 컴포넌트에서 navigate를 props로 받도록 변경
+const ProfileContent = ({ currentUser, handleLogout, navigate }) => {
+    // const navigate = useNavigate(); // 👈 [제거]
     const [nickname, setNickname] = useState(currentUser?.nickname || '');
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [message, setMessage] = useState({ type: '', text: '' }); // 성공/에러 메시지
-
+    const [message, setMessage] = useState({ type: '', text: '' }); 
+    
+    // (기존 기능 로직은 모두 그대로 유지됩니다)
     // 닉네임 중복 확인
     const handleCheckNickname = async () => {
-        setMessage({ type: '', text: '' }); // 메시지 초기화
+        setMessage({ type: '', text: '' }); 
         if (nickname === currentUser.nickname) {
             setMessage({ type: 'info', text: '현재 닉네임입니다.' });
             return;
@@ -28,9 +31,9 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
             });
             const data = await response.json();
             if (response.ok) {
-                setMessage({ type: 'success', text: data.message }); // "사용 가능한 닉네임입니다."
+                setMessage({ type: 'success', text: data.message }); 
             } else {
-                setMessage({ type: 'error', text: data.message }); // "이미 사용 중인 닉네임입니다."
+                setMessage({ type: 'error', text: data.message }); 
             }
         } catch (error) {
             setMessage({ type: 'error', text: '중복 확인 중 오류가 발생했습니다.' });
@@ -52,11 +55,10 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
             const data = await response.json();
             if (response.ok) {
                 setMessage({ type: 'success', text: '닉네임이 성공적으로 변경되었습니다. 갱신을 위해 3초 후 다시 로그인해주세요.' });
-                // 중요: 닉네임 변경 시 세션/토큰 정보 갱신을 위해 로그아웃 처리
                 setTimeout(() => {
                     handleLogout();
                     navigate('/login');
-                }, 3000); // 3초 대기
+                }, 3000); 
             } else {
                 setMessage({ type: 'error', text: data.message || '닉네임 변경에 실패했습니다.' });
             }
@@ -69,7 +71,6 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
     const handleChangePassword = async (e) => {
         e.preventDefault();
         setMessage({ type: '', text: '' });
-
         if (!currentPassword || !newPassword || !confirmPassword) {
             setMessage({ type: 'error', text: '모든 비밀번호 필드를 입력해주세요.' });
             return;
@@ -78,7 +79,6 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
             setMessage({ type: 'error', text: '새 비밀번호가 일치하지 않습니다.' });
             return;
         }
-
         try {
             const response = await fetch('http://localhost:3001/api/users/password', {
                 method: 'PUT',
@@ -98,7 +98,7 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
                 setTimeout(() => {
                     handleLogout();
                     navigate('/login');
-                }, 3000); // 3초 대기
+                }, 3000); 
             } else {
                 setMessage({ type: 'error', text: data.message || '비밀번호 변경에 실패했습니다.' });
             }
@@ -111,7 +111,6 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
     const handleAccountDelete = async () => {
         // eslint-disable-next-line no-restricted-globals
         const isConfirmed = confirm(`정말로 회원 탈퇴를 진행하시겠습니까?\n'${currentUser.username}' 계정의 모든 정보(게시글, 댓글, 신청내역)가 삭제되며 복구할 수 없습니다.`);
-
         if (isConfirmed) {
             try {
                 const response = await fetch('http://localhost:3001/api/users/account', {
@@ -121,7 +120,7 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    alert('회원 탈퇴가 완료되었습니다. 이용해주셔서 감사합니다.'); // 탈퇴는 alert 사용 허용
+                    alert('회원 탈퇴가 완료되었습니다. 이용해주셔서 감사합니다.');
                     handleLogout();
                     navigate('/');
                 } else {
@@ -133,65 +132,62 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
         }
     };
 
+
     return (
-        <div className="space-y-8">
+        // 🌟 [디자인 수정] Tailwind 클래스 -> CSS 클래스로 변경
+        <div className="profile-content-wrapper">
             {/* 메시지 알림창 */}
             {message.text && (
-                <div className={`p-4 rounded-lg flex items-center gap-2 ${
-                    message.type === 'success' ? 'bg-green-100 text-green-800' :
-                    message.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
-                }`}>
-                    {message.type === 'success' && <Check className="w-5 h-5" />}
-                    {message.type === 'error' && <AlertCircle className="w-5 h-5" />}
+                <div className={`message-box ${message.type}`}>
+                    {message.type === 'success' && <Check className="icon" />}
+                    {message.type === 'error' && <AlertCircle className="icon" />}
                     {message.text}
                 </div>
             )}
             
             {/* 회원 기본 정보 */}
-            <div className="bg-white p-6 rounded-lg shadow-md space-y-6">
-                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 pb-2 border-b"><User className="w-5 h-5 text-blue-600"/> 회원 기본 정보</h2>
+            <div className="profile-card">
+                <h2 className="card-header">
+                    <User className="icon-main icon-amber"/> 회원 기본 정보
+                </h2>
                 
-                {/* 아이디 */}
-                <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-600 mb-1">아이디</label>
-                    <div className="flex items-center p-3 border rounded-lg bg-gray-100 text-gray-500">
+                <div className="form-group">
+                    <label className="form-label">아이디</label>
+                    <div className="form-input-readonly">
                         {currentUser.username}
                     </div>
                 </div>
 
-                {/* 이메일 */}
-                <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-600 mb-1">이메일</label>
-                    <div className="flex items-center p-3 border rounded-lg bg-gray-100 text-gray-500">
-                        <Mail className="w-5 h-5 mr-2 text-gray-400" /> {currentUser.email}
+                <div className="form-group">
+                    <label className="form-label">이메일</label>
+                    <div className="form-input-readonly">
+                        <Mail className="icon-sm" /> {currentUser.email}
                     </div>
                 </div>
                 
-                {/* 닉네임 */}
-                <div className="flex flex-col">
-                    <label htmlFor="nickname" className="text-sm font-medium text-gray-600 mb-1">닉네임</label>
-                    <div className="flex gap-2">
+                <div className="form-group">
+                    <label htmlFor="nickname" className="form-label">닉네임</label>
+                    <div className="form-row">
                         <input 
                             id="nickname"
                             type="text" 
                             value={nickname}
                             onChange={(e) => setNickname(e.target.value)}
-                            className="flex-1 p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                            className="form-input flex-1"
                         />
                         <button 
                             onClick={handleCheckNickname} 
-                            className="bg-gray-200 text-gray-700 px-4 rounded-lg hover:bg-gray-300 transition text-sm"
+                            className="button secondary-light"
                         >
                             중복 확인
                         </button>
                     </div>
                 </div>
 
-                {/* 저장 버튼 */}
-                <div className="flex justify-end pt-4 border-t">
+                <div className="card-footer">
                     <button 
                         onClick={handleProfileSave} 
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
+                        className="button primary"
                     >
                         정보 저장
                     </button>
@@ -199,44 +195,46 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
             </div>
 
             {/* 비밀번호 변경 */}
-            <form onSubmit={handleChangePassword} className="bg-white p-6 rounded-lg shadow-md space-y-6">
-                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 pb-2 border-b"><Key className="w-5 h-5 text-red-600"/> 비밀번호 변경</h2>
+            <form onSubmit={handleChangePassword} className="profile-card">
+                <h2 className="card-header danger">
+                    <Key className="icon-main icon-danger"/> 비밀번호 변경
+                </h2>
                 
-                <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-600 mb-1">현재 비밀번호</label>
+                <div className="form-group">
+                    <label className="form-label">현재 비밀번호</label>
                     <input 
                         type="password"
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
-                        className="w-full p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        className="form-input danger-focus"
                         placeholder="현재 사용 중인 비밀번호"
                     />
                 </div>
-                <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-600 mb-1">새 비밀번호</label>
+                <div className="form-group">
+                    <label className="form-label">새 비밀번호</label>
                     <input 
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        className="w-full p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        className="form-input danger-focus"
                         placeholder="새 비밀번호"
                     />
                 </div>
-                <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-600 mb-1">새 비밀번호 확인</label>
+                <div className="form-group">
+                    <label className="form-label">새 비밀번호 확인</label>
                     <input 
                         type="password" 
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        className="form-input danger-focus"
                         placeholder="새 비밀번호 확인"
                     />
                 </div>
 
-                <div className="flex justify-end pt-4 border-t">
+                <div className="card-footer danger">
                     <button 
                         type="submit"
-                        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition font-semibold"
+                        className="button danger"
                     >
                         비밀번호 변경
                     </button>
@@ -244,15 +242,17 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
             </form>
 
             {/* 회원 탈퇴 */}
-            <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
-                 <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 pb-2 border-b"><Trash2 className="w-5 h-5 text-gray-500"/> 회원 탈퇴</h2>
-                 <p className="text-gray-600 text-sm">
-                   회원 탈퇴 시 작성하신 모든 게시글과 댓글, 입양 신청 내역이 영구적으로 삭제되며 복구할 수 없습니다.
+            <div className="profile-card danger-light">
+                 <h2 className="card-header danger-light-text">
+                    <Trash2 className="icon-main icon-danger-light"/> 회원 탈퇴
+                 </h2>
+                 <p className="card-description danger">
+                   회원 탈퇴 시 작성하신 모든 게시글, 댓글, 일기, 리뷰, 입양 신청 내역이 영구적으로 삭제되며 복구할 수 없습니다.
                  </p>
-                 <div className="flex justify-end pt-4 border-t">
+                 <div className="card-footer-text">
                     <button 
                         onClick={handleAccountDelete} 
-                        className="text-sm text-gray-500 hover:text-red-500 hover:underline transition"
+                        className="button-link-danger"
                     >
                         회원 탈퇴 진행
                     </button>
@@ -265,13 +265,13 @@ const ProfileContent = ({ currentUser, handleLogout }) => {
 // ===============================================
 // 💡 2. 입양 신청 내역 탭 (ApplicationContent)
 // ===============================================
-const ApplicationContent = ({ currentUser }) => { // 🌟 currentUser 받기
+const ApplicationContent = ({ currentUser, navigate }) => { // 🌟 navigate 받기
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null); // 🌟 에러 상태 추가
-    const navigate = useNavigate(); // 🌟 navigate 훅 사용
+    const [error, setError] = useState(null); 
+    // const navigate = useNavigate(); // 👈 [제거]
 
-    // 🌟 [수정] 더미 데이터 대신 API 연동
+    // (기존 기능 로직은 모두 그대로 유지됩니다)
     useEffect(() => {
         if (!currentUser?.username) return;
 
@@ -279,7 +279,6 @@ const ApplicationContent = ({ currentUser }) => { // 🌟 currentUser 받기
             setLoading(true);
             setError(null);
             try {
-                // 🌟 서버 API 호출 (server/index.js에 구현된 API)
                 const response = await fetch(`http://localhost:3001/api/applications/${currentUser.username}`);
                 if (response.ok) {
                     const data = await response.json();
@@ -298,36 +297,36 @@ const ApplicationContent = ({ currentUser }) => { // 🌟 currentUser 받기
     }, [currentUser.username]);
 
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 pb-2 border-b"><ClipboardList className="w-5 h-5 text-blue-600"/> 입양 신청 내역</h2>
+      <div className="profile-card">
+        <h2 className="card-header">
+            <ClipboardList className="icon-main icon-amber"/> 입양 신청 내역
+        </h2>
         
         {loading ? (
-            <p className="text-gray-500 text-center py-4">신청 내역을 불러오는 중...</p>
+            <p className="card-placeholder">신청 내역을 불러오는 중...</p>
         ) : error ? (
-            <p className="text-red-500 text-center py-4">{error}</p>
+            <p className="card-placeholder error">{error}</p>
         ) : applications.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">입양 신청 내역이 없습니다.</p>
+            <p className="card-placeholder">입양 신청 내역이 없습니다.</p>
         ) : (
-            <div className="mt-4 space-y-3">
+            <div className="application-list">
             {applications.map(app => (
                 <div 
                     key={app.id} 
-                    className="p-4 border rounded-lg flex justify-between items-center hover:bg-blue-50 transition cursor-pointer"
-                    // 🌟 클릭 시 해당 공고 상세 페이지로 이동
+                    className="application-card"
                     onClick={() => navigate(`/adoption/${app.postId}`)}
                 >
                     <div>
-                        <p className="font-semibold text-gray-800">{app.petName}</p>
-                        <div className="flex items-center text-sm text-gray-500 mt-1 gap-4">
-                            {/* 🌟 날짜 포맷팅 수정 */}
-                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3"/> 신청일: {new Date(app.createdAt).toLocaleDateString('ko-KR')}</span>
-                            <span className="flex items-center gap-1">보호소: {app.shelter}</span>
+                        <p className="application-pet-name">{app.petName}</p>
+                        <div className="application-meta">
+                            <span className="meta-item"><Calendar className="icon-xs"/> 신청일: {new Date(app.createdAt).toLocaleDateString('ko-KR')}</span>
+                            <span className="meta-item">보호소: {app.shelter}</span>
                         </div>
                     </div>
-                    <span className={`px-3 py-1 text-sm rounded-full font-medium ${
-                        app.status === '심사 중' || app.status === '신청완료' ? 'bg-yellow-200 text-yellow-800' :
-                        app.status === '승인 완료' ? 'bg-green-200 text-green-800' :
-                        'bg-red-200 text-red-800'
+                    <span className={`status-badge ${
+                        app.status === '심사 중' || app.status === '신청완료' ? 'status-pending' :
+                        app.status === '승인 완료' ? 'status-success' :
+                        'status-danger'
                     }`}>
                         {app.status}
                     </span>
@@ -342,21 +341,19 @@ const ApplicationContent = ({ currentUser }) => { // 🌟 currentUser 받기
 // ===============================================
 // 💡 3. 나의 게시글 탭 (ActivityContent)
 // ===============================================
-const ActivityContent = ({ currentUser }) => {
-    const navigate = useNavigate();
+const ActivityContent = ({ currentUser, navigate }) => { // 🌟 navigate 받기
+    // const navigate = useNavigate(); // 👈 [제거]
     const [myPosts, setMyPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // 🌟 '내가 쓴 글' 목록을 서버에서 가져오기
+    // (기존 기능 로직은 모두 그대로 유지됩니다)
     useEffect(() => {
-        if (!currentUser?.username) return; // 사용자 정보가 없으면 실행 중지
-
+        if (!currentUser?.username) return; 
         const fetchMyPosts = async () => {
             setLoading(true);
             setError(null);
             try {
-                // 🌟 서버 API 호출 (server/index.js에 구현된 API)
                 const response = await fetch(`http://localhost:3001/api/users/${currentUser.username}/posts`);
                 if (response.ok) {
                     const data = await response.json();
@@ -370,27 +367,22 @@ const ActivityContent = ({ currentUser }) => {
                 setLoading(false);
             }
         };
-
         fetchMyPosts();
-    }, [currentUser.username]); // currentUser.username이 변경될 때만 실행
+    }, [currentUser.username]);
 
-    // 게시글 삭제 핸들러
     const handlePostDelete = async (postId) => {
         // eslint-disable-next-line no-restricted-globals
         if (confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
             try {
                 const response = await fetch(`http://localhost:3001/api/posts/${postId}`, {
                     method: 'DELETE',
-                    // 🌟 [보안] 본인 확인용 ID 전송 (BoardDetail.jsx와 로직 통일)
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id }) // 🌟 서버가 userId를 요구할 경우
+                    body: JSON.stringify({ userId: currentUser.id }) 
                 });
                 if (response.ok) {
-                    // UI에서 즉시 삭제
                     setMyPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
                     alert('게시글이 삭제되었습니다.');
                 } else {
-                    // 🌟 [수정] 서버에서 보낸 에러 메시지 표시
                     const errData = await response.json();
                     alert(errData.message || '게시글 삭제에 실패했습니다.');
                 }
@@ -401,56 +393,56 @@ const ActivityContent = ({ currentUser }) => {
     };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 pb-2 border-b"><BookOpen className="w-5 h-5 text-blue-600"/> 나의 게시글</h2>
+        <div className="profile-card">
+            <h2 className="card-header">
+                <BookOpen className="icon-main icon-amber"/> 나의 게시글
+            </h2>
             
             {loading ? (
-                <p className="text-gray-500 text-center py-4">게시글을 불러오는 중...</p>
+                <p className="card-placeholder">게시글을 불러오는 중...</p>
             ) : error ? (
-                <p className="text-red-500 text-center py-4">{error}</p>
+                <p className="card-placeholder error">{error}</p>
             ) : myPosts.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">작성한 게시글이 없습니다.</p>
+                <p className="card-placeholder">작성한 게시글이 없습니다.</p>
             ) : (
-                <div className="overflow-x-auto mt-4">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                <div className="activity-table-wrapper">
+                    <table className="activity-table">
+                        <thead>
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">카테고리</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제목</th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">댓글/조회</th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">날짜</th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">관리</th>
+                                <th>카테고리</th>
+                                <th>제목</th>
+                                <th>댓글/조회</th>
+                                <th>날짜</th>
+                                <th>관리</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody>
                             {myPosts.map(post => (
-                                <tr key={post.id} className="hover:bg-gray-50 transition">
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{post.category}</td>
-                                    <td 
-                                        className="px-4 py-4 text-sm font-medium text-blue-600 cursor-pointer hover:underline"
-                                        onClick={() => navigate(`/board/${post.id}`)}
-                                    >
-                                        {post.title}
+                                <tr key={post.id}>
+                                    <td data-label="카테고리">{post.category}</td>
+                                    <td data-label="제목">
+                                        <span 
+                                            className="table-link"
+                                            onClick={() => navigate(`/board/${post.id}`)}
+                                        >
+                                            {post.title}
+                                        </span>
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                                        {post.comments} / {post.views}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                                        {new Date(post.createdAt).toISOString().split('T')[0]}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-center text-sm">
-                                        <div className="flex justify-center space-x-2">
+                                    <td data-label="댓글/조회" className="text-center">{post.comments} / {post.views}</td>
+                                    <td data-label="날짜" className="text-center">{new Date(post.createdAt).toISOString().split('T')[0]}</td>
+                                    <td data-label="관리" className="text-center">
+                                        <div className="table-actions">
                                             <button 
                                                 onClick={() => navigate(`/board/edit/${post.id}`)} 
-                                                className="text-blue-500 hover:text-blue-700 p-1"
+                                                className="action-button edit"
                                             >
-                                                <Edit className="w-4 h-4" />
+                                                <Edit className="icon-xs" />
                                             </button>
                                             <button 
                                                 onClick={() => handlePostDelete(post.id)} 
-                                                className="text-red-500 hover:text-red-700 p-1"
+                                                className="action-button delete"
                                             >
-                                                <Trash2 className="w-4 h-4" />
+                                                <Trash2 className="icon-xs" />
                                             </button>
                                         </div>
                                     </td>
@@ -470,13 +462,9 @@ const ActivityContent = ({ currentUser }) => {
 const TabItem = ({ name, label, icon: Icon, active, onClick }) => (
   <button
     onClick={() => onClick(name)}
-    className={`flex items-center gap-2 px-6 py-3 font-medium transition whitespace-nowrap ${
-      active 
-        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-    }`}
+    className={`tab-item ${active ? 'active' : ''}`}
   >
-    <Icon className="w-5 h-5"/>
+    <Icon className="icon" />
     {label}
   </button>
 );
@@ -485,32 +473,26 @@ const TabItem = ({ name, label, icon: Icon, active, onClick }) => (
 // ===============================================
 // 💡 메인 컴포넌트
 // ===============================================
-/**
- * 마이페이지 메인 컴포넌트
- * @param {object} props
- * @param {object | null} props.currentUser - App.js에서 전달받은 로그인한 사용자 정보
- * @param {function} props.handleLogout - App.js에서 전달받은 로그아웃 함수
- */
 export default function ProfileManagement({ currentUser, handleLogout }) {
   const [activeTab, setActiveTab] = useState('profile');
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // 🌟 [수정] 메인 컴포넌트 스코프에서 useNavigate 훅 사용
 
-  // 💡 currentUser가 없으면(로그아웃 상태) 로그인 페이지로 리다이렉트
-  useEffect(() => {
-    if (!currentUser) {
-      navigate('/login');
-    }
-  }, [currentUser, navigate]);
+  // 🌟 [수정] PrivateRoute가 이미 처리하므로 중복 navigate 제거
+  // useEffect(() => {
+  //   if (!currentUser) {
+  //     navigate('/login');
+  //   }
+  // }, [currentUser, navigate]); 
 
   const handleTabClick = (tabName) => {
       setActiveTab(tabName);
   };
   
-  // 💡 currentUser가 로드되기 전에 렌더링되는 것을 방지
+  // 🌟 [수정] currentUser가 (처음엔) null일 수 있으므로 로딩 스피너 표시
   if (!currentUser) {
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="profile-page-wrapper loading">
+            <div className="loading-spinner"></div>
         </div>
     ); 
   }
@@ -518,53 +500,55 @@ export default function ProfileManagement({ currentUser, handleLogout }) {
   const renderContent = () => {
     switch (activeTab) {
       case 'profile':
-        // 🌟 ProfileContent에 currentUser와 handleLogout 전달
-        return <ProfileContent currentUser={currentUser} handleLogout={handleLogout} />;
+        // 🌟 ProfileContent에 navigate prop 전달
+        return <ProfileContent currentUser={currentUser} handleLogout={handleLogout} navigate={navigate} />;
       case 'application':
-        // 🌟 ApplicationContent에 currentUser 전달
-        return <ApplicationContent currentUser={currentUser} />;
+        // 🌟 ApplicationContent에 navigate prop 전달
+        return <ApplicationContent currentUser={currentUser} navigate={navigate} />;
       case 'activity':
-        // 🌟 ActivityContent에 currentUser 전달
-        return <ActivityContent currentUser={currentUser} />;
+        // 🌟 ActivityContent에 navigate prop 전달
+        return <ActivityContent currentUser={currentUser} navigate={navigate} />;
       default:
-        return <ProfileContent currentUser={currentUser} handleLogout={handleLogout} />;
+        // 🌟 ProfileContent에 navigate prop 전달
+        return <ProfileContent currentUser={currentUser} handleLogout={handleLogout} navigate={navigate} />;
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-gray-900 border-b pb-4">
-        마이페이지
-      </h1>
+    <div className="profile-page-wrapper">
+        <div className="profile-container">
+            <h1 className="profile-header">
+                마이페이지
+            </h1>
 
-      {/* 탭 네비게이션 */}
-      <div className="flex border-b mb-6 bg-white rounded-t-lg shadow-sm overflow-x-auto">
-        <TabItem 
-          name="profile" 
-          label="회원 정보 관리" 
-          icon={User} 
-          active={activeTab === 'profile'} 
-          onClick={handleTabClick} 
-        />
-        <TabItem 
-          name="application" 
-          label="입양 신청 내역" 
-          icon={ClipboardList} 
-          active={activeTab === 'application'} 
-          onClick={handleTabClick} 
-        />
-        <TabItem 
-          name="activity" 
-          label="나의 게시글" 
-          icon={BookOpen} 
-          active={activeTab === 'activity'} 
-          onClick={handleTabClick} 
-        />
-      </div>
+            <div className="profile-tabs-container">
+                <TabItem 
+                    name="profile" 
+                    label="회원 정보 관리" 
+                    icon={User} 
+                    active={activeTab === 'profile'} 
+                    onClick={handleTabClick} 
+                />
+                <TabItem 
+                    name="application" 
+                    label="입양 신청 내역" 
+                    icon={ClipboardList} 
+                    active={activeTab === 'application'} 
+                    onClick={handleTabClick} 
+                />
+                <TabItem 
+                    name="activity" 
+                    label="나의 게시글" 
+                    icon={BookOpen} 
+                    active={activeTab === 'activity'} 
+                    onClick={handleTabClick} 
+                />
+            </div>
 
-      {/* 탭 콘텐츠 영역 */}
-      {renderContent()}
+            {/* 탭 콘텐츠 영역 */}
+            {renderContent()}
 
+        </div>
     </div>
   );
 }

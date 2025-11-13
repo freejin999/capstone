@@ -1,0 +1,485 @@
+/* ===============================================
+ * 🌟 몽글몽글 테마 (전역 설정)
+ * =============================================== */
+:root {
+    /* 🌟 요청하신 새 컬러 팔레트 적용 */
+    --brand-primary: #735048;       /* (수정) 중간-어두운 갈색 (메인 버튼/텍스트) */
+    --brand-primary-dark: #594C3C;    /* (수정) 가장 어두운 갈색 (호버/진한 텍스트) */
+    --brand-primary-light: #F2E2CE;  /* (수정) 중간 베이지 (활성 탭 배경) */
+    --brand-primary-text: #735048;   /* (수정) 중간-어두운 갈색 (헤더 텍스트) */
+    
+    /* (수정) 몽글몽글한 느낌을 위한 악센트/배경 */
+    --bg-main: #F2EDE4;             /* (수정) 가장 밝은 베이지 (전체 배경) */
+    --bg-card: #ffffff;            /* (유지) 카드는 흰색으로 유지 (대비) */
+    --border-color: #F2CBBD;       /* (수정) 피치/핑크색 (테두리) */
+    --border-color-light: #F2E2CE;  /* (수정) 중간 베이지 (연한 테두리) */
+
+    /* (유지) 기능성 색상 */
+    --star-color: #facc15; /* yellow-400 */
+    --star-color-empty: #e5e7eb; /* gray-200 */
+    --like-color: #ef4444; /* red-500 */
+    --danger-color: #991b1b; /* red-800 */
+    --danger-color-light: #be123c; /* rose-700 */
+    --brand-danger-bg: #fff1f2; /* rose-50 */
+    --brand-danger-text: #9f1239; /* rose-900 */
+
+    --text-primary: #374151; /* gray-700 */
+    --text-light: #6b7280; /* gray-500 */
+}
+
+/* ===============================================
+ * 1. 메인 레이아웃
+ * =============================================== */
+/* ... (기존 코드와 동일 ... */
+.review-page-wrapper {
+    background-color: var(--bg-main);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    box-sizing: border-box; 
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+.review-page-wrapper *, .review-page-wrapper *:before, .review-page-wrapper *:after {
+    box-sizing: inherit; 
+}
+
+.review-page-wrapper.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+}
+.spinner {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border-top: 4px solid var(--brand-primary);
+    border-right: 4px solid transparent;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.error-box {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--bg-card);
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+.error-box p {
+    color: var(--danger-color);
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+}
+
+.review-container {
+    max-width: 1100px; /* max-w-7xl */
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* ===============================================
+ * 2. 헤더 및 검색/필터
+ * =============================================== */
+/* ... (기존 코드와 동일 ... */
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+    flex-wrap: wrap; /* 🌟 모바일 반응형 */
+    gap: 1rem; /* 🌟 모바일 반응형 */
+}
+.review-title {
+    font-size: 1.875rem; /* text-3xl */
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+.review-subtitle {
+    color: var(--text-light);
+}
+
+.button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none; /* 🌟 Link 태그 리셋 */
+}
+.button.primary-button {
+    background-color: var(--brand-primary);
+    color: white;
+}
+.button.primary-button:hover {
+    background-color: var(--brand-primary-dark);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+.icon-sm {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.search-bar-wrapper {
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+.search-bar {
+    position: relative;
+}
+.icon-search {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af; /* gray-400 */
+    width: 1.25rem;
+    height: 1.25rem;
+}
+.search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.75rem; /* pl-10 */
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    border-radius: 8px;
+    font-size: 1rem;
+}
+.search-input:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 2px var(--brand-primary-light);
+    outline: none;
+}
+
+.filter-section {
+    background-color: var(--bg-card);
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.filter-group {
+    margin-bottom: 1rem;
+}
+.filter-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+.filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.filter-button {
+    padding: 0.5rem 1rem;
+    border-radius: 9999px; /* rounded-full */
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background-color: var(--bg-main);
+    color: var(--brand-primary-text);
+    border: none;
+    cursor: pointer;
+}
+.filter-button:hover {
+    background-color: var(--border-color-light);
+}
+.filter-button.active {
+    background-color: var(--brand-primary);
+    color: white;
+}
+.filter-button.rating.active {
+    background-color: var(--star-color);
+    color: var(--brand-primary-dark);
+}
+
+/* ===============================================
+ * 3. 리뷰 카드 그리드
+ * =============================================== */
+.review-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+.review-card {
+    background-color: var(--bg-card);
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden; 
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: auto; 
+}
+.review-card:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.07);
+    transform: translateY(-4px);
+}
+
+.card-image-wrapper {
+    position: relative;
+    height: 12rem; /* h-48 */
+    background-color: var(--border-color-light);
+}
+.card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.card-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: var(--brand-primary);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.card-body {
+    padding: 1rem;
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column; 
+    justify-content: flex-start; 
+}
+.card-title {
+    font-size: 1.125rem; /* text-lg */
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.star-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+.star {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--star-color-empty);
+}
+.star.filled {
+    fill: var(--star-color);
+    color: var(--star-color);
+}
+.star-rating-text {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    margin-left: 0.25rem;
+}
+
+/* 🌟 [핵심 수정] */
+.card-content {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    margin-bottom: 0; 
+    line-height: 1.5;
+    word-break: break-word; 
+    
+    max-height: 4.5em; /* 1.5em * 3 lines */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    /* 🌟 [수정] 
+     * 닫힐 때(ease-out) 더 부드럽게 느껴지도록 타이밍 함수 변경
+     * 펼쳐지는 속도를 0.3s로 약간 빠르게 조정
+     */
+    transition: max-height 0.3s ease-out; 
+}
+
+/* 🌟 [핵심 수정] */
+.card-content.expanded {
+    max-height: 1000px; 
+    margin-bottom: 0.5rem; 
+    
+    /* 🌟 [수정] 
+     * 펼쳐질 때는 닫힐 때(ease-out)와 반대인 ease-in 사용
+     * (transition 속성은 base 클래스에만 정의해야 중복/충돌이 없습니다)
+     */
+    transition: max-height 0.4s ease-in; 
+    /* [제거] transition 속성이 base에 있으므로, 여기서는 타이밍만 정의할 수 있으나
+       (transition-timing-function: ease-in;)
+       속도를 다르게 주기 위해 그냥 transition을 사용합니다.
+       (이전 코드에서 transition이 중복 정의되었던 것이 문제의 원인이었을 수 있습니다.)
+    */
+}
+
+/* "전체 보기" 버튼 스타일 */
+.read-more-button {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--brand-primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem 0 0 0; 
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: auto; 
+}
+.read-more-button:hover {
+    color: var(--brand-primary-dark);
+    text-decoration: underline;
+}
+.read-more-button .icon-xs {
+    width: 1rem;
+    height: 1rem;
+}
+
+
+.card-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--bg-main);
+}
+.footer-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.author-nickname {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
+.footer-separator {
+    color: var(--border-color-light);
+}
+.date-info {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+.likes-info {
+    display: none; 
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--like-color);
+}
+.icon-xs {
+    width: 1rem;
+    height: 1rem;
+}
+.likes-info .icon-xs {
+    fill: currentColor;
+}
+.likes-count {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+.action-button {
+    font-size: 0.75rem; /* text-xs */
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: background-color 0.2s ease;
+    border: 1px solid;
+    cursor: pointer;
+    text-decoration: none;
+}
+.action-button .icon-xs { width: 0.75rem; height: 0.75rem; }
+
+.action-button.edit {
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+}
+.action-button.edit:hover {
+    background-color: var(--bg-main);
+}
+
+.action-button.delete {
+    background-color: transparent;
+    border-color: var(--brand-danger-text);
+    color: var(--brand-danger-text); 
+}
+.action-button.delete:hover {
+    background-color: var(--brand-danger-bg); 
+    color: var(--brand-danger); 
+}
+
+/* 검색 결과 없음 */
+.no-results-box {
+    grid-column: 1 / -1; 
+    text-align: center;
+    padding: 3rem;
+    background-color: var(--bg-card);
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    color: var(--text-light);
+}
+.no-results-box p:first-child {
+    font-size: 1.125rem;
+}
+.no-results-box p:last-child {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.results-summary {
+    margin-top: 2rem;
+    text-align: center;
+    color: var(--text-light);
+}
+.results-summary .count {
+    font-weight: 700;
+    color: var(--brand-primary);
+}
+
+/* ===============================================
+ * 4. 반응형 (모바일)
+ * =============================================== */
+@media (max-width: 1024px) {
+    .review-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 640px) {
+    .review-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+    .review-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .button.primary-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
