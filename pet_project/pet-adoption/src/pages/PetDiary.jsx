@@ -21,7 +21,7 @@ export default function PetDiary({ currentUser }) {
         if (currentUser) {
             fetchDiaries(currentUser.username);
         } else {
-            // 비정상적인 접근 (PrivateRoute가 막아주겠지만, 예방 차원)
+            // PrivateRoute가 막아주겠지만, 비로그인 상태 대비
             setLoading(false);
             setError("일기를 불러오려면 로그인이 필요합니다.");
         }
@@ -35,16 +35,20 @@ export default function PetDiary({ currentUser }) {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`http://localhost:3001/api/diaries/${username}`);
+            // 💡 주의: 백엔드에 이 API (GET /api/diaries/:username) 구현 필요!
+            const response = await fetch(`http://localhost:3001/api/diaries/${username}`); 
             if (response.ok) {
                 const data = await response.json();
                 setDiaries(data);
+            } else if (response.status === 404) {
+                 // DB에 데이터가 없는 경우도 성공으로 처리
+                 setDiaries([]);
             } else {
                 throw new Error('일기를 불러오는데 실패했습니다.');
             }
         } catch (err) {
             console.error('일기 로드 오류:', err);
-            setError(err.message);
+            setError('서버와의 연결에 실패했거나, 일기 API 구현이 필요합니다.');
         } finally {
             setLoading(false);
         }
@@ -53,135 +57,315 @@ export default function PetDiary({ currentUser }) {
     // 4. 필터링 로직 (DB에서 가져온 'diaries' 상태를 사용)
     const filteredDiaries = diaries.filter(diary => {
         const matchesMood = selectedMood === '전체' || diary.mood === selectedMood;
-        const matchesSearch = diary.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              diary.content.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = (diary.title && diary.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                              (diary.content && diary.content.toLowerCase().includes(searchTerm.toLowerCase()));
         return matchesMood && matchesSearch;
     });
 
+    // 로딩 및 에러 상태 렌더링
+    if (loading) {
+        return <div className="diary-container loading-state"><div className="spinner-large"></div><p className="loading-text">일기를 불러오는 중...</p></div>;
+    }
+    if (error) {
+        return <div className="diary-container error-state"><p className="error-message">{error}</p><button onClick={() => navigate('/')} className="primary-button">홈으로</button></div>;
+    }
+
+
     return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6 text-gray-900 border-b pb-2">
-                반려동물 일기 🐾
-            </h1>
+        <div className="diary-container">
+            {/* ------------------------------------------- */}
+            {/* 🎨 CSS 스타일 정의 (단일 파일 내) */}
+            {/* ------------------------------------------- */}
+            <style>{`
+                /* 컬러 팔레트: #F2EDE4(배경), #594C3C(텍스트), #F2E2CE(경계선), #F2CBBD(악센트), #735048(기본 색상) */
 
-            {/* 필터 및 검색, 작성 버튼 영역 */}
-            <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+                .diary-container {
+                    min-height: 100vh;
+                    background-color: #F2EDE4; /* Light Background */
+                    padding: 32px 0;
+                    font-family: 'Inter', sans-serif;
+                }
+                .main-wrapper {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 0 16px;
+                }
+                .diary-header {
+                    font-size: 28px;
+                    font-weight: bold;
+                    color: #735048; /* Primary Color */
+                    margin-bottom: 24px;
+                    padding-bottom: 8px;
+                    border-bottom: 2px solid #F2E2CE;
+                }
+
+                /* 필터 및 버튼 영역 */
+                .filter-area {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                    margin-bottom: 24px;
+                }
+                @media (min-width: 768px) {
+                    .filter-area {
+                        flex-direction: row;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+                }
+
+                /* Mood 탭 스타일 */
+                .mood-tabs {
+                    display: flex;
+                    overflow-x: auto;
+                    white-space: nowrap;
+                    background-color: white;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                    border: 1px solid #F2E2CE;
+                    flex-wrap: wrap; /* 모바일에서 랩핑 */
+                }
+                .mood-button {
+                    padding: 8px 16px;
+                    font-weight: 500;
+                    transition: background-color 0.15s, color 0.15s;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    color: #594C3C;
+                }
+                .mood-button:hover {
+                    background-color: #F2E2CE;
+                }
+                .mood-button.active {
+                    color: white; 
+                    background-color: #735048; /* Primary Color */
+                    border-radius: 8px;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                    margin: 2px;
+                }
                 
-                {/* Mood 필터 탭 */}
-                <div className="flex border-b overflow-x-auto whitespace-nowrap bg-white p-2 rounded-lg shadow-sm">
-                    {moods.map(mood => (
-                        <button
-                            key={mood}
-                            onClick={() => setSelectedMood(mood)}
-                            className={`px-4 py-2 font-medium transition rounded-md ${
-                                selectedMood === mood
-                                    ? 'bg-purple-600 text-white'
-                                    : 'text-gray-600 hover:bg-gray-100'
-                            }`}
-                        >
-                            {mood}
-                        </button>
-                    ))}
-                </div>
+                /* 검색 및 작성 버튼 그룹 */
+                .search-group {
+                    display: flex;
+                    gap: 12px;
+                    width: 100%;
+                }
+                @media (min-width: 768px) {
+                    .search-group {
+                        width: auto;
+                    }
+                }
+                .search-input-wrapper {
+                    position: relative;
+                    flex-grow: 1;
+                }
+                .search-icon {
+                    position: absolute;
+                    left: 12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 20px;
+                    height: 20px;
+                    color: #A0A0A0;
+                }
+                .search-input {
+                    width: 100%;
+                    padding: 8px 12px 8px 40px;
+                    border: 1px solid #F2CBBD;
+                    border-radius: 8px;
+                    box-sizing: border-box;
+                    font-size: 16px;
+                }
+                .write-button {
+                    background-color: #F2CBBD; /* Accent Color */
+                    color: #735048;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: background-color 0.15s;
+                    text-decoration: none;
+                    white-space: nowrap;
+                    border: none;
+                }
+                .write-button:hover {
+                    background-color: #F2E2CE;
+                }
+                
+                /* 일기 카드 그리드 */
+                .diary-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                    gap: 24px;
+                    margin-top: 24px;
+                }
+                .diary-card {
+                    display: block; /* Link로 사용 */
+                    background-color: white;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                    overflow: hidden;
+                    border: 1px solid #F2E2CE;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    text-decoration: none;
+                }
+                .diary-card:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+                }
+                .card-padding {
+                    padding: 20px;
+                }
+                .mood-badge {
+                    display: inline-block;
+                    padding: 4px 10px;
+                    border-radius: 9999px;
+                    font-size: 12px;
+                    font-weight: 500;
+                }
+                /* Mood Colors */
+                .mood-행복 { background-color: #e9f5db; color: #5a8a1f; }
+                .mood-슬픔 { background-color: #e0f2f1; color: #00796b; }
+                .mood-설렘 { background-color: #ffe0b2; color: #ff9800; }
+                .mood-일상 { background-color: #f5f5f5; color: #594C3C; }
 
-                {/* 검색 및 작성 버튼 */}
-                <div className="flex gap-3 items-center">
-                    <div className="relative w-full md:w-64">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="text"
-                            placeholder="제목 또는 내용 검색"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
+                .card-footer {
+                    padding-top: 12px;
+                    margin-top: 12px;
+                    border-top: 1px dashed #F2E2CE;
+                    color: #735048;
+                }
+                .footer-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+                .footer-item-text {
+                    font-size: 14px;
+                }
+                .empty-state {
+                    text-align: center;
+                    padding: 50px;
+                    background-color: white;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+                }
+                .empty-state a {
+                    margin-top: 16px;
+                    text-decoration: none;
+                }
+
+                /* 로딩/에러 상태 */
+                .spinner-large {
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #735048; 
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 16px;
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+
+            `}</style>
+
+            <div className="main-wrapper">
+                <h1 className="diary-header">반려동물 일기 🐾</h1>
+                
+                {/* 필터 및 검색, 작성 버튼 영역 */}
+                <div className="filter-area">
+                    {/* Mood 필터 탭 */}
+                    <div className="mood-tabs">
+                        {moods.map(mood => (
+                            <button
+                                key={mood}
+                                onClick={() => setSelectedMood(mood)}
+                                className={`mood-button ${selectedMood === mood ? 'active' : ''}`}
+                            >
+                                {mood}
+                            </button>
+                        ))}
                     </div>
-                    
-                    {/* 5. 💡 '새 일기 작성' 버튼을 <Link>로 변경 */}
-                    <Link 
-                        to="/diary/write"
-                        className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition flex items-center gap-2 whitespace-nowrap font-semibold"
-                    >
-                        <Plus className="w-5 h-5" />
-                        새 일기 작성
-                    </Link>
+
+                    {/* 검색 및 작성 버튼 */}
+                    <div className="search-group">
+                        <div className="search-input-wrapper">
+                            <Search className="search-icon" />
+                            <input
+                                type="text"
+                                placeholder="제목 또는 내용 검색"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="search-input"
+                            />
+                        </div>
+                        
+                        {/* 새 일기 작성 버튼 */}
+                        <Link to="/diary/write" className="write-button">
+                            <Plus className="w-5 h-5" />
+                            새 일기 작성
+                        </Link>
+                    </div>
                 </div>
-            </div>
-
-            {/* 일기 목록 그리드 */}
-            {loading && (
-                <div className="text-center p-10">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-500">일기를 불러오는 중...</p>
-                </div>
-            )}
-
-            {error && (
-                 <div className="col-span-full text-center p-10 bg-red-100 rounded-lg shadow-lg text-red-700">
-                    <p>😭 {error}</p>
-                 </div>
-            )}
-
-            {!loading && !error && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-                    {filteredDiaries.length > 0 ? (
-                        filteredDiaries.map(diary => (
-                            // 6. 💡 카드 전체를 클릭하면 상세 페이지로 이동하도록 <Link>로 감쌈
+                
+                {/* 일기 목록 그리드 */}
+                {filteredDiaries.length > 0 ? (
+                    <div className="diary-grid">
+                        {filteredDiaries.map(diary => (
                             <Link 
                                 to={`/diary/${diary.id}`} 
                                 key={diary.id} 
-                                className="block bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition duration-300"
+                                className="diary-card"
                             >
-                                <div className="p-5">
+                                <div className="card-padding">
                                     <div className="flex justify-between items-start mb-2">
-                                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                                            diary.mood === '행복' ? 'bg-pink-100 text-pink-700' :
-                                            diary.mood === '슬픔' ? 'bg-blue-100 text-blue-700' :
-                                            diary.mood === '설렘' ? 'bg-green-100 text-green-700' :
-                                            'bg-gray-100 text-gray-700'
-                                        }`}>
+                                        <span className={`mood-badge mood-${diary.mood}`}>
                                             {diary.mood}
                                         </span>
-                                        <span className="text-sm text-gray-500 flex items-center gap-1">
-                                            {/* 7. 💡 날짜 포맷 변경 */}
+                                        <span className="footer-item-text flex items-center gap-1">
                                             <Calendar className="w-4 h-4"/> {new Date(diary.createdAt).toISOString().split('T')[0]}
                                         </span>
                                     </div>
-                                    <h2 className="text-xl font-bold text-gray-800 mb-2 truncate">{diary.title}</h2>
-                                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">{diary.content}</p>
+                                    <h2 className="text-xl font-bold text-gray-800 mb-2">{diary.title}</h2>
+                                    <p className="text-sm text-gray-600 mb-4" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{diary.content}</p>
 
-                                    <div className="flex justify-between items-center pt-3 border-t text-sm text-gray-500">
+                                    <div className="card-footer flex justify-between items-center">
                                         <div className="flex items-center gap-4">
-                                            <span className="flex items-center gap-1">
-                                                {/* 💡 사진은 추후 구현 (일단 0으로) */}
+                                            <span className="footer-item">
                                                 <Image className="w-4 h-4"/> 0장
                                             </span>
-                                            <span className="flex items-center gap-1 text-red-500 font-medium">
-                                                {/* 💡 좋아요는 추후 구현 (일단 0으로) */}
-                                                <Heart className="w-4 h-4"/> 0
+                                            <span className="footer-item" style={{color: '#B91C1C'}}>
+                                                <Heart className="w-4 h-4 fill-current"/> 0
                                             </span>
                                         </div>
-                                        {/* 8. 💡 '자세히 보기' 버튼은 <Link>로 대체되었으므로 제거 */}
-                                        <span className="text-purple-600 hover:underline text-sm font-medium">
+                                        <span className="text-sm font-medium" style={{color: '#735048'}}>
                                             자세히 보기
                                         </span>
                                     </div>
                                 </div>
                             </Link>
-                        ))
-                    ) : (
-                        <div className="col-span-full text-center p-10 bg-white rounded-lg shadow-lg text-gray-500">
-                            <p>😭 작성된 일기가 없습니다. 새로운 추억을 기록해 보세요!</p>
-                            <Link 
-                                to="/diary/write" 
-                                className="mt-4 inline-block px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition"
-                            >
-                                지금 작성하기
-                            </Link>
-                        </div>
-                    )}
-                </div>
-            )}
+                        ))}
+                    </div>
+                ) : (
+                    <div className="empty-state">
+                        <p className="text-lg" style={{color: '#735048'}}>😭 작성된 일기가 없습니다. 새로운 추억을 기록해 보세요!</p>
+                        <Link 
+                            to="/diary/write" 
+                            className="write-button"
+                            style={{marginTop: '20px', backgroundColor: '#F2CBBD', color: '#735048'}}
+                        >
+                            <Plus className="w-5 h-5" />
+                            지금 작성하기
+                        </Link>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
