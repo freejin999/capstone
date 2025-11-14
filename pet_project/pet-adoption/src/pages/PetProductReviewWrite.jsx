@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Star } from 'lucide-react';
+// 🌟 [추가] 몽글몽글 디자인 CSS 파일 임포트
+import './PetProductReviewWrite.css'; 
 
 // 1. App.js로부터 'currentUser'를 props로 받습니다.
 export default function PetProductReviewWrite({ currentUser }) {
@@ -20,6 +22,7 @@ export default function PetProductReviewWrite({ currentUser }) {
 
     const categories = ['사료', '간식', '장난감', '미용', '위생용품', '급식기', '외출용품', '기타'];
 
+    // (기능 로직은 기존과 100% 동일합니다)
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -33,24 +36,16 @@ export default function PetProductReviewWrite({ currentUser }) {
         e.preventDefault();
         setError(null);
 
-        // 3. [보안] currentUser 확인
         if (!currentUser) {
             alert('리뷰를 작성하려면 로그인이 필요합니다.');
             navigate('/login');
             return;
         }
 
-        // 유효성 검사
         if (!formData.productName.trim()) {
             setError('제품명을 입력해주세요.');
             return;
         }
-        
-        // 🌟 [수정] 별점 0점(rating: 0)도 유효한 값으로 인정하므로, 프론트엔드 유효성 검사 제거
-        // if (formData.rating === 0) {
-        //     setError('별점을 선택해주세요.');
-        //     return;
-        // }
         
         if (!formData.content.trim()) {
             setError('리뷰 내용을 입력해주세요.');
@@ -59,12 +54,9 @@ export default function PetProductReviewWrite({ currentUser }) {
 
         setIsSubmitting(true);
 
-        // 4. API로 전송할 데이터 조립 (currentUser 정보 포함)
         const payload = {
             ...formData,
             userId: currentUser.id,
-            // 🌟 [핵심 수정] 
-            // 'author' -> 'authorUsername' (서버 index.js와 키 이름을 일치시킴)
             authorUsername: currentUser.username, 
             authorNickname: currentUser.nickname 
         };
@@ -78,10 +70,9 @@ export default function PetProductReviewWrite({ currentUser }) {
 
             if (response.ok) {
                 alert('리뷰가 성공적으로 등록되었습니다!');
-                navigate('/reviews'); // 리뷰 목록 페이지로 이동
+                navigate('/reviews'); 
             } else {
                 const errData = await response.json();
-                // 🌟 서버에서 보낸 에러 메시지를 표시
                 setError(errData.message || '리뷰 등록에 실패했습니다.');
             }
         } catch (apiError) {
@@ -93,59 +84,60 @@ export default function PetProductReviewWrite({ currentUser }) {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        // 🌟 [수정] 모든 className을 새 CSS 파일 기준으로 변경
+        <div className="review-form-page-wrapper">
             {/* Header */}
-            <header className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold text-blue-600">새 리뷰 작성</h1>
-                        <button
-                            onClick={() => navigate('/reviews')}
-                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                            목록으로
-                        </button>
-                    </div>
+            <header className="form-header">
+                <div className="form-header-container">
+                    <h1 className="form-title">새 리뷰 작성</h1>
+                    <button
+                        onClick={() => navigate('/reviews')}
+                        className="button-link"
+                    >
+                        <ArrowLeft className="icon-sm" />
+                        목록으로
+                    </button>
                 </div>
             </header>
 
             {/* Main Content */}
-            <main className="max-w-4xl mx-auto px-4 py-8">
-                <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+            <main className="form-main-container">
+                <form onSubmit={handleSubmit} className="form-card">
                     
                     {/* 에러 메시지 */}
                     {error && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                        <div className="message-box error">
                             <span className="block sm:inline">{error}</span>
                         </div>
                     )}
 
                     {/* 제품명 */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            제품명 <span className="text-red-500">*</span>
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="productName">
+                            제품명 <span className="required-star">*</span>
                         </label>
                         <input
+                            id="productName"
                             type="text"
                             name="productName"
                             value={formData.productName}
                             onChange={handleChange}
                             placeholder="예: 슈퍼프리미엄 연어 사료"
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-input"
                         />
                     </div>
 
                     {/* 카테고리 선택 */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            카테고리 <span className="text-red-500">*</span>
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="category">
+                            카테고리 <span className="required-star">*</span>
                         </label>
                         <select
+                            id="category"
                             name="category"
                             value={formData.category}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-input"
                         >
                             {categories.map(category => (
                                 <option key={category} value={category}>
@@ -156,11 +148,11 @@ export default function PetProductReviewWrite({ currentUser }) {
                     </div>
 
                     {/* 별점 */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            별점 <span className="text-red-500">*</span>
+                    <div className="form-group">
+                        <label className="form-label">
+                            별점 <span className="required-star">*</span>
                         </label>
-                        <div className="flex items-center gap-1">
+                        <div className="star-rating-input">
                             {[...Array(5)].map((_, index) => {
                                 const rate = index + 1;
                                 return (
@@ -170,58 +162,60 @@ export default function PetProductReviewWrite({ currentUser }) {
                                         onClick={() => handleRatingClick(rate)}
                                         onMouseEnter={() => setRatingHover(rate)}
                                         onMouseLeave={() => setRatingHover(0)}
-                                        className="focus:outline-none"
+                                        className="star-button"
                                     >
                                         <Star
-                                            className={`w-8 h-8 transition-colors ${
+                                            className={`star ${
                                                 rate <= (ratingHover || formData.rating)
-                                                    ? 'fill-yellow-400 text-yellow-400'
-                                                    : 'text-gray-300'
+                                                    ? 'filled'
+                                                    : ''
                                             }`}
                                         />
                                     </button>
                                 );
                             })}
-                            <span className="ml-3 text-lg font-bold text-gray-700">{formData.rating} / 5</span>
+                            <span className="star-rating-text">{formData.rating} / 5</span>
                         </div>
                     </div>
 
                     {/* 이미지 URL */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="image">
                             제품 이미지 URL (선택)
                         </label>
                         <input
+                            id="image"
                             type="text"
                             name="image"
                             value={formData.image}
                             onChange={handleChange}
                             placeholder="https://example.com/image.png"
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-input"
                         />
                     </div>
 
                     {/* 내용 입력 */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            리뷰 내용 <span className="text-red-500">*</span>
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="content">
+                            리뷰 내용 <span className="required-star">*</span>
                         </label>
                         <textarea
+                            id="content"
                             name="content"
                             value={formData.content}
                             onChange={handleChange}
                             placeholder="제품에 대한 솔직한 리뷰를 남겨주세요."
                             rows={10}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            className="form-input"
                         />
                     </div>
 
                     {/* 버튼 영역 */}
-                    <div className="flex justify-end gap-3 pt-4 border-t">
+                    <div className="form-footer">
                         <button
                             type="button"
                             onClick={() => navigate('/reviews')}
-                            className="px-6 py-2 border rounded-lg hover:bg-gray-50 transition"
+                            className="button secondary-button"
                             disabled={isSubmitting}
                         >
                             취소
@@ -229,16 +223,16 @@ export default function PetProductReviewWrite({ currentUser }) {
                         <button
                             type="submit"
                             disabled={isSubmitting || !currentUser}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="button primary-button"
                         >
                             {isSubmitting ? (
                                 <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    <div className="spinner-sm"></div>
                                     등록 중...
                                 </>
                             ) : (
                                 <>
-                                    <Send className="w-4 h-4" />
+                                    <Send className="icon-sm" />
                                     리뷰 등록
                                 </>
                             )}

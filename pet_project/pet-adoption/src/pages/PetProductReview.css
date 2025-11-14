@@ -355,17 +355,33 @@
 .card-footer {
     padding: 1rem;
     border-top: 1px solid var(--bg-main);
+    
+    /* 1. [수정] Flexbox 레이아웃으로 변경 */
+    display: flex;
+    align-items: center; /* 세로 중앙 정렬 */
+    justify-content: space-between; /* 양쪽 끝으로 밀기 */
+    
+    /* 2. [추가] 모바일에서 세로로 쌓이고, 간격을 줌 */
+    flex-wrap: wrap; 
+    gap: 0.75rem; 
 }
 .footer-info {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.75rem;
+    /* 3. [수정] justify-content 변경 (좋아요가 없으므로) */
+    justify-content: flex-start;
+    /* 4. [제거] 불필요한 margin-bottom 제거 */
+    /* margin-bottom: 0.75rem; */ 
+    
+    /* 5. [추가] 버튼이 있을 때 너무 커지지 않도록 */
+    flex-grow: 1; 
 }
 .author-info {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    /* 6. [추가] 모바일에서 줄바꿈 방지 */
+    white-space: nowrap;
 }
 .author-nickname {
     font-size: 0.875rem;
@@ -401,6 +417,8 @@
     display: flex;
     gap: 0.5rem;
     justify-content: flex-end;
+    /* 7. [추가] 버튼 영역이 줄어들지 않도록 함 */
+    flex-shrink: 0; 
 }
 .action-button {
     font-size: 0.75rem; /* text-xs */

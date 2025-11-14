@@ -1,0 +1,265 @@
+/* ===============================================
+ * 🌟 몽글몽글 테마 (전역 설정)
+ * =============================================== */
+:root {
+    /* 🌟 요청하신 새 컬러 팔레트 적용 */
+    --brand-primary: #735048;       /* (수정) 중간-어두운 갈색 (메인 버튼/텍스트) */
+    --brand-primary-dark: #594C3C;    /* (수정) 가장 어두운 갈색 (호버/진한 텍스트) */
+    --brand-primary-light: #F2E2CE;  /* (수정) 중간 베이지 (활성 탭 배경) */
+    
+    /* (수정) 몽글몽글한 느낌을 위한 악센트/배경 */
+    --bg-main: #F2EDE4;             /* (수정) 가장 밝은 베이지 (전체 배경) */
+    --bg-card: #ffffff;
+    --border-color: #F2CBBD;       /* (수정) 피치/핑크색 (테두리) */
+    --border-color-light: #F2E2CE;  /* (수정) 중간 베이지 (연한 테두리) */
+
+    /* (유지) 기능성 색상 */
+    --star-color: #facc15; /* yellow-400 */
+    --star-color-empty: #e5e7eb; /* gray-200 */
+    --danger-color: #991b1b; /* red-800 */
+    --brand-danger-bg: #fff1f2; /* rose-50 */
+    --brand-danger-border: #fecdd3; /* rose-200 */
+    --brand-danger-text: #9f1239; /* rose-900 */
+
+    --text-primary: #374151; /* gray-700 */
+    --text-light: #6b7280; /* gray-500 */
+}
+
+/* ===============================================
+ * 1. 메인 레이아웃
+ * =============================================== */
+.review-form-page-wrapper {
+    background-color: var(--bg-main);
+    min-height: 100vh;
+    box-sizing: border-box; 
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+.review-form-page-wrapper *, 
+.review-form-page-wrapper *:before, 
+.review-form-page-wrapper *:after {
+    box-sizing: inherit; 
+}
+
+/* ===============================================
+ * 2. 헤더
+ * =============================================== */
+.form-header {
+    background-color: var(--bg-card);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid var(--border-color-light);
+    padding: 1rem;
+}
+.form-header-container {
+    max-width: 1000px; /* max-w-4xl + padding */
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.form-title {
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: 700;
+    color: var(--brand-primary-dark);
+}
+.button-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+.button-link:hover {
+    color: var(--brand-primary-text);
+}
+.icon-sm {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* ===============================================
+ * 3. 메인 콘텐츠 (폼)
+ * =============================================== */
+.form-main-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.form-card {
+    background-color: var(--bg-card);
+    border-radius: 16px; /* rounded-lg (몽글몽글) */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* space-y-6 */
+}
+
+/* 폼 요소 */
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+}
+.required-star {
+    color: var(--danger-color);
+    margin-left: 0.25rem;
+}
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    border-radius: 12px; /* rounded-lg (몽글몽글) */
+    transition: all 0.2s ease;
+    font-family: inherit;
+    font-size: 1rem;
+    background-color: white; /* 🌟 select 배경색 보장 */
+}
+.form-input:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 2px var(--brand-primary-light);
+    outline: none;
+}
+textarea.form-input {
+    min-height: 150px;
+    resize: vertical;
+}
+
+/* 🌟 [추가] <select> 드롭다운 화살표 커스텀 */
+select.form-input {
+    /* 1. 기본 브라우저 화살표 숨기기 */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    
+    /* 2. 커스텀 화살표 (아래쪽을 가리키는 SVG, 테마 색상 #594C3C 적용) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23594C3C' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    
+    /* 3. 🌟 화살표 위치: 오른쪽에서 1.25rem (20px) 떨어진 곳에 배치 */
+    /* (기본 텍스트 패딩 1rem(16px)보다 살짝 더 안쪽으로 이동) */
+    background-position: right 1.25rem center; 
+    background-size: 1.25em; /* 화살표 크기 */
+
+    /* 4. 🌟 텍스트가 커스텀 화살표를 덮어쓰지 않도록 오른쪽 패딩 추가 */
+    /* (1.25rem 화살표 위치 + 1.25rem 추가 여백 = 2.5rem) */
+    padding-right: 2.5rem; 
+}
+
+/* IE/Edge 구형 브라우저용 화살표 숨기기 */
+select.form-input::-ms-expand {
+    display: none;
+}
+
+
+/* 별점 */
+.star-rating-input {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.star-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+.star {
+    width: 2rem; /* w-8 h-8 */
+    height: 2rem;
+    color: var(--star-color-empty);
+    transition: color 0.1s ease-in-out;
+}
+.star.filled {
+    fill: var(--star-color);
+    color: var(--star-color);
+}
+.star-rating-text {
+    margin-left: 0.75rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* 폼 푸터 (버튼) */
+.form-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bg-main);
+}
+.button {
+    padding: 0.6rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.button.primary-button {
+    background-color: var(--brand-primary);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+.button.primary-button:hover:not(:disabled) {
+    background-color: var(--brand-primary-dark);
+    box-shadow: 0 6px 10px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.button.secondary-button {
+    background-color: var(--bg-card);
+    color: var(--text-light);
+    border: 1px solid #d1d5db;
+}
+.button.secondary-button:hover:not(:disabled) {
+    background-color: var(--bg-main);
+}
+
+/* 버튼 로딩 스피너 */
+.spinner-sm {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border-top: 2px solid white;
+    border-right: 2px solid transparent;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 메시지 박스 */
+.message-box {
+    padding: 1rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid;
+}
+.message-box.error {
+    background-color: var(--brand-danger-bg);
+    color: var(--brand-danger-text);
+    border-color: var(--brand-danger-border);
+}
