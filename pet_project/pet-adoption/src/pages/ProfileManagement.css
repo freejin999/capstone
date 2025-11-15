@@ -2,7 +2,7 @@
  * 🌟 몽글몽글 테마 (전역 설정)
  * =============================================== */
 :root {
-    /* 🌟 [수정] 요청하신 새 컬러 팔레트 적용 */
+    /* 🌟 요청하신 새 컬러 팔레트 적용 */
     --brand-primary: #735048;       /* (수정) 중간-어두운 갈색 (메인 버튼/텍스트) */
     --brand-primary-dark: #594C3C;    /* (수정) 가장 어두운 갈색 (호버/진한 텍스트) */
     --brand-primary-light: #F2E2CE;  /* (수정) 중간 베이지 (활성 탭 배경) */
@@ -35,55 +35,30 @@
 /* ===============================================
  * 1. 메인 레이아웃
  * =============================================== */
+/* ... (기존 코드와 동일) ... */
 .profile-page-wrapper {
-    background-color: var(--bg-main); /* 🌟 새 배경색 적용 */
+    background-color: var(--bg-main); 
     min-height: 100vh;
     padding: 3rem 1rem;
     box-sizing: border-box; 
 }
-
 .profile-page-wrapper *, .profile-page-wrapper *:before, .profile-page-wrapper *:after {
     box-sizing: inherit; 
 }
-
-/* 로딩 상태 */
-.profile-page-wrapper.loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.loading-spinner {
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    border-top: 4px solid var(--brand-primary); /* 🌟 새 테마색 적용 */
-    border-right: 4px solid transparent;
-    animation: spin 1s linear infinite;
-}
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.profile-container {
-    max-width: 56rem; 
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
-}
-
+/* ... (중간 생략) ... */
 .profile-header {
     font-size: 2.25rem; 
     font-weight: 800; 
     margin-bottom: 2rem;
-    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
-    border-bottom: 1px solid var(--border-color); /* 🌟 새 테마색 적용 */
+    color: var(--brand-primary-text); 
+    border-bottom: 1px solid var(--border-color); 
     padding-bottom: 1rem;
 }
 
 /* ===============================================
  * 2. 탭 메뉴
  * =============================================== */
+/* ... (기존 코드와 동일) ... */
 .profile-tabs-container {
     display: flex;
     margin-bottom: 2rem;
@@ -94,7 +69,6 @@
     gap: 0.5rem; 
     overflow-x: auto;
 }
-
 .tab-item {
     display: flex;
     align-items: center;
@@ -113,20 +87,19 @@
     width: 1.25rem;
     height: 1.25rem;
 }
-
 .tab-item:hover {
-    background-color: var(--bg-main); /* 🌟 새 테마색 적용 */
-    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+    background-color: var(--bg-main); 
+    color: var(--brand-primary-text); 
 }
-
 .tab-item.active {
-    background-color: var(--brand-primary-light); /* 🌟 새 테마색 적용 */
-    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+    background-color: var(--brand-primary-light); 
+    color: var(--brand-primary-text); 
 }
 
 /* ===============================================
  * 3. 공통 카드 및 폼 요소
  * =============================================== */
+/* ... (기존 코드와 동일 - 버튼 왼쪽 정렬 수정 포함) ... */
 .profile-content-wrapper {
     display: flex;
     flex-direction: column;
@@ -140,39 +113,44 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; 
+    gap: 0; 
 }
+.profile-card > * {
+    margin-top: 1.5rem; 
+}
+.profile-card > *:first-child {
+    margin-top: 0; 
+}
+
 
 .card-header {
     font-size: 1.5rem; 
     font-weight: 700; 
-    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+    color: var(--brand-primary-text); 
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-color-light); /* 🌟 새 테마색 적용 */
+    border-bottom: 1px solid var(--border-color-light); 
 }
 
 .icon-main {
     width: 1.5rem; 
     height: 1.5rem;
 }
-.icon-main.icon-amber { color: var(--brand-primary); } /* 🌟 새 테마색 적용 */
-.icon-main.icon-danger { color: var(--brand-danger); } /* (유지) */
+.icon-main.icon-amber { color: var(--brand-primary); } 
+.icon-main.icon-danger { color: var(--brand-danger); } 
 
 .form-group {
     display: flex;
     flex-direction: column;
 }
-
 .form-label {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-light);
     margin-bottom: 0.25rem;
 }
-
 .form-input,
 .form-input-readonly {
     width: 100%;
@@ -185,15 +163,14 @@
 }
 .form-input:focus,
 .form-input.danger-focus:focus {
-    border-color: var(--brand-primary); /* 🌟 새 테마색 적용 */
-    box-shadow: 0 0 0 2px var(--brand-primary-light); /* 🌟 새 테마색 적용 */
+    border-color: var(--brand-primary); 
+    box-shadow: 0 0 0 2px var(--brand-primary-light); 
     outline: none;
 }
 .form-input.danger-focus:focus {
     border-color: var(--brand-danger);
     box-shadow: 0 0 0 2px var(--brand-danger-bg);
 }
-
 .form-input-readonly {
     background-color: #f3f4f6; 
     color: var(--text-light);
@@ -201,9 +178,7 @@
     align-items: center;
     gap: 0.5rem;
 }
-
 .icon-sm { width: 1.25rem; height: 1.25rem; color: #9ca3af; }
-
 .form-row {
     display: flex;
     gap: 0.75rem;
@@ -212,11 +187,14 @@
 
 .card-footer {
     display: flex;
-    justify-content: flex-end;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color-light); /* 🌟 새 테마색 적용 */
+    justify-content: flex-start; /* 🌟 버튼 왼쪽 정렬 */
+    padding-top: 1.5rem; 
+    margin-top: 1.5rem; 
+    border-top: 1px solid var(--border-color-light); 
 }
-.card-footer.danger { border-top-color: var(--brand-danger-border); } /* (유지) */
+.card-footer.danger { 
+    border-top-color: var(--brand-danger-border); 
+} 
 
 /* 버튼 */
 .button {
@@ -233,10 +211,10 @@
     transform: translateY(-2px);
 }
 .button.primary {
-    background-color: var(--brand-primary); /* 🌟 새 테마색 적용 */
+    background-color: var(--brand-primary); 
     color: white;
 }
-.button.primary:hover { background-color: var(--brand-primary-dark); } /* 🌟 새 테마색 적용 */
+.button.primary:hover { background-color: var(--brand-primary-dark); } 
 
 .button.danger {
     background-color: var(--brand-danger);
@@ -245,13 +223,12 @@
 .button.danger:hover { background-color: #be123c; } 
 
 .button.secondary-light {
-    background-color: var(--brand-primary-light); /* 🌟 새 테마색 적용 */
-    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+    background-color: var(--brand-primary-light); 
+    color: var(--brand-primary-text); 
     font-size: 0.875rem;
 }
 .button.secondary-light:hover { 
-    /* background-color: var(--border-color); */ /* 👈 [수정] 핑크/피치 색상 제거 */
-    background-color: #e4d2bc; /* 👈 [추가] '살짝 진한' 베이지색(페이지 배경색)으로 변경 */
+    background-color: var(--bg-main); 
 }
 
 /* 회원 탈퇴 카드 */
@@ -270,8 +247,9 @@
 }
 .card-footer-text {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start; /* 🌟 버튼 왼쪽 정렬 */
     padding-top: 1rem;
+    margin-top: 1.5rem; 
 }
 .button-link-danger {
     font-size: 0.875rem;
@@ -331,7 +309,7 @@
 }
 .application-card {
     padding: 1.25rem;
-    background-color: var(--bg-main); /* 🌟 새 테마색 적용 */
+    background-color: var(--bg-main); 
     border-radius: 12px;
     display: flex;
     justify-content: space-between;
@@ -340,13 +318,13 @@
     cursor: pointer;
 }
 .application-card:hover {
-    background-color: var(--brand-primary-light); /* 🌟 새 테마색 적용 */
+    background-color: var(--brand-primary-light); 
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 .application-pet-name {
     font-weight: 700;
     font-size: 1.125rem;
-    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+    color: var(--brand-primary-text); 
 }
 .application-meta {
     display: flex;
@@ -376,6 +354,27 @@
 .status-success { background-color: #dcfce7; color: #166534; } 
 .status-danger { background-color: #fee2e2; color: #991b1b; } 
 
+/* 🌟 [추가] '나의 댓글' 탭 스타일 */
+.comment-content {
+    font-weight: 500;
+    color: var(--text-primary);
+    /* 1줄 말줄임표 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 400px; /* 🌟 댓글 내용이 너무 길어지지 않게 */
+}
+.meta-item-post {
+    font-style: italic;
+    color: var(--text-light);
+    font-size: 0.875rem;
+    /* 1줄 말줄임표 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px; /* 🌟 원본 글 제목이 너무 길어지지 않게 */
+}
+
 
 /* ===============================================
  * 5. 나의 게시글 (ActivityContent)
@@ -390,14 +389,14 @@
     width: 100%; 
 }
 .activity-table thead {
-    background-color: var(--bg-main); /* 🌟 새 테마색 적용 */
+    background-color: var(--bg-main); 
 }
 .activity-table th {
     padding: 0.75rem 1rem;
     text-align: left;
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+    color: var(--brand-primary-text); 
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -411,7 +410,7 @@
     border-bottom: none; 
 }
 .activity-table tbody tr:hover {
-    background-color: var(--bg-main); /* 🌟 새 테마색 적용 */
+    background-color: var(--bg-main); 
 }
 .activity-table td {
     padding: 1rem;
@@ -424,11 +423,11 @@
 
 .table-link {
     font-weight: 500;
-    color: var(--brand-primary-dark); /* 🌟 새 테마색 적용 */
+    color: var(--brand-primary-dark); 
     cursor: pointer;
 }
 .table-link:hover {
-    color: var(--brand-primary); /* 🌟 새 테마색 적용 */
+    color: var(--brand-primary); 
     text-decoration: underline;
 }
 
@@ -445,8 +444,8 @@
     transition: color 0.2s ease;
 }
 .action-button .icon-xs { width: 1rem; height: 1rem; }
-.action-button.edit { color: var(--brand-primary); } /* 🌟 새 테마색 적용 */
-.action-button.edit:hover { color: var(--brand-primary-dark); } /* 🌟 새 테마색 적용 */
+.action-button.edit { color: var(--brand-primary); } 
+.action-button.edit:hover { color: var(--brand-primary-dark); } 
 .action-button.delete { color: var(--brand-danger); }
 .action-button.delete:hover { color: #b91c1c; } 
 
@@ -458,7 +457,7 @@
     .activity-table tr {
         display: block;
         margin-bottom: 1rem;
-        border: 1px solid var(--border-color-light); /* 🌟 새 테마색 적용 */
+        border: 1px solid var(--border-color-light); 
         border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 2px 4px rgba(0,0,0,0.03);
@@ -479,7 +478,7 @@
         width: calc(50% - 2rem);
         text-align: left;
         font-weight: 600;
-        color: var(--brand-primary-text); /* 🌟 새 테마색 적용 */
+        color: var(--brand-primary-text); 
     }
     .activity-table td.text-center { text-align: right; }
     .table-actions { justify-content: flex-end; }

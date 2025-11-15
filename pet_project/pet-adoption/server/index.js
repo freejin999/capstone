@@ -51,6 +51,159 @@ app.get('/', (req, res) => {
 
 
 // ----------------------------------------------------
+// (H) 🚨 입양 공고 API (NEW) - (B) 섹션 위로 이동 (가독성)
+// ----------------------------------------------------
+
+// [수정] 1. 입양 공고 목록 (GET /api/adoption) - DB 연동
+app.get('/api/adoption', async (req, res) => {
+    console.log('GET /api/adoption 요청 수신 (DB)');
+    try {
+        const sql = `
+            SELECT a.*, u.nickname AS authorNickname
+            FROM adoption_posts a
+            LEFT JOIN users u ON a.userId = u.id
+            ORDER BY a.createdAt DESC
+        `;
+        const [rows] = await pool.query(sql);
+        res.json(rows);
+    } catch (error) {
+        console.error('DB 조회 중 오류 발생 (GET /api/adoption):', error);
+        res.status(500).json({ message: '서버 오류: 공고 목록을 불러오지 못했습니다.' });
+    }
+});
+
+// [수정] 1-2. 입양 공고 상세 (GET /api/adoption/:id) - DB 연동
+app.get('/api/adoption/:id', async (req, res) => {
+    const { id } = req.params;
+    console.log(`GET /api/adoption/${id} 요청 수신 (DB)`);
+    try {
+        const sql = `
+            SELECT a.*, u.nickname AS authorNickname
+            FROM adoption_posts a
+            LEFT JOIN users u ON a.userId = u.id
+            WHERE a.id = ?
+        `;
+        const [posts] = await pool.query(sql, [id]);
+        if (posts.length === 0) {
+            return res.status(404).json({ message: "공고를 찾을 수 없습니다." });
+        }
+        res.json(posts[0]);
+    } catch (error) {
+        console.error('DB 조회 중 오류 발생 (GET /api/adoption/:id):', error);
+        res.status(500).json({ message: '서버 오류: 공고를 불러오지 못했습니다.' });
+    }
+});
+
+// 25. [NEW] 입양 공고 작성 (POST /api/adoption)
+app.post('/api/adoption', async (req, res) => {
+    const { name, species, breed, age, gender, size, region, description, image, userId, author, authorNickname } = req.body;
+    
+    if (!name || !species || !breed || !age || !gender || !size || !region || !description || !userId || !author || !authorNickname) {
+        console.warn('누락된 필드:', { name, species, breed, age, gender, size, region, description, userId, author, authorNickname });
+        return res.status(400).json({ message: "필수 필드가 누락되었습니다." });
+    }
+    try {
+        const sql = `
+            INSERT INTO adoption_posts (name, species, breed, age, gender, size, region, description, image, userId, author, authorNickname, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '입양가능')
+        `;
+        const [result] = await pool.query(sql, [name, species, breed, age, gender, size, region, description, image || null, userId, author, authorNickname]);
+        res.status(201).json({ message: '입양 공고가 성공적으로 등록되었습니다.', postId: result.insertId });
+    } catch (error) {
+        console.error('DB 삽입 중 오류 발생 (POST /api/adoption):', error);
+        res.status(500).json({ message: '서버 오류: 공고 등록에 실패했습니다.' });
+    }
+});
+
+// 26. [NEW] 입양 공고 수정 (PUT /api/adoption/:id)
+app.put('/api/adoption/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, species, breed, age, gender, size, region, description, image, status, userId } = req.body;
+
+    if (!name || !species || !breed || !age || !gender || !size || !region || !description || !status || !userId) {
+        return res.status(400).json({ message: "필수 필드가 누락되었습니다." });
+    }
+    try {
+        const sql = `
+            UPDATE adoption_posts 
+            SET name = ?, species = ?, breed = ?, age = ?, gender = ?, size = ?, region = ?, description = ?, image = ?, status = ?
+            WHERE id = ? AND userId = ?
+        `;
+        const [result] = await pool.query(sql, [name, species, breed, age, gender, size, region, description, image || null, status, id, userId]);
+        
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ message: '공고를 수정할 권한이 없거나 해당 공고를 찾을 수 없습니다.' });
+        }
+        res.json({ message: '공고가 성공적으로 수정되었습니다.' });
+    } catch (error) {
+        console.error('DB 업데이트 중 오류 발생 (PUT /api/adoption/:id):', error);
+        res.status(500).json({ message: '서버 오류: 공고 수정에 실패했습니다.' });
+    }
+});
+
+// 27. [NEW] 입양 공고 삭제 (DELETE /api/adoption/:id)
+app.delete('/api/adoption/:id', async (req, res) => {
+    const { id } = req.params;
+    const { userId } = req.body; 
+    if (!userId) {
+        return res.status(400).json({ message: '본인 확인을 위한 사용자 ID가 필요합니다.' });
+    }
+    try {
+        const sql = 'DELETE FROM adoption_posts WHERE id = ? AND userId = ?';
+        const [result] = await pool.query(sql, [id, userId]);
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ message: '공고를 삭제할 권한이 없거나 해당 공고를 찾을 수 없습니다.' });
+        }
+        res.json({ message: '공고가 성공적으로 삭제되었습니다.' });
+    } catch (error) {
+        console.error('DB 삭제 중 오류 발생 (DELETE /api/adoption/:id):', error);
+        res.status(500).json({ message: '서버 오류: 공고 삭제에 실패했습니다.' });
+    }
+});
+
+// 28. [NEW] 입양 신청 (POST /api/adoption/apply)
+app.post('/api/adoption/apply', async (req, res) => {
+    const { postId, userId, username, petName } = req.body;
+    if (!postId || !userId || !username || !petName) {
+        return res.status(400).json({ message: "신청 정보가 누락되었습니다." });
+    }
+    try {
+        const sql = `
+            INSERT INTO adoption_applications (postId, userId, username, petName, status)
+            VALUES (?, ?, ?, ?, '신청완료')
+        `;
+        await pool.query(sql, [postId, userId, username, petName]);
+        res.status(201).json({ message: '입양 신청이 완료되었습니다.' });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ message: '이미 이 공고에 입양 신청을 하셨습니다.' });
+        }
+        console.error('DB 삽입 중 오류 발생 (POST /api/adoption/apply):', error);
+        res.status(500).json({ message: '서버 오류: 입양 신청에 실패했습니다.' });
+    }
+});
+
+// 29. [NEW] '내 입양 신청 내역' 조회 (GET /api/applications/:username)
+app.get('/api/applications/:username', async (req, res) => {
+    const { username } = req.params;
+    try {
+        const sql = `
+            SELECT a.*, p.region AS shelter, p.image AS petImage
+            FROM adoption_applications a
+            JOIN adoption_posts p ON a.postId = p.id
+            WHERE a.username = ?
+            ORDER BY a.createdAt DESC
+        `;
+        const [applications] = await pool.query(sql, [username]);
+        res.json(applications);
+    } catch (error) {
+        console.error('DB 조회 중 오류 발생 (GET /api/applications/:username):', error);
+        res.status(500).json({ message: '서버 오류: 신청 내역을 불러오지 못했습니다.' });
+    }
+});
+
+
+// ----------------------------------------------------
 // (B) 사용자 인증 API (회원가입 / 로그인)
 // ----------------------------------------------------
 
@@ -170,20 +323,30 @@ app.get('/api/posts/:id', async (req, res) => {
     }
 });
 
+// 🌟 [핵심 수정 1] 게시글 작성 API (isNotice 추가)
 app.post('/api/posts', async (req, res) => {
     const { title, content, author = '익명사용자', category = '자유게시판' } = req.body;
+
     if (!title || !content) {
         return res.status(400).json({ message: '제목과 내용을 입력해야 합니다.' });
     }
+
+    // 🌟 [추가] '공지사항' 카테고리면 isNotice 플래그를 true(1)로 설정
+    const isNotice = (category === '공지사항');
+
     const sql = `
-        INSERT INTO posts (title, content, author, category, likedUsers) 
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO posts (title, content, author, category, likedUsers, isNotice) 
+        VALUES (?, ?, ?, ?, ?, ?)
     `;
     const initialLikedUsers = JSON.stringify([]); 
+
     try {
-        const [result] = await pool.query(sql, [title, content, author, category, initialLikedUsers]);
+        // 🌟 [수정] isNotice를 SQL 쿼리에 추가
+        const [result] = await pool.query(sql, [title, content, author, category, initialLikedUsers, isNotice]);
         const newPostId = result.insertId;
+        
         const [newPostRows] = await pool.query('SELECT * FROM posts WHERE id = ?', [newPostId]);
+        
         res.status(201).json({ 
             message: '게시글이 성공적으로 등록되었습니다.', 
             post: newPostRows[0] 
@@ -252,15 +415,26 @@ app.put('/api/posts/:id', async (req, res) => {
     }
 });
 
+// 🌟 [핵심 수정 3 - 보너스] 게시글 삭제 API (ProfileManagement.jsx와 호환되도록)
 app.delete('/api/posts/:id', async (req, res) => {
     const postId = parseInt(req.params.id);
+    // 🌟 [수정] ProfileManagement에서 보내는 `authorUsername`을 받음
+    const { authorUsername } = req.body; 
+
     if (isNaN(postId)) { return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' }); }
+    if (!authorUsername) { return res.status(400).json({ message: '본인 확인을 위한 사용자 ID가 필요합니다.' }); }
+
     try {
-        const [result] = await pool.query('DELETE FROM posts WHERE id = ?', [postId]);
+        // 🌟 [수정] author(username)가 일치하는지 확인하며 삭제
+        const [result] = await pool.query('DELETE FROM posts WHERE id = ? AND author = ?', [postId, authorUsername]);
+
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: '삭제할 게시글을 찾을 수 없습니다.' });
+            return res.status(403).json({ message: '게시글을 삭제할 권한이 없거나 해당 글을 찾을 수 없습니다.' });
         }
+
+        console.log(`✅ 게시글 ID ${postId} DB 삭제 완료`);
         res.json({ message: '게시글이 삭제되었습니다.', deletedId: postId });
+
     } catch (error) {
         console.error('DB 삭제 중 오류 발생 (DELETE /api/posts/:id):', error);
         res.status(500).json({ message: '서버 오류: 게시글 삭제에 실패했습니다.' });
@@ -284,18 +458,26 @@ app.get('/api/posts/:postId/comments', async (req, res) => {
     }
 });
 
+// 🌟 [핵심 수정] 댓글 작성 API
 app.post('/api/posts/:postId/comments', async (req, res) => {
     const postId = parseInt(req.params.postId);
-    const { content, author = '익명사용자' } = req.body; 
+    // 🌟 [수정] author(닉네임)와 authorUsername(고유ID)을 모두 받음
+    const { content, author = '익명사용자', authorUsername = 'anonymous' } = req.body; 
+
     if (isNaN(postId)) { return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' }); }
     if (!content || content.trim().length === 0) {
         return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
     }
-    const sql = 'INSERT INTO comments (postId, author, content) VALUES (?, ?, ?)';
+
+    // 🌟 [수정] authorUsername도 저장
+    const sql = 'INSERT INTO comments (postId, author, content, authorUsername) VALUES (?, ?, ?, ?)';
     try {
-        const [result] = await pool.query(sql, [postId, author, content]);
+        // 🌟 [수정] authorUsername 추가
+        const [result] = await pool.query(sql, [postId, author, content, authorUsername]);
         const newCommentId = result.insertId;
+        
         const [newCommentRows] = await pool.query('SELECT * FROM comments WHERE id = ?', [newCommentId]);
+        
         console.log(`✅ 게시글 ${postId}에 새로운 댓글 (ID: ${newCommentId}) DB 저장됨.`);
         res.status(201).json({ message: '댓글이 성공적으로 작성되었습니다.', comment: newCommentRows[0] });
     } catch (error) {
@@ -304,6 +486,55 @@ app.post('/api/posts/:postId/comments', async (req, res) => {
     }
 });
 
+// 🌟 [NEW] 댓글 수정 (PUT /api/comments/:id)
+app.put('/api/comments/:id', async (req, res) => {
+    const { id } = req.params; // 댓글 ID
+    const { content, authorUsername } = req.body; // 수정할 내용, 본인 확인용 ID
+
+    if (!content || !authorUsername) {
+        return res.status(400).json({ message: "내용과 사용자 ID가 필요합니다." });
+    }
+    
+    try {
+        const sql = `
+            UPDATE comments 
+            SET content = ? 
+            WHERE id = ? AND authorUsername = ?
+        `;
+        const [result] = await pool.query(sql, [content, id, authorUsername]);
+        
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ message: '댓글을 수정할 권한이 없거나 해당 댓글을 찾을 수 없습니다.' });
+        }
+        res.json({ message: '댓글이 성공적으로 수정되었습니다.' });
+    } catch (error) {
+        console.error('DB 업데이트 중 오류 발생 (PUT /api/comments/:id):', error);
+        res.status(500).json({ message: '서버 오류: 댓글 수정에 실패했습니다.' });
+    }
+});
+
+// 🌟 [NEW] 댓글 삭제 (DELETE /api/comments/:id)
+app.delete('/api/comments/:id', async (req, res) => {
+    const { id } = req.params; // 댓글 ID
+    const { authorUsername } = req.body; // 본인 확인용 ID
+
+    if (!authorUsername) {
+        return res.status(400).json({ message: "본인 확인을 위한 사용자 ID가 필요합니다." });
+    }
+    
+    try {
+        const sql = 'DELETE FROM comments WHERE id = ? AND authorUsername = ?';
+        const [result] = await pool.query(sql, [id, authorUsername]);
+
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ message: '댓글을 삭제할 권한이 없거나 해당 댓글을 찾을 수 없습니다.' });
+        }
+        res.json({ message: '댓글이 성공적으로 삭제되었습니다.' });
+    } catch (error) {
+        console.error('DB 삭제 중 오류 발생 (DELETE /api/comments/:id):', error);
+        res.status(500).json({ message: '서버 오류: 댓글 삭제에 실패했습니다.' });
+    }
+});
 
 // ----------------------------------------------------
 // (E) 사용자/마이페이지 API
@@ -326,6 +557,34 @@ app.get('/api/users/:username/posts', async (req, res) => {
         res.status(500).json({ message: '서버 오류: ' });
     }
 });
+
+// 🌟 [핵심 추가] '내가 쓴 댓글' 목록 조회 API
+app.get('/api/users/username/:username/comments', async (req, res) => {
+    const { username } = req.params;
+    
+    try {
+        // 'authorUsername'(고유ID)를 기준으로 댓글을 조회하고,
+        // LEFT JOIN으로 원본 게시글의 'title'과 'id'를 함께 가져옵니다.
+        const sql = `
+            SELECT 
+                c.id, 
+                c.content, 
+                c.createdAt, 
+                c.postId, 
+                p.title AS postTitle 
+            FROM comments c
+            LEFT JOIN posts p ON c.postId = p.id
+            WHERE c.authorUsername = ?
+            ORDER BY c.createdAt DESC;
+        `;
+        const [rows] = await pool.query(sql, [username]);
+        res.json(rows);
+    } catch (error) {
+        console.error('DB 조회 중 오류 발생 (GET /api/users/username/:username/comments):', error);
+        res.status(500).json({ message: '서버 오류: 댓글 내역을 불러오지 못했습니다.' });
+    }
+});
+
 
 app.post('/api/users/check-nickname', async (req, res) => {
     const { nickname } = req.body;
@@ -532,7 +791,6 @@ app.get('/api/reviews/entry/:id', async (req, res) => {
 app.post('/api/reviews', async (req, res) => {
     const { productName, category, rating, content, image, authorUsername, authorNickname, userId } = req.body;
 
-    // 🌟 [수정] 유효성 검사 로직 변경 (rating: 0 허용)
     if (!productName || !category || !content || !authorUsername || !userId || !authorNickname || (rating === null || rating === undefined)) {
         console.warn('누락된 필드:', { productName, category, rating, content, authorUsername, authorNickname, userId });
         return res.status(400).json({ message: "필수 필드가 누락되었습니다." });
@@ -556,7 +814,6 @@ app.put('/api/reviews/:id', async (req, res) => {
     const { id } = req.params;
     const { productName, category, rating, content, image, userId } = req.body;
 
-    // 🌟 [수정] 유효성 검사 로직 변경 (rating: 0 허용)
     if (!productName || !category || !content || !userId || (rating === null || rating === undefined)) {
         return res.status(400).json({ message: "필수 필드가 누락되었습니다." });
     }
@@ -599,161 +856,6 @@ app.delete('/api/reviews/:id', async (req, res) => {
     } catch (error) {
         console.error('DB 삭제 중 오류 발생 (DELETE /api/reviews/:id):', error);
         res.status(500).json({ message: '서버 오류: 리뷰 삭제에 실패했습니다.' });
-    }
-});
-
-
-// ----------------------------------------------------
-// (H) 🚨 입양 공고 API (NEW)
-// ----------------------------------------------------
-
-// [수정] 1. 입양 공고 목록 (GET /api/adoption) - DB 연동
-app.get('/api/adoption', async (req, res) => {
-    console.log('GET /api/adoption 요청 수신 (DB)');
-    try {
-        // 🌟 [수정] 작성자 닉네임(authorNickname)도 JOIN
-        const sql = `
-            SELECT a.*, u.nickname AS authorNickname
-            FROM adoption_posts a
-            LEFT JOIN users u ON a.userId = u.id
-            ORDER BY a.createdAt DESC
-        `;
-        const [rows] = await pool.query(sql);
-        res.json(rows);
-    } catch (error) {
-        console.error('DB 조회 중 오류 발생 (GET /api/adoption):', error);
-        res.status(500).json({ message: '서버 오류: 공고 목록을 불러오지 못했습니다.' });
-    }
-});
-
-// [수정] 1-2. 입양 공고 상세 (GET /api/adoption/:id) - DB 연동
-app.get('/api/adoption/:id', async (req, res) => {
-    const { id } = req.params;
-    console.log(`GET /api/adoption/${id} 요청 수신 (DB)`);
-    try {
-        // 🌟 [수정] 작성자 닉네임(authorNickname)도 JOIN
-        const sql = `
-            SELECT a.*, u.nickname AS authorNickname
-            FROM adoption_posts a
-            LEFT JOIN users u ON a.userId = u.id
-            WHERE a.id = ?
-        `;
-        const [posts] = await pool.query(sql, [id]);
-        if (posts.length === 0) {
-            return res.status(404).json({ message: "공고를 찾을 수 없습니다." });
-        }
-        res.json(posts[0]);
-    } catch (error) {
-        console.error('DB 조회 중 오류 발생 (GET /api/adoption/:id):', error);
-        res.status(500).json({ message: '서버 오류: 공고를 불러오지 못했습니다.' });
-    }
-});
-
-// 25. [NEW] 입양 공고 작성 (POST /api/adoption)
-app.post('/api/adoption', async (req, res) => {
-    // 🌟 [수정] authorNickname 추가
-    const { name, species, breed, age, gender, size, region, description, image, userId, author, authorNickname } = req.body;
-    
-    if (!name || !species || !breed || !age || !gender || !size || !region || !description || !userId || !author || !authorNickname) {
-        return res.status(400).json({ message: "필수 필드가 누락되었습니다." });
-    }
-    try {
-        const sql = `
-            INSERT INTO adoption_posts (name, species, breed, age, gender, size, region, description, image, userId, author, authorNickname, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '입양가능')
-        `;
-        const [result] = await pool.query(sql, [name, species, breed, age, gender, size, region, description, image || null, userId, author, authorNickname]);
-        res.status(201).json({ message: '입양 공고가 성공적으로 등록되었습니다.', postId: result.insertId });
-    } catch (error) {
-        console.error('DB 삽입 중 오류 발생 (POST /api/adoption):', error);
-        res.status(500).json({ message: '서버 오류: 공고 등록에 실패했습니다.' });
-    }
-});
-
-// 26. [NEW] 입양 공고 수정 (PUT /api/adoption/:id)
-app.put('/api/adoption/:id', async (req, res) => {
-    const { id } = req.params;
-    const { name, species, breed, age, gender, size, region, description, image, status, userId } = req.body;
-
-    if (!name || !species || !breed || !age || !gender || !size || !region || !description || !status || !userId) {
-        return res.status(400).json({ message: "필수 필드가 누락되었습니다." });
-    }
-    try {
-        const sql = `
-            UPDATE adoption_posts 
-            SET name = ?, species = ?, breed = ?, age = ?, gender = ?, size = ?, region = ?, description = ?, image = ?, status = ?
-            WHERE id = ? AND userId = ?
-        `;
-        const [result] = await pool.query(sql, [name, species, breed, age, gender, size, region, description, image || null, status, id, userId]);
-        
-        if (result.affectedRows === 0) {
-            return res.status(403).json({ message: '공고를 수정할 권한이 없거나 해당 공고를 찾을 수 없습니다.' });
-        }
-        res.json({ message: '공고가 성공적으로 수정되었습니다.' });
-    } catch (error) {
-        console.error('DB 업데이트 중 오류 발생 (PUT /api/adoption/:id):', error);
-        res.status(500).json({ message: '서버 오류: 공고 수정에 실패했습니다.' });
-    }
-});
-
-// 27. [NEW] 입양 공고 삭제 (DELETE /api/adoption/:id)
-app.delete('/api/adoption/:id', async (req, res) => {
-    const { id } = req.params;
-    const { userId } = req.body; 
-    if (!userId) {
-        return res.status(400).json({ message: '본인 확인을 위한 사용자 ID가 필요합니다.' });
-    }
-    try {
-        const sql = 'DELETE FROM adoption_posts WHERE id = ? AND userId = ?';
-        const [result] = await pool.query(sql, [id, userId]);
-        if (result.affectedRows === 0) {
-            return res.status(403).json({ message: '공고를 삭제할 권한이 없거나 해당 공고를 찾을 수 없습니다.' });
-        }
-        res.json({ message: '공고가 성공적으로 삭제되었습니다.' });
-    } catch (error) {
-        console.error('DB 삭제 중 오류 발생 (DELETE /api/adoption/:id):', error);
-        res.status(500).json({ message: '서버 오류: 공고 삭제에 실패했습니다.' });
-    }
-});
-
-// 28. [NEW] 입양 신청 (POST /api/adoption/apply)
-app.post('/api/adoption/apply', async (req, res) => {
-    const { postId, userId, username, petName } = req.body;
-    if (!postId || !userId || !username || !petName) {
-        return res.status(400).json({ message: "신청 정보가 누락되었습니다." });
-    }
-    try {
-        const sql = `
-            INSERT INTO adoption_applications (postId, userId, username, petName, status)
-            VALUES (?, ?, ?, ?, '신청완료')
-        `;
-        await pool.query(sql, [postId, userId, username, petName]);
-        res.status(201).json({ message: '입양 신청이 완료되었습니다.' });
-    } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: '이미 이 공고에 입양 신청을 하셨습니다.' });
-        }
-        console.error('DB 삽입 중 오류 발생 (POST /api/adoption/apply):', error);
-        res.status(500).json({ message: '서버 오류: 입양 신청에 실패했습니다.' });
-    }
-});
-
-// 29. [NEW] '내 입양 신청 내역' 조회 (GET /api/applications/:username)
-app.get('/api/applications/:username', async (req, res) => {
-    const { username } = req.params;
-    try {
-        const sql = `
-            SELECT a.*, p.region AS shelter, p.image AS petImage
-            FROM adoption_applications a
-            JOIN adoption_posts p ON a.postId = p.id
-            WHERE a.username = ?
-            ORDER BY a.createdAt DESC
-        `;
-        const [applications] = await pool.query(sql, [username]);
-        res.json(applications);
-    } catch (error) {
-        console.error('DB 조회 중 오류 발생 (GET /api/applications/:username):', error);
-        res.status(500).json({ message: '서버 오류: 신청 내역을 불러오지 못했습니다.' });
     }
 });
 
@@ -910,6 +1012,9 @@ async function initializeDatabase() {
 
         // 9. [NEW] adoption_posts에 authorNickname 컬럼 추가 (이전 버전에 빠졌을 경우 대비)
         await safeAddColumn('adoption_posts', 'authorNickname', "VARCHAR(100) NOT NULL");
+        
+        // 10. [NEW] 🚨 comments 테이블에 authorUsername 컬럼 추가 (댓글 작성자 ID)
+        await safeAddColumn('comments', 'authorUsername', "VARCHAR(100) DEFAULT 'anonymous'");
 
 
         console.log('✅ 모든 테이블과 컬럼 구조가 최신 상태입니다.');

@@ -1,21 +1,104 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, ThumbsUp, MessageSquare, Calendar, User, Trash2, Edit } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Eye, ThumbsUp, MessageSquare, Calendar, User, Trash2, Edit, Save, X } from 'lucide-react'; // 🌟 Save, X 아이콘 추가
 
+// ===============================================
+// 💡 [핵심 수정] CommentItem 컴포넌트를 BoardDetail 함수 *밖으로* 이동
+// ===============================================
+/**
+ * 개별 댓글 컴포넌트
+ * (BoardDetail 밖으로 분리하여 불필요한 리렌더링 및 포커스 상실 방지)
+ */
+const CommentItem = ({ 
+    comment, 
+    currentUser, 
+    isEditing, 
+    editedContent,
+    onEdit,
+    onCancel,
+    onUpdate,
+    onDelete,
+    onTextChange 
+}) => {
+    // 🌟 본인 댓글인지 확인 (authorUsername 기준)
+    const isOwner = currentUser && currentUser.username === comment.authorUsername;
+
+    return (
+        <div className="comment-item">
+            <div className="comment-meta">
+                <span className="comment-author">{comment.author}</span>
+                <span className="comment-date">
+                    {new Date(comment.createdAt).toISOString().split('T')[0]}
+                </span>
+            </div>
+            
+            {/* 🌟 수정 모드일 때 <textarea> 렌더링 */}
+            {isEditing ? (
+                <div className="comment-edit-form">
+                    <textarea
+                        className="comment-textarea edit"
+                        value={editedContent}
+                        onChange={(e) => onTextChange(e.target.value)} // 👈 부모의 setEditingCommentText 호출
+                    />
+                    <div className="comment-actions">
+                        <button 
+                            onClick={() => onUpdate(comment.id)} 
+                            className="action-button-small save"
+                        >
+                            <Save className="w-4 h-4" /> 저장
+                        </button>
+                        <button 
+                            onClick={onCancel} 
+                            className="action-button-small cancel"
+                        >
+                            <X className="w-4 h-4" /> 취소
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                // 기존 댓글 내용
+                <p className="comment-content">{comment.content}</p>
+            )}
+
+            {/* 🌟 본인 댓글이고, 수정 모드가 아닐 때만 '수정/삭제' 버튼 표시 */}
+            {isOwner && !isEditing && (
+                <div className="comment-actions">
+                    <button 
+                        onClick={() => onEdit(comment)}
+                        className="action-button-small edit"
+                    >
+                        <Edit className="w-4 h-4" /> 수정
+                    </button>
+                    <button 
+                        onClick={() => onDelete(comment.id, comment.authorUsername)}
+                        className="action-button-small delete"
+                    >
+                        <Trash2 className="w-4 h-4" /> 삭제
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+// ===============================================
+// 💡 메인 BoardDetail 컴포넌트
+// ===============================================
 export default function BoardDetail({ currentUser }) {
     const { id } = useParams();
     const navigate = useNavigate();
     
     const [post, setPost] = useState(null);
-    const [comments, setComments] = useState([]); // 💡 댓글 목록 상태
+    const [comments, setComments] = useState([]);
     const [newCommentText, setNewCommentText] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isLiked, setIsLiked] = useState(false);
     const [likeAnimating, setLikeAnimating] = useState(false);
     
-    // 임시 사용자 닉네임 (댓글 작성 시 사용)
-    const currentUserAuthor = currentUser ? currentUser.nickname : '비로그인 사용자';
+    const [editingCommentId, setEditingCommentId] = useState(null); 
+    const [editingCommentText, setEditingCommentText] = useState(''); 
 
     // ----------------------------------------------------
     // 🔥 데이터 로드 (게시글 상세 + 댓글)
@@ -23,22 +106,18 @@ export default function BoardDetail({ currentUser }) {
     useEffect(() => {
         fetchPostDetail();
         fetchComments(); 
-    }, [id]);
+    }, [id]); 
 
-    // 💡 좋아요 상태 초기화 (post, currentUser 변경 시)
+    // 좋아요 상태 초기화 (post, currentUser 변경 시)
     useEffect(() => {
-        if (post && currentUser) { 
-            // 게시글이 로드되고, 사용자가 로그인했을 때 좋아요 상태를 확인
-            if (post.likedUsers && post.likedUsers.includes(currentUser.username)) {
+        if (post) { 
+            if (currentUser && post.likedUsers && post.likedUsers.includes(currentUser.username)) {
                 setIsLiked(true);
             } else {
                 setIsLiked(false);
             }
         }
-        if (!currentUser) {
-            setIsLiked(false); // 로그아웃하면 좋아요 상태 초기화
-        }
-    }, [post, currentUser]);
+    }, [post, currentUser]); 
 
     const fetchPostDetail = async () => {
         try {
@@ -63,7 +142,6 @@ export default function BoardDetail({ currentUser }) {
         }
     };
     
-    // 💡 댓글 목록 가져오기 함수 (9. GET /api/posts/:postId/comments)
     const fetchComments = async () => {
         try {
             const response = await fetch(`http://localhost:3001/api/posts/${id}/comments`);
@@ -79,7 +157,7 @@ export default function BoardDetail({ currentUser }) {
     };
 
     // ----------------------------------------------------
-    // 💡 댓글 작성 처리 (10. POST /api/posts/:postId/comments)
+    // 💡 댓글 작성 처리 (currentUser 연동)
     // ----------------------------------------------------
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
@@ -101,20 +179,16 @@ export default function BoardDetail({ currentUser }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     content: newCommentText, 
-                    author: currentUserAuthor 
+                    author: currentUser.nickname,
+                    authorUsername: currentUser.username 
                 }),
             });
 
             if (response.ok) {
                 const data = await response.json();
-                
-                // 상태 업데이트: 새 댓글을 목록 맨 위에 추가
                 setComments(prev => [data.comment, ...prev]); 
-                setNewCommentText(''); // 입력 필드 초기화
-                
-                // 게시글의 댓글 수 업데이트 (UI 상에서)
+                setNewCommentText(''); 
                 setPost(prev => ({ ...prev, comments: (prev.comments || 0) + 1 }));
-
             } else {
                 alert('댓글 작성에 실패했습니다.');
             }
@@ -125,26 +199,106 @@ export default function BoardDetail({ currentUser }) {
     };
 
     // ----------------------------------------------------
-    // 💡 '좋아요' 핸들러 (5. PUT /api/posts/:id/like)
+    // 🌟 [NEW] 댓글 수정/삭제 핸들러
+    // ----------------------------------------------------
+
+    // '수정' 버튼 클릭 시
+    const handleCommentEdit = (comment) => {
+        setEditingCommentId(comment.id);
+        setEditingCommentText(comment.content);
+    };
+
+    // '수정 취소' 버튼 클릭 시
+    const handleCommentCancel = () => {
+        setEditingCommentId(null);
+        setEditingCommentText('');
+    };
+
+    // '수정 저장' 버튼 클릭 시
+    const handleCommentUpdate = async (commentId) => {
+        if (!editingCommentText.trim()) {
+            alert('댓글 내용을 입력해주세요.');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`http://localhost:3001/api/comments/${commentId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: editingCommentText,
+                    authorUsername: currentUser.username // [보안] 본인 확인용
+                })
+            });
+
+            if (response.ok) {
+                // 프론트엔드 상태 즉시 업데이트
+                setComments(prev => 
+                    prev.map(c => 
+                        c.id === commentId ? { ...c, content: editingCommentText } : c
+                    )
+                );
+                handleCommentCancel(); // 수정 모드 종료
+            } else {
+                const errData = await response.json();
+                alert(errData.message || '댓글 수정에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('댓글 수정 오류:', error);
+            alert('서버 오류로 댓글 수정에 실패했습니다.');
+        }
+    };
+
+    // '삭제' 버튼 클릭 시
+    const handleCommentDelete = async (commentId, authorUsername) => {
+        if (!currentUser || currentUser.username !== authorUsername) {
+            alert('삭제할 권한이 없습니다.');
+            return;
+        }
+
+        // eslint-disable-next-line no-restricted-globals
+        if (confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+            try {
+                const response = await fetch(`http://localhost:3001/api/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ authorUsername: currentUser.username }) // [보안] 본인 확인용
+                });
+
+                if (response.ok) {
+                    // 프론트엔드 상태 즉시 업데이트
+                    setComments(prev => prev.filter(c => c.id !== commentId));
+                    setPost(prev => ({ ...prev, comments: (prev.comments || 1) - 1 }));
+                } else {
+                    const errData = await response.json();
+                    alert(errData.message || '댓글 삭제에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('댓글 삭제 오류:', error);
+                alert('서버 오류로 댓글 삭제에 실패했습니다.');
+            }
+        }
+    };
+
+
+    // ----------------------------------------------------
+    // 💡 '좋아요' 핸들러 (currentUser 연동)
     // ----------------------------------------------------
     const handleLike = async () => {
+        // (기존 코드와 동일)
         if (!currentUser) {
             alert('좋아요를 누르려면 로그인이 필요합니다.');
             navigate('/login');
             return;
         }
-        
         setLikeAnimating(true);
-        setTimeout(() => setLikeAnimating(false), 500);
-
+        setTimeout(() => setLikeAnimating(false), 500); 
         try {
             const response = await fetch(`http://localhost:3001/api/posts/${id}/like`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                // userId로 로그인한 사용자의 username (고유 ID) 전송
                 body: JSON.stringify({ userId: currentUser.username }) 
             });
-
             if (response.ok) {
                 const data = await response.json();
                 setPost(prev => ({ ...prev, likes: data.likes }));
@@ -159,30 +313,36 @@ export default function BoardDetail({ currentUser }) {
     };
 
     // ----------------------------------------------------
-    // 💡 '삭제' 핸들러 (7. DELETE /api/posts/:id)
+    // 💡 '게시글 삭제' 핸들러 (currentUser 연동)
     // ----------------------------------------------------
     const handleDelete = async () => {
-        // [보안] 권한 검사
-        if (!currentUser || currentUser.username !== post.author) {
-            alert('이 글을 삭제할 권한이 없습니다.');
+        // (기존 코드와 동일)
+        if (!currentUser) {
+            alert('삭제할 권한이 없습니다. (로그인 필요)');
             return;
         }
-
-        // NOTE: window.confirm 대신 커스텀 UI/모달을 권장
-        if (!window.confirm(`정말로 이 게시글을 삭제하시겠습니까?`)) {
+        if (currentUser.username !== post.author) {
+            alert('본인이 작성한 글만 삭제할 수 있습니다.');
             return;
         }
-
+        // eslint-disable-next-line no-restricted-globals
+        const userConfirmed = confirm('정말로 이 게시글을 삭제하시겠습니까?');
+        if (!userConfirmed) {
+            return;
+        }
         try {
             const response = await fetch(`http://localhost:3001/api/posts/${id}`, {
                 method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ authorUsername: currentUser.username })
             });
 
             if (response.ok) {
                 alert('게시글이 삭제되었습니다.');
-                navigate('/board'); // 목록으로 이동
+                navigate('/board'); 
             } else {
-                alert('게시글 삭제에 실패했습니다.');
+                const errData = await response.json();
+                alert(errData.message || '게시글 삭제에 실패했습니다.');
             }
         } catch (error) {
             console.error('삭제 API 오류:', error);
@@ -192,7 +352,7 @@ export default function BoardDetail({ currentUser }) {
 
 
     // ----------------------------------------------------
-    // 로딩 및 에러 렌더링
+    // 렌더링
     // ----------------------------------------------------
     if (loading) {
         return (
@@ -217,22 +377,6 @@ export default function BoardDetail({ currentUser }) {
     }
     if (!post) { return null; }
 
-    // ----------------------------------------------------
-    // 💡 댓글 UI (Render Content)
-    // ----------------------------------------------------
-    const CommentItem = ({ comment }) => (
-        <div className="comment-item">
-            <div className="comment-meta">
-                <span className="comment-author">{comment.author}</span>
-                <span className="comment-date">
-                    {/* MySQL DateTime 포맷을 YYYY-MM-DD로 변환 */}
-                    {new Date(comment.createdAt).toISOString().split('T')[0]}
-                </span>
-            </div>
-            <p className="comment-content">{comment.content}</p>
-        </div>
-    );
-
 
     return (
         <div className="detail-container">
@@ -240,8 +384,7 @@ export default function BoardDetail({ currentUser }) {
             {/* 🎨 CSS 스타일 정의 (단일 파일 내) */}
             {/* ------------------------------------------- */}
             <style>{`
-                /* 컬러 팔레트: #F2EDE4(배경), #594C3C(텍스트), #F2E2CE(경계선), #F2CBBD(악센트), #735048(기본 색상) */
-                
+                /* ( ... 기존 스타일 ... ) */
                 .detail-container {
                     min-height: 100vh;
                     background-color: #F2EDE4; 
@@ -274,6 +417,15 @@ export default function BoardDetail({ currentUser }) {
                 @keyframes spin {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
+                }
+                .primary-button {
+                    background-color: #735048;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    border: none;
+                    cursor: pointer;
                 }
 
                 .header {
@@ -314,7 +466,7 @@ export default function BoardDetail({ currentUser }) {
                     overflow: hidden;
                 }
 
-                /* 게시글 헤더 스타일 */
+                /* ( ... .post-header, .post-body 등 기존 스타일 ... ) */
                 .post-header {
                     padding: 24px;
                     border-bottom: 1px solid #F2E2CE;
@@ -350,8 +502,6 @@ export default function BoardDetail({ currentUser }) {
                     align-items: center;
                     gap: 4px;
                 }
-
-                /* 게시글 본문 스타일 */
                 .post-body {
                     padding: 24px;
                 }
@@ -362,7 +512,7 @@ export default function BoardDetail({ currentUser }) {
                     min-height: 200px;
                 }
 
-                /* 좋아요 버튼 스타일 */
+                /* ( ... .like-area, .like-button 등 기존 스타일 ... ) */
                 .like-area {
                     padding: 24px;
                     border-top: 1px solid #F2E2CE;
@@ -399,7 +549,14 @@ export default function BoardDetail({ currentUser }) {
                 .like-button.liked:hover:not(:disabled) {
                     background-color: #DC2626; 
                 }
-                /* 좋아요 애니메이션 (CSS는 JS 파일 상단에 정의됨) */
+                @keyframes heartBeat {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.3); }
+                    100% { transform: scale(1); }
+                }
+                .heart-beat {
+                    animation: heartBeat 0.5s ease-in-out;
+                }
 
                 /* 댓글 영역 스타일 */
                 .comments-area {
@@ -429,6 +586,7 @@ export default function BoardDetail({ currentUser }) {
                     resize: none;
                     font-size: 14px;
                     margin-bottom: 12px;
+                    font-family: inherit; /* 🌟 폰트 상속 */
                 }
                 .comment-submit-area {
                     display: flex;
@@ -482,6 +640,69 @@ export default function BoardDetail({ currentUser }) {
                 .comment-content {
                     font-size: 15px;
                     color: #594C3C;
+                    white-space: pre-wrap; 
+                    word-break: break-word; 
+                }
+
+                /* 🌟 [NEW] 댓글 수정 폼 */
+                .comment-edit-form {
+                    margin-top: 8px;
+                }
+                .comment-textarea.edit {
+                    width: 100%; 
+                    min-height: 80px;
+                }
+
+                /* 🌟 [NEW] 댓글 수정/삭제 버튼 */
+                .comment-actions {
+                    display: flex;
+                    gap: 8px;
+                    margin-top: 8px;
+                }
+                .action-button-small {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 4px 8px;
+                    font-size: 13px;
+                    border-radius: 6px;
+                    border: 1px solid transparent;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+                .action-button-small .w-4 { width: 16px; height: 16px; } /* 아이콘 크기 */
+                
+                .action-button-small.edit {
+                    color: #735048; /* brand-primary-text */
+                    background-color: #F2E2CE; /* brand-primary-light */
+                    border-color: #F2E2CE;
+                }
+                .action-button-small.edit:hover {
+                    background-color: #e4d2bc; /* 살짝 어둡게 */
+                }
+                .action-button-small.delete {
+                    color: #991B1B; /* danger-color */
+                    background-color: #fee2e2; /* red-100 */
+                    border-color: #fee2e2;
+                }
+                .action-button-small.delete:hover {
+                    background-color: #fecdd3; /* red-200 */
+                }
+                .action-button-small.save {
+                    color: white;
+                    background-color: #735048; /* brand-primary */
+                    border-color: #735048;
+                }
+                .action-button-small.save:hover {
+                    background-color: #594C3C; /* brand-primary-dark */
+                }
+                .action-button-small.cancel {
+                    color: #6b7280; /* text-light */
+                    background-color: #e5e7eb; /* gray-200 */
+                    border-color: #e5e7eb;
+                }
+                .action-button-small.cancel:hover {
+                    background-color: #d1d5db; /* gray-300 */
                 }
 
 
@@ -501,6 +722,7 @@ export default function BoardDetail({ currentUser }) {
                     display: flex;
                     align-items: center;
                     gap: 8px;
+                    text-decoration: none; 
                 }
                 .edit-button {
                     border: 1px solid #735048;
@@ -532,17 +754,14 @@ export default function BoardDetail({ currentUser }) {
                 <article className="post-card">
                     {/* 게시글 헤더 */}
                     <div className="post-header">
-                        {/* 카테고리 배지 */}
                         <div className="mb-3">
                             <span className="category-badge">
                                 {post.category}
                             </span>
                         </div>
-                        {/* 제목 */}
                         <h1 className="post-title">
                             {post.title}
                         </h1>
-                        {/* 메타 정보 */}
                         <div className="post-meta">
                             <div className="meta-item"><User className="w-4 h-4" /><span>{post.author}</span></div>
                             <div className="meta-item"><Calendar className="w-4 h-4" /><span>{post.date ? post.date : (post.createdAt ? new Date(post.createdAt).toISOString().split('T')[0] : '날짜없음')}</span></div>
@@ -554,7 +773,7 @@ export default function BoardDetail({ currentUser }) {
                     {/* 게시글 본문 */}
                     <div className="post-body">
                         <div className="post-content">
-                            <p>{post.content}</p>
+                            {post.content}
                         </div>
                     </div>
 
@@ -609,7 +828,19 @@ export default function BoardDetail({ currentUser }) {
                         <div className="comment-list">
                             {comments.length > 0 ? (
                                 comments.map(comment => (
-                                    <CommentItem key={comment.id} comment={comment} />
+                                    <CommentItem 
+                                        key={comment.id} 
+                                        comment={comment} 
+                                        currentUser={currentUser} 
+                                        // 🌟 [수정] 수정에 필요한 모든 props 전달
+                                        isEditing={editingCommentId === comment.id}
+                                        editedContent={editingCommentText}
+                                        onEdit={handleCommentEdit}
+                                        onCancel={handleCommentCancel}
+                                        onUpdate={handleCommentUpdate}
+                                        onDelete={handleCommentDelete}
+                                        onTextChange={setEditingCommentText}
+                                    />
                                 ))
                             ) : (
                                 <p className="text-gray-500 text-center py-4">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
@@ -621,12 +852,12 @@ export default function BoardDetail({ currentUser }) {
                 {/* 하단 버튼 (수정/삭제) */}
                 {currentUser && post.author === currentUser.username && (
                     <div className="bottom-actions">
-                        <button
-                            onClick={() => navigate(`/board/edit/${id}`)}
+                        <Link
+                            to={`/board/edit/${id}`}
                             className="action-button edit-button"
                         >
                             <Edit className="w-4 h-4" />수정
-                        </button>
+                        </Link>
                         <button
                             onClick={handleDelete}
                             className="action-button delete-button"

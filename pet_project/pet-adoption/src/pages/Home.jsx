@@ -1,32 +1,31 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ChevronRight, Bell, Heart, Bot } from 'lucide-react';
+// 🌟 [수정] react-router-dom에서 실제 Link를 임포트합니다.
+import { Link } from 'react-router-dom';
+// 🌟 [수정] BookOpen 아이콘 추가
+import { ChevronRight, Bell, Heart, Bot, Star, MessageSquare, BookOpen } from 'lucide-react'; 
 
 // --- CSS Block for Styling ---
-// Tailwind CSS 클래스를 일반 CSS로 변환하여 여기에 정의합니다.
+// (이전과 동일한 몽글몽글 디자인 CSS)
 const styles = `
 .home-container {
   min-height: 100vh;
   background-color: #F2EDE4; /* C1: Light Background */
   font-family: 'Inter', sans-serif;
 }
-
 .main-content {
   max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
   padding: 1.5rem 1rem;
 }
-
 .main-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 1.5rem;
 }
-
 .main-section, .sidebar-section {
   grid-column: span 12 / span 12;
 }
-
 @media (min-width: 1024px) { /* lg: breakpoint */
   .main-section {
     grid-column: span 9 / span 9;
@@ -35,22 +34,21 @@ const styles = `
     grid-column: span 3 / span 3;
   }
 }
-
 .section-spacing {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
-
 /* Carousel Styles */
 .carousel-wrapper {
   height: 20rem; 
   border-radius: 0.75rem;
   overflow: hidden;
   box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  position: relative; /* 🌟 Dot를 위해 relative 추가 */
 }
-
 .slide-item {
+  position: absolute; /* 🌟 [수정] position: absolute 추가 */
   top: 0; right: 0; bottom: 0; left: 0;
   transition: opacity 700ms;
   display: flex;
@@ -65,7 +63,6 @@ const styles = `
 .slide-color-1 { background: linear-gradient(to right, #F2CBBD, #735048); } /* C4 to C5 */
 .slide-color-2 { background: linear-gradient(to right, #735048, #594C3C); } /* C5 to C2 */
 .slide-color-3 { background: linear-gradient(to right, #F2CBBD, #594C3C); } /* C4 to C2 */
-
 .carousel-dots {
   position: absolute;
   bottom: 1rem;
@@ -83,12 +80,12 @@ const styles = `
   transition: all 150ms;
   background-color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
+  border: none; /* 🌟 [추가] 버튼 기본 테두리 제거 */
 }
 .dot-active {
   background-color: white;
   width: 1.5rem;
 }
-
 /* Animal Card Styles (추천 동물에 사용) */
 .card-wrapper {
   background-color: white;
@@ -97,6 +94,7 @@ const styles = `
   box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); /* shadow-sm */
   transition: box-shadow 150ms;
   cursor: pointer;
+  text-decoration: none; /* 🌟 [추가] Link 태그 밑줄 제거 */
 }
 .card-wrapper:hover {
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.06); /* hover:shadow-md */
@@ -128,7 +126,6 @@ const styles = `
   font-size: 0.75rem; /* text-xs */
   color: #735048; /* C5: Secondary Text Color */
 }
-
 /* Quick Menu Styles (unchanged) */
 .menu-box {
   background-color: white;
@@ -172,8 +169,8 @@ const styles = `
 .menu-text {
   font-size: 0.875rem;
   font-weight: 500;
+  color: #594C3C; /* 🌟 [추가] 텍스트 색상 */
 }
-
 /* Notice Styles (color updated) */
 .notice-wrapper {
   background-color: white;
@@ -212,6 +209,7 @@ const styles = `
   border-radius: 0.25rem;
   cursor: pointer;
   transition: background-color 150ms;
+  text-decoration: none; 
 }
 .notice-item:hover {
   background-color: #F2E2CE; /* C3: Light Beige Hover */
@@ -229,6 +227,7 @@ const styles = `
   color: #594C3C; /* C2: Dark Text on Tag */
   padding: 0 0.375rem;
   border-radius: 0.25rem;
+  font-weight: 600; 
 }
 .notice-text {
   font-size: 0.875rem;
@@ -241,7 +240,6 @@ const styles = `
   font-size: 0.75rem;
   color: #735048; /* C5: Secondary date color */
 }
-
 /* Question/Latest Post Board Styles */
 .question-list-container {
     display: flex;
@@ -255,6 +253,7 @@ const styles = `
     border-bottom: 1px solid #F2E2CE; /* C3 */
     cursor: pointer;
     transition: background-color 150ms;
+    text-decoration: none; 
 }
 .question-item:last-child {
     border-bottom: none;
@@ -278,6 +277,7 @@ const styles = `
     font-size: 0.75rem;
     color: #735048; /* C5 */
     gap: 0.75rem;
+    white-space: nowrap; 
 }
 .question-user {
     /* Simple username display */
@@ -285,7 +285,6 @@ const styles = `
 .question-comments {
     white-space: nowrap;
 }
-
 /* General Styles (color updated) */
 .section-header {
   display: flex;
@@ -314,6 +313,7 @@ const styles = `
 }
 .grid-cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem; 
 }
 .grid-cols-5 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -323,10 +323,8 @@ const styles = `
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
-
 /* Custom Color Classes for Icons/Accents */
 .text-icon-color { color: #594C3C; /* C2 */ }
-
 /* Banner Ad (color updated) */
 .ad-banner {
     background: linear-gradient(to bottom right, #F2EDE4, #F2E2CE); /* C1 to C3 */
@@ -337,7 +335,6 @@ const styles = `
 }
 .ad-text-1 { color: #735048; /* C5 */ font-size: 0.875rem; margin-bottom: 0.5rem; }
 .ad-text-2 { color: #735048; /* C5 */ font-size: 0.75rem; }
-
 /* AI Consultant Styles */
 .ai-consultant-card {
   background-color: white;
@@ -354,6 +351,12 @@ const styles = `
   margin-bottom: 0.5rem;
   color: #594C3C;
   resize: none;
+  font-family: inherit; 
+}
+.ai-input:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 2px var(--brand-primary-light);
+    outline: none;
 }
 .ai-button {
   width: 100%;
@@ -364,6 +367,7 @@ const styles = `
   border-radius: 0.375rem;
   transition: background-color 150ms;
   cursor: pointer;
+  border: none; 
 }
 .ai-button:hover:not(:disabled) {
   background-color: #594C3C; /* C2 */
@@ -382,6 +386,7 @@ const styles = `
   color: #594C3C;
   white-space: pre-wrap;
   min-height: 80px;
+  line-height: 1.6; 
 }
 .ai-response-loading {
   text-align: center;
@@ -390,12 +395,15 @@ const styles = `
 }
 .ai-citation {
   margin-top: 0.5rem;
-  font-size: 0.65rem;
+  font-size: 0.75rem; 
   color: #735048;
 }
 .ai-citation a {
   color: #735048;
   text-decoration: underline;
+}
+.ai-citation p {
+    margin-bottom: 0.25rem; 
 }
 `;
 // --- End CSS Block ---
@@ -406,8 +414,7 @@ const apiKey = "";
 
 /**
  * Gemini API 호출 함수 (Google Search Grounding 포함)
- * @param {string} prompt 사용자 질문
- * @returns {Promise<{text: string, sources: Array<{uri: string, title: string}>}>}
+ * (이 함수는 수정되지 않았습니다 - 기존 로직 100% 동일)
  */
 const callGeminiApi = async (prompt) => {
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
@@ -456,7 +463,6 @@ const callGeminiApi = async (prompt) => {
                 }
             } else {
                 if (response.status === 429 && attempt < maxRetries - 1) {
-                    // 429 Too Many Requests (Rate Limit) -> Apply exponential backoff
                     const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
                     attempt++;
                     await new Promise(resolve => setTimeout(resolve, delay));
@@ -473,7 +479,7 @@ const callGeminiApi = async (prompt) => {
 };
 
 
-// 캐러셀 컴포넌트 (unchanged logic)
+// 캐러셀 컴포넌트 (수정 없음)
 function Carousel() {
   const slides = [
     { id: 1, text: "사지말고 입양하세요 🧡", colorClass: "slide-color-1" },
@@ -517,46 +523,45 @@ function Carousel() {
 }
 
 // 동물 카드 컴포넌트 (추천 동물에 사용)
-const AnimalCard = ({ name, imageSrc, age, gender }) => (
-  <div className="card-wrapper">
+// 🌟 [수정] age prop은 "2살" 같이 '살'이 포함된 string으로 받으므로, 템플릿에서 '살'을 제거합니다.
+const AnimalCard = ({ id, name, imageSrc, age, gender }) => (
+  <Link to={`/adoption/${id}`} className="card-wrapper">
     <div className="card-image-box">
       <img src={imageSrc} alt={name} className="card-image"/>
     </div>
     <div className="card-info">
       <h3 className="card-title">{name}</h3>
+      {/* 🌟 [수정] {age}살 -> {age} 로 변경 */}
       <p className="card-meta">{age} · {gender}</p>
     </div>
-  </div>
+  </Link>
 );
 
 // 공지사항 아이템
-const NoticeItem = ({ title, date, isNew }) => (
-  <div className="notice-item">
+// 🌟 [수정] Link 태그로 감싸서 실제 상세 페이지로 이동
+const NoticeItem = ({ id, title, date, isNew }) => (
+  <Link to={`/board/${id}`} className="notice-item">
     <div className="notice-left">
       {isNew && <span className="notice-new-tag">N</span>}
       <span className="notice-text">{title}</span>
     </div>
     <span className="notice-date">{date}</span>
-  </div>
+  </Link>
 );
 
 // 질문 게시판/최신글 아이템
-const QuestionItem = ({ title, user, comments }) => (
-  <div className="question-item">
+// 🌟 [수정] Link 태그로 감싸서 실제 상세 페이지로 이동
+const QuestionItem = ({ id, title, user, comments }) => (
+  <Link to={`/board/${id}`} className="question-item">
     <span className="question-title">{title}</span>
     <div className="question-meta">
       <span className="question-user">{user}</span>
       <span className="question-comments">💬 {comments}</span>
     </div>
-  </div>
+  </Link>
 );
 
-// 컴포넌트가 임시로 사용할 Link 함수 (실제 라우팅 없이 단순 console.log)
-const MockLink = ({ to, className, children }) => (
-    <a href="#" className={className} onClick={() => console.log(`Navigating to: ${to}`)}>{children}</a>
-);
-
-// AI 건강 조언가 컴포넌트
+// AI 건강 조언가 컴포넌트 (수정 없음)
 function AiConsultant() {
     const [question, setQuestion] = useState('');
     const [response, setResponse] = useState(null);
@@ -577,7 +582,7 @@ function AiConsultant() {
 
     return (
         <div className="ai-consultant-card">
-            <h3 className="notice-title mb-3">
+            <h3 className="notice-title" style={{ marginBottom: '0.75rem' }}> {/* mb-3 */}
                 <Bot className="w-4 h-4" />
                 AI 반려동물 조언가
             </h3>
@@ -621,35 +626,91 @@ function AiConsultant() {
     );
 }
 
-// --- Mock Data for Sections ---
-const mockNotices = [
-  { title: "필독! 새로운 입양 절차 안내입니다", date: "11.13", isNew: true },
-  { title: "겨울철 반려동물 건강 관리 팁 공유", date: "11.12", isNew: true },
-  { title: "입양 후기 이벤트 당첨자 발표", date: "11.10", isNew: false },
-  { title: "정기 점검 안내 (11/08 02:00~04:00)", date: "11.08", isNew: false },
-  { title: "커뮤니티 이용 규칙 변경 안내", date: "11.05", isNew: false },
-  { title: "새로운 펫 용품 등록 안내", date: "11.01", isNew: false },
-];
+// 🌟 [수정] App.js에서 'currentUser'를 props로 받습니다.
+export default function Home({ currentUser }) {
+  
+  // 🌟 [추가] DB 데이터를 저장할 상태
+  const [notices, setNotices] = useState([]);
+  const [latestPosts, setLatestPosts] = useState([]);
+  const [qaPosts, setQaPosts] = useState([]);
+  const [recommendedAnimals, setRecommendedAnimals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-const mockLatestPosts = [
-  { title: "새로운 가족을 맞이할 때 준비해야 할 5가지", user: "행복한집사", comments: 15 },
-  { title: "강아지 훈련, 칭찬이 중요해요! 긍정 강화 훈련법", user: "훈련사K", comments: 8 },
-  { title: "고양이가 사료를 갑자기 안 먹는데 왜 그럴까요?", user: "멍냥맘", comments: 12 },
-  { title: "털 빠짐 관리 팁 좀 공유해주세요!", user: "털뿜뿜", comments: 20 },
-  { title: "반려동물과 함께 하는 안전한 여행 팁", user: "여행가J", comments: 7 },
-];
+  // 🌟 [추가] 서버에서 모든 데이터를 가져오는 useEffect
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-const mockRecommendedAnimals = [
-    { name: "복돌이", imageSrc: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop", age: "2살", gender: "남아" },
-    { name: "둥가", imageSrc: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=400&h=400&fit-crop", age: "1살", gender: "여아" },
-    { name: "보리", imageSrc: "https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=400&h=400&fit-crop", age: "3살", gender: "남아" },
-    { name: "초코", imageSrc: "https://images.unsplash.com/photo-1615751072497-5f5169febe17?w=400&h=400&fit-crop", age: "2살", gender: "여아" },
-];
+        // 1. 게시글 (공지, 최신글, 질문) 데이터 가져오기
+        const postsResponse = await fetch('http://localhost:3001/api/posts');
+        if (!postsResponse.ok) throw new Error('게시글 목록을 불러올 수 없습니다.');
+        const allPosts = await postsResponse.json();
+        
+        // 2. 입양 공고 (추천 동물) 데이터 가져오기
+        const adoptionResponse = await fetch('http://localhost:3001/api/adoption');
+        if (!adoptionResponse.ok) throw new Error('입양 공고를 불러올 수 없습니다.');
+        const allAdoptionPosts = await adoptionResponse.json();
 
+        // 3. 데이터 분류 및 상태 업데이트
+        const noticePosts = allPosts
+          .filter(p => p.isNotice === 1 || p.isNotice === true)
+          .slice(0, 5);
+        
+        const regularPosts = allPosts
+          .filter(p => p.isNotice !== 1 && p.isNotice !== true)
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // 최신순 정렬
 
-export default function Home({ isLoggedIn }) {
-  // Mocking Link component with MockLink for standalone usage
-  const Link = MockLink;
+        setNotices(noticePosts);
+        
+        // 🌟 [핵심 수정] '최신글'을 '자유게시판' 카테고리만 필터링
+        setLatestPosts(regularPosts.filter(p => p.category === '자유게시판').slice(0, 5));
+        
+        setQaPosts(regularPosts.filter(p => p.category === '질문답변').slice(0, 4));
+        
+        // 4. 추천 동물 (랜덤 4개)
+        const shuffledAnimals = allAdoptionPosts.sort(() => 0.5 - Math.random());
+        setRecommendedAnimals(shuffledAnimals.slice(0, 4));
+
+      } catch (err) {
+        console.error("홈페이지 데이터 로딩 실패:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHomeData();
+  }, []); // 처음 로드 시 1회 실행
+
+  // 🌟 [추가] 로딩 및 에러 처리 UI
+  if (loading) {
+    return (
+      <div className="home-container" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#594C3C' }}>
+        <style>{styles}</style> {/* 🌟 스타일 태그 추가 */}
+        <div className="spinner-large" style={{ borderTopColor: '#735048' }}></div>
+        <p style={{ marginTop: '1rem', fontSize: '1.25rem' }}>페이지를 불러오는 중...</p>
+      </div>
+    );
+  }
+  if (error) {
+     return (
+      <div className="home-container" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <style>{styles}</style> {/* 🌟 스타일 태그 추가 */}
+        <div style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)', textAlign: 'center' }}>
+            <h2 style={{ color: '#735048', fontSize: '1.5rem', marginBottom: '1rem' }}>데이터 로딩 실패</h2>
+            <p style={{ color: '#594C3C', marginBottom: '1.5rem' }}>{error}</p>
+            <button onClick={() => window.location.reload()} style={{
+                backgroundColor: '#735048', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer'
+            }}>
+                새로고침
+            </button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <>
@@ -666,7 +727,7 @@ export default function Home({ isLoggedIn }) {
                 <Carousel />
               </div>
 
-              {/* 빠른 메뉴 */}
+              {/* 빠른 메뉴 (이제 실제 <Link>로 작동) */}
               <div className="menu-box">
                 <div className="menu-grid">
                   <Link to="/adoption" className="menu-item">
@@ -683,36 +744,45 @@ export default function Home({ isLoggedIn }) {
                   </Link>
                   <Link to="/reviews" className="menu-item">
                     <div className="menu-icon-box">
-                      <span className="text-2xl">⭐</span>
+                      <Star className="w-6 h-6 text-icon-color" />
                     </div>
                     <span className="menu-text">용품 리뷰</span>
                   </Link>
                   <Link to="/diary" className="menu-item">
                     <div className="menu-icon-box">
-                      <span className="text-2xl">📔</span>
+                      <BookOpen className="w-6 h-6 text-icon-color" />
                     </div>
                     <span className="menu-text">반려일기</span>
                   </Link>
                 </div>
               </div>
 
-              {/* 질문 게시판 */}
+              {/* 질문 게시판 (DB 연동) */}
               <div className="menu-box">
                 <div className="section-header">
                   <h2 className="section-title">📝 질문 게시판</h2>
-                  <Link to="/board?category=질문답변" className="section-link">
+                  <Link to="/board" className="section-link"> {/* 🌟 [수정] /board?category=... -> /board */}
                     더보기 <ChevronRight className="w-4 h-4" />
                   </Link>
                 </div>
                 <div className="question-list-container">
-                    <QuestionItem title="새끼 강아지 예방접종 시기 문의드립니다" user="행복한집사" comments={5} />
-                    <QuestionItem title="고양이가 사료를 갑자기 안 먹는데 왜 그럴까요?" user="멍냥맘" comments={12} />
-                    <QuestionItem title="산책 시 강아지가 다른 강아지에게 짖는 문제" user="복돌이아빠" comments={8} />
-                    <QuestionItem title="털 빠짐 관리 팁 좀 공유해주세요!" user="털뿜뿜" comments={20} />
+                  {qaPosts.length > 0 ? (
+                    qaPosts.map(post => (
+                      <QuestionItem 
+                        key={post.id}
+                        id={post.id} // 🌟 Link를 위해 id 전달
+                        title={post.title} 
+                        user={post.authorNickname || post.author} // 🌟 닉네임 우선 표시
+                        comments={post.comments} 
+                      />
+                    ))
+                  ) : (
+                    <p style={{ padding: '1rem 0.5rem', color: '#735048' }}>등록된 질문이 없습니다.</p>
+                  )}
                 </div>
               </div>
 
-              {/* 최신글 */}
+              {/* 최신글 (DB 연동) */}
               <div className="menu-box">
                 <div className="section-header">
                   <h2 className="section-title">✨ 최신글</h2>
@@ -721,18 +791,23 @@ export default function Home({ isLoggedIn }) {
                   </Link>
                 </div>
                 <div className="question-list-container">
-                    {mockLatestPosts.map((post, index) => (
-                        <QuestionItem 
-                            key={index} 
-                            title={post.title} 
-                            user={post.user} 
-                            comments={post.comments} 
-                        />
-                    ))}
+                  {latestPosts.length > 0 ? (
+                    latestPosts.map(post => (
+                      <QuestionItem 
+                        key={post.id}
+                        id={post.id} // 🌟 Link를 위해 id 전달
+                        title={post.title} 
+                        user={post.authorNickname || post.author} // 🌟 닉네임 우선 표시
+                        comments={post.comments} 
+                      />
+                    ))
+                  ) : (
+                     <p style={{ padding: '1rem 0.5rem', color: '#735048' }}>등록된 글이 없습니다.</p>
+                  )}
                 </div>
               </div>
 
-              {/* 오늘의 추천 반려동물 */}
+              {/* 오늘의 추천 반려동물 (DB 연동) */}
               <div className="menu-box">
                 <div className="section-header">
                   <h2 className="section-title">🐾 오늘의 추천 반려동물</h2>
@@ -741,15 +816,21 @@ export default function Home({ isLoggedIn }) {
                   </Link>
                 </div>
                 <div className="main-grid grid-cols-4">
-                  {mockRecommendedAnimals.map((animal, index) => (
-                      <AnimalCard
-                          key={index}
+                  {recommendedAnimals.length > 0 ? (
+                    recommendedAnimals.map((animal) => (
+                        <AnimalCard
+                          key={animal.id}
+                          id={animal.id} 
                           name={animal.name}
-                          imageSrc={animal.imageSrc}
-                          age={animal.age}
+                          imageSrc={animal.image || `https://placehold.co/400x400/F2E2CE/594C3C?text=${animal.name}`}
+                          // 🌟 [수정] "살"을 붙여서 string으로 전달
+                          age={`${animal.age}살`}
                           gender={animal.gender}
-                      />
-                  ))}
+                        />
+                    ))
+                  ) : (
+                     <p style={{ padding: '1rem 0.5rem', color: '#735048', gridColumn: 'span 4' }}>추천할 동물이 없습니다.</p>
+                  )}
                 </div>
               </div>
               
@@ -761,24 +842,31 @@ export default function Home({ isLoggedIn }) {
               {/* AI 건강 조언가 */}
               <AiConsultant />
 
-              {/* 공지사항 (사이드바 버전) */}
+              {/* 공지사항 (사이드바 버전 - DB 연동) */}
               <div className="notice-wrapper sticky-notice">
                 <div className="notice-header">
                   <h3 className="notice-title">
                     <Bell className="w-4 h-4" />
                     공지사항
                   </h3>
-                  <button className="text-xs text-gray-500 hover:text-gray-700">전체</button>
+                  <Link to="/board" className="section-link" style={{ fontSize: '0.75rem' }}> 
+                    전체
+                  </Link>
                 </div>
                 <div className="notice-list">
-                  {mockNotices.slice(0, 5).map((notice, index) => (
+                  {notices.length > 0 ? (
+                    notices.map((notice) => (
                         <NoticeItem 
-                            key={index} 
-                            title={notice.title} 
-                            date={notice.date} 
-                            isNew={notice.isNew} 
+                          key={notice.id}
+                          id={notice.id} 
+                          title={notice.title} 
+                          date={new Date(notice.createdAt).toLocaleDateString('ko-KR').slice(5)} 
+                          isNew={ (new Date() - new Date(notice.createdAt)) / (1000 * 60 * 60 * 24) < 3 } 
                         />
-                    ))}
+                    ))
+                  ) : (
+                     <p style={{ padding: '1rem 0.5rem', color: '#735048', fontSize: '0.875rem' }}>등록된 공지사항이 없습니다.</p>
+                  )}
                 </div>
               </div>
 

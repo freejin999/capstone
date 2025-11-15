@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom'; 
-import { User, ClipboardList, BookOpen, Key, Mail, Edit, Trash2, Calendar, LogOut, Check, X, AlertCircle } from 'lucide-react';
-import './ProfileManagement.css'; // 🌟 [추가] 몽글몽글 디자인 CSS 파일 임포트
+// 🌟 [수정] MessageSquare 아이콘 추가
+import { User, ClipboardList, BookOpen, Key, Mail, Edit, Trash2, Calendar, LogOut, Check, X, AlertCircle, MessageSquare } from 'lucide-react';
+import './ProfileManagement.css'; // 🌟 몽글몽글 디자인 CSS 파일 임포트
 
 // ===============================================
 // 💡 1. 회원 정보 관리 탭 (ProfileContent)
@@ -39,8 +40,6 @@ const ProfileContent = ({ currentUser, handleLogout, navigate }) => {
             setMessage({ type: 'error', text: '중복 확인 중 오류가 발생했습니다.' });
         }
     };
-
-    // 닉네임/프로필 저장
     const handleProfileSave = async () => {
         if (nickname === currentUser.nickname) {
             setMessage({ type: 'info', text: '변경 사항이 없습니다.' });
@@ -66,8 +65,6 @@ const ProfileContent = ({ currentUser, handleLogout, navigate }) => {
             setMessage({ type: 'error', text: '프로필 저장 중 오류가 발생했습니다.' });
         }
     };
-
-    // 비밀번호 변경
     const handleChangePassword = async (e) => {
         e.preventDefault();
         setMessage({ type: '', text: '' });
@@ -106,8 +103,6 @@ const ProfileContent = ({ currentUser, handleLogout, navigate }) => {
             setMessage({ type: 'error', text: '비밀번호 변경 중 오류가 발생했습니다.' });
         }
     };
-
-    // 회원 탈퇴
     const handleAccountDelete = async () => {
         // eslint-disable-next-line no-restricted-globals
         const isConfirmed = confirm(`정말로 회원 탈퇴를 진행하시겠습니까?\n'${currentUser.username}' 계정의 모든 정보(게시글, 댓글, 신청내역)가 삭제되며 복구할 수 없습니다.`);
@@ -132,11 +127,9 @@ const ProfileContent = ({ currentUser, handleLogout, navigate }) => {
         }
     };
 
-
     return (
-        // 🌟 [디자인 수정] Tailwind 클래스 -> CSS 클래스로 변경
         <div className="profile-content-wrapper">
-            {/* 메시지 알림창 */}
+            {/* ( ... 기존 ProfileContent JSX ... ) */}
             {message.text && (
                 <div className={`message-box ${message.type}`}>
                     {message.type === 'success' && <Check className="icon" />}
@@ -144,27 +137,22 @@ const ProfileContent = ({ currentUser, handleLogout, navigate }) => {
                     {message.text}
                 </div>
             )}
-            
-            {/* 회원 기본 정보 */}
             <div className="profile-card">
                 <h2 className="card-header">
                     <User className="icon-main icon-amber"/> 회원 기본 정보
                 </h2>
-                
                 <div className="form-group">
                     <label className="form-label">아이디</label>
                     <div className="form-input-readonly">
                         {currentUser.username}
                     </div>
                 </div>
-
                 <div className="form-group">
                     <label className="form-label">이메일</label>
                     <div className="form-input-readonly">
                         <Mail className="icon-sm" /> {currentUser.email}
                     </div>
                 </div>
-                
                 <div className="form-group">
                     <label htmlFor="nickname" className="form-label">닉네임</label>
                     <div className="form-row">
@@ -183,7 +171,6 @@ const ProfileContent = ({ currentUser, handleLogout, navigate }) => {
                         </button>
                     </div>
                 </div>
-
                 <div className="card-footer">
                     <button 
                         onClick={handleProfileSave} 
@@ -193,13 +180,10 @@ const ProfileContent = ({ currentUser, handleLogout, navigate }) => {
                     </button>
                 </div>
             </div>
-
-            {/* 비밀번호 변경 */}
             <form onSubmit={handleChangePassword} className="profile-card">
                 <h2 className="card-header danger">
                     <Key className="icon-main icon-danger"/> 비밀번호 변경
                 </h2>
-                
                 <div className="form-group">
                     <label className="form-label">현재 비밀번호</label>
                     <input 
@@ -230,7 +214,6 @@ const ProfileContent = ({ currentUser, handleLogout, navigate }) => {
                         placeholder="새 비밀번호 확인"
                     />
                 </div>
-
                 <div className="card-footer danger">
                     <button 
                         type="submit"
@@ -240,8 +223,6 @@ const ProfileContent = ({ currentUser, handleLogout, navigate }) => {
                     </button>
                 </div>
             </form>
-
-            {/* 회원 탈퇴 */}
             <div className="profile-card danger-light">
                  <h2 className="card-header danger-light-text">
                     <Trash2 className="icon-main icon-danger-light"/> 회원 탈퇴
@@ -265,13 +246,13 @@ const ProfileContent = ({ currentUser, handleLogout, navigate }) => {
 // ===============================================
 // 💡 2. 입양 신청 내역 탭 (ApplicationContent)
 // ===============================================
-const ApplicationContent = ({ currentUser, navigate }) => { // 🌟 navigate 받기
+const ApplicationContent = ({ currentUser, navigate }) => { 
+// ... (기존 ApplicationContent 코드와 동일) ...
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null); 
     // const navigate = useNavigate(); // 👈 [제거]
 
-    // (기존 기능 로직은 모두 그대로 유지됩니다)
     useEffect(() => {
         if (!currentUser?.username) return;
 
@@ -341,13 +322,13 @@ const ApplicationContent = ({ currentUser, navigate }) => { // 🌟 navigate 받
 // ===============================================
 // 💡 3. 나의 게시글 탭 (ActivityContent)
 // ===============================================
-const ActivityContent = ({ currentUser, navigate }) => { // 🌟 navigate 받기
+const ActivityContent = ({ currentUser, navigate }) => { 
+// ... (기존 ActivityContent 코드와 동일) ...
     // const navigate = useNavigate(); // 👈 [제거]
     const [myPosts, setMyPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // (기존 기능 로직은 모두 그대로 유지됩니다)
     useEffect(() => {
         if (!currentUser?.username) return; 
         const fetchMyPosts = async () => {
@@ -374,10 +355,11 @@ const ActivityContent = ({ currentUser, navigate }) => { // 🌟 navigate 받기
         // eslint-disable-next-line no-restricted-globals
         if (confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
             try {
+                // 🌟 [수정] ProfileManagement에서 삭제 시에도 본인 ID(username) 전송
                 const response = await fetch(`http://localhost:3001/api/posts/${postId}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id }) 
+                    body: JSON.stringify({ authorUsername: currentUser.username }) 
                 });
                 if (response.ok) {
                     setMyPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
@@ -457,9 +439,82 @@ const ActivityContent = ({ currentUser, navigate }) => { // 🌟 navigate 받기
 };
 
 // ===============================================
+// 💡 4. [NEW] 나의 댓글 탭 (ActivityCommentsContent)
+// ===============================================
+const ActivityCommentsContent = ({ currentUser, navigate }) => {
+    const [myComments, setMyComments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        // 🌟 [수정] 닉네임이 아닌 username으로 API 호출
+        if (!currentUser?.username) return;
+
+        const fetchMyComments = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                // 🌟 [수정] API 경로를 nickname -> username으로 변경 (index.js와 일치)
+                const response = await fetch(`http://localhost:3001/api/users/username/${currentUser.username}/comments`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setMyComments(data);
+                } else {
+                    setError('댓글 내역을 불러오는 데 실패했습니다.');
+                }
+            } catch (err) {
+                setError('서버 연결에 실패했습니다.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMyComments();
+    }, [currentUser.username]); // 🌟 [수정] 의존성 변경
+
+    return (
+        <div className="profile-card">
+            <h2 className="card-header">
+                <MessageSquare className="icon-main icon-amber"/> 나의 댓글
+            </h2>
+            
+            {loading ? (
+                <p className="card-placeholder">댓글을 불러오는 중...</p>
+            ) : error ? (
+                <p className="card-placeholder error">{error}</p>
+            ) : myComments.length === 0 ? (
+                <p className="card-placeholder">작성한 댓글이 없습니다.</p>
+            ) : (
+                <div className="application-list">
+                    {myComments.map(comment => (
+                        <div 
+                            key={comment.id} 
+                            className="application-card" 
+                            onClick={() => navigate(`/board/${comment.postId}`)}
+                        >
+                            <div>
+                                <p className="comment-content">{comment.content}</p>
+                                <div className="application-meta">
+                                    <span className="meta-item"><Calendar className="icon-xs"/> {new Date(comment.createdAt).toLocaleDateString('ko-KR')}</span>
+                                    <span className="meta-item-post">
+                                        원본 글: {comment.postTitle ? `"${comment.postTitle}"` : `(게시글 ID: ${comment.postId})`}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+// ===============================================
 // 💡 탭 버튼 컴포넌트
 // ===============================================
 const TabItem = ({ name, label, icon: Icon, active, onClick }) => (
+// ... (기존 코드와 동일) ...
   <button
     onClick={() => onClick(name)}
     className={`tab-item ${active ? 'active' : ''}`}
@@ -477,7 +532,7 @@ export default function ProfileManagement({ currentUser, handleLogout }) {
   const [activeTab, setActiveTab] = useState('profile');
   const navigate = useNavigate(); // 🌟 [수정] 메인 컴포넌트 스코프에서 useNavigate 훅 사용
 
-  // 🌟 [수정] PrivateRoute가 이미 처리하므로 중복 navigate 제거
+  // 🌟 [제거] PrivateRoute가 이미 처리하므로 중복 navigate 제거
   // useEffect(() => {
   //   if (!currentUser) {
   //     navigate('/login');
@@ -488,7 +543,6 @@ export default function ProfileManagement({ currentUser, handleLogout }) {
       setActiveTab(tabName);
   };
   
-  // 🌟 [수정] currentUser가 (처음엔) null일 수 있으므로 로딩 스피너 표시
   if (!currentUser) {
     return (
         <div className="profile-page-wrapper loading">
@@ -500,16 +554,15 @@ export default function ProfileManagement({ currentUser, handleLogout }) {
   const renderContent = () => {
     switch (activeTab) {
       case 'profile':
-        // 🌟 ProfileContent에 navigate prop 전달
         return <ProfileContent currentUser={currentUser} handleLogout={handleLogout} navigate={navigate} />;
       case 'application':
-        // 🌟 ApplicationContent에 navigate prop 전달
         return <ApplicationContent currentUser={currentUser} navigate={navigate} />;
       case 'activity':
-        // 🌟 ActivityContent에 navigate prop 전달
         return <ActivityContent currentUser={currentUser} navigate={navigate} />;
+      // 🌟 [추가] '나의 댓글' 탭 렌더링
+      case 'comments':
+        return <ActivityCommentsContent currentUser={currentUser} navigate={navigate} />;
       default:
-        // 🌟 ProfileContent에 navigate prop 전달
         return <ProfileContent currentUser={currentUser} handleLogout={handleLogout} navigate={navigate} />;
     }
   };
@@ -542,6 +595,14 @@ export default function ProfileManagement({ currentUser, handleLogout }) {
                     icon={BookOpen} 
                     active={activeTab === 'activity'} 
                     onClick={handleTabClick} 
+                />
+                {/* 🌟 [추가] '나의 댓글' 탭 버튼 */}
+                <TabItem 
+                  name="comments" 
+                  label="나의 댓글" 
+                  icon={MessageSquare}
+                  active={activeTab === 'comments'} 
+                  onClick={handleTabClick} 
                 />
             </div>
 
