@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // 🌟 useRef 임포트
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Eye, ThumbsUp, MessageSquare, Calendar, User, Trash2, Edit, Save, X } from 'lucide-react'; // 🌟 Save, X 아이콘 추가
 
@@ -99,14 +99,33 @@ export default function BoardDetail({ currentUser }) {
     
     const [editingCommentId, setEditingCommentId] = useState(null); 
     const [editingCommentText, setEditingCommentText] = useState(''); 
+    
+    // 🌟 [핵심 수정] React.StrictMode의 2회 실행을 방지하기 위한 Ref
+    const viewCountFetched = useRef(false);
 
     // ----------------------------------------------------
     // 🔥 데이터 로드 (게시글 상세 + 댓글)
     // ----------------------------------------------------
     useEffect(() => {
-        fetchPostDetail();
+        // 🌟 [핵심 수정] 조회수 증가 API를 분리하여 1회만 호출
+        const incrementView = async () => {
+            try {
+                await fetch(`http://localhost:3001/api/posts/${id}/view`, { method: 'POST' });
+            } catch (err) {
+                console.error("조회수 증가 API 실패:", err);
+            }
+        };
+
+        // React.StrictMode에서 2번 실행되는 것을 방지
+        if (viewCountFetched.current === false) {
+            incrementView(); // 1. 조회수 1 증가 (1회만 실행)
+            viewCountFetched.current = true; // 2. 플래그를 true로 설정
+        }
+
+        fetchPostDetail(); // 3. 게시글 데이터 가져오기 (조회수 증가 로직 없음)
         fetchComments(); 
-    }, [id]); 
+        
+    }, [id]); // id가 바뀔 때만 실행
 
     // 좋아요 상태 초기화 (post, currentUser 변경 시)
     useEffect(() => {
@@ -119,6 +138,7 @@ export default function BoardDetail({ currentUser }) {
         }
     }, [post, currentUser]); 
 
+    // 🌟 [수정] 조회수 증가 로직이 제거된 API 호출 함수
     const fetchPostDetail = async () => {
         try {
             setLoading(true);
@@ -143,6 +163,7 @@ export default function BoardDetail({ currentUser }) {
     };
     
     const fetchComments = async () => {
+        // ... (기존 코드와 동일) ...
         try {
             const response = await fetch(`http://localhost:3001/api/posts/${id}/comments`);
             if (response.ok) {
@@ -160,19 +181,17 @@ export default function BoardDetail({ currentUser }) {
     // 💡 댓글 작성 처리 (currentUser 연동)
     // ----------------------------------------------------
     const handleCommentSubmit = async (e) => {
+        // ... (기존 코드와 동일) ...
         e.preventDefault();
-        
         if (!currentUser) {
             alert('댓글을 작성하려면 로그인이 필요합니다.');
             navigate('/login');
             return;
         }
-        
         if (!newCommentText.trim()) {
             alert('댓글 내용을 입력해주세요.');
             return;
         }
-
         try {
             const response = await fetch(`http://localhost:3001/api/posts/${id}/comments`, {
                 method: 'POST',
@@ -183,7 +202,6 @@ export default function BoardDetail({ currentUser }) {
                     authorUsername: currentUser.username 
                 }),
             });
-
             if (response.ok) {
                 const data = await response.json();
                 setComments(prev => [data.comment, ...prev]); 
@@ -201,44 +219,36 @@ export default function BoardDetail({ currentUser }) {
     // ----------------------------------------------------
     // 🌟 [NEW] 댓글 수정/삭제 핸들러
     // ----------------------------------------------------
-
-    // '수정' 버튼 클릭 시
+    // ... (기존 코드와 동일) ...
     const handleCommentEdit = (comment) => {
         setEditingCommentId(comment.id);
         setEditingCommentText(comment.content);
     };
-
-    // '수정 취소' 버튼 클릭 시
     const handleCommentCancel = () => {
         setEditingCommentId(null);
         setEditingCommentText('');
     };
-
-    // '수정 저장' 버튼 클릭 시
     const handleCommentUpdate = async (commentId) => {
         if (!editingCommentText.trim()) {
             alert('댓글 내용을 입력해주세요.');
             return;
         }
-        
         try {
             const response = await fetch(`http://localhost:3001/api/comments/${commentId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     content: editingCommentText,
-                    authorUsername: currentUser.username // [보안] 본인 확인용
+                    authorUsername: currentUser.username 
                 })
             });
-
             if (response.ok) {
-                // 프론트엔드 상태 즉시 업데이트
                 setComments(prev => 
                     prev.map(c => 
                         c.id === commentId ? { ...c, content: editingCommentText } : c
                     )
                 );
-                handleCommentCancel(); // 수정 모드 종료
+                handleCommentCancel(); 
             } else {
                 const errData = await response.json();
                 alert(errData.message || '댓글 수정에 실패했습니다.');
@@ -248,25 +258,20 @@ export default function BoardDetail({ currentUser }) {
             alert('서버 오류로 댓글 수정에 실패했습니다.');
         }
     };
-
-    // '삭제' 버튼 클릭 시
     const handleCommentDelete = async (commentId, authorUsername) => {
         if (!currentUser || currentUser.username !== authorUsername) {
             alert('삭제할 권한이 없습니다.');
             return;
         }
-
         // eslint-disable-next-line no-restricted-globals
         if (confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
             try {
                 const response = await fetch(`http://localhost:3001/api/comments/${commentId}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ authorUsername: currentUser.username }) // [보안] 본인 확인용
+                    body: JSON.stringify({ authorUsername: currentUser.username }) 
                 });
-
                 if (response.ok) {
-                    // 프론트엔드 상태 즉시 업데이트
                     setComments(prev => prev.filter(c => c.id !== commentId));
                     setPost(prev => ({ ...prev, comments: (prev.comments || 1) - 1 }));
                 } else {
@@ -280,12 +285,11 @@ export default function BoardDetail({ currentUser }) {
         }
     };
 
-
     // ----------------------------------------------------
     // 💡 '좋아요' 핸들러 (currentUser 연동)
     // ----------------------------------------------------
     const handleLike = async () => {
-        // (기존 코드와 동일)
+        // ... (기존 코드와 동일) ...
         if (!currentUser) {
             alert('좋아요를 누르려면 로그인이 필요합니다.');
             navigate('/login');
@@ -316,7 +320,7 @@ export default function BoardDetail({ currentUser }) {
     // 💡 '게시글 삭제' 핸들러 (currentUser 연동)
     // ----------------------------------------------------
     const handleDelete = async () => {
-        // (기존 코드와 동일)
+        // ... (기존 코드와 동일) ...
         if (!currentUser) {
             alert('삭제할 권한이 없습니다. (로그인 필요)');
             return;
@@ -336,7 +340,6 @@ export default function BoardDetail({ currentUser }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ authorUsername: currentUser.username })
             });
-
             if (response.ok) {
                 alert('게시글이 삭제되었습니다.');
                 navigate('/board'); 
@@ -355,6 +358,7 @@ export default function BoardDetail({ currentUser }) {
     // 렌더링
     // ----------------------------------------------------
     if (loading) {
+        // ... (기존 코드와 동일) ...
         return (
             <div className="detail-container loading-state">
                 <div className="spinner-large"></div>
@@ -363,6 +367,7 @@ export default function BoardDetail({ currentUser }) {
         );
     }
     if (error) {
+        // ... (기존 코드와 동일) ...
         return (
             <div className="detail-container error-state">
                 <p className="error-message">{error}</p>

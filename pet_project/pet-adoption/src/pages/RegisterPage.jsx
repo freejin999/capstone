@@ -186,9 +186,54 @@ export default function RegisterPage() {
     const [error, setError] = useState(null); // 에러 메시지 상태
     const [isSubmitting, setIsSubmitting] = useState(false); // 제출 중 상태
 
+    const [nicknameChecked, setNicknameChecked] = useState(false);
+    const [nicknameError, setNicknameError] = useState(null);
+
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // [NEW] 닉네임을 수정하면 중복 확인 상태 초기화
+    if (name === 'nickname') {
+        setNicknameChecked(false);
+        setNicknameError(null);
+        }
+    };
+
+    // [NEW] 닉네임 중복 확인 버튼 클릭 시 호출
+    const handleCheckNickname = async () => {
+        const { nickname } = formData;
+        if (!nickname.trim()) {
+            setNicknameError('닉네임을 입력해주세요.');
+            return;
+        }
+
+        setNicknameError(null);
+        setIsSubmitting(true); // 버튼 로딩 효과 재활용
+
+        try {
+            const response = await fetch('http://localhost:3001/api/users/check-nickname', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nickname })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setNicknameError('사용 가능한 닉네임입니다.');
+                setNicknameChecked(true); // ✅ 확인 완료
+            } else {
+                setNicknameError(result.message); // "이미 사용 중인 닉네임입니다."
+                setNicknameChecked(false);
+            }
+
+        } catch (apiError) {
+            setNicknameError('닉네임 확인 중 오류가 발생했습니다.');
+            setNicknameChecked(false);
+        } finally {
+            setIsSubmitting(false); // 로딩 종료
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -202,6 +247,11 @@ export default function RegisterPage() {
         }
         if (formData.password !== formData.confirmPassword) {
             setError('비밀번호가 일치하지 않습니다.');
+            return;
+        }
+        // [NEW] 닉네임 중복 확인 여부 검사
+        if (!nicknameChecked) {
+            setError('닉네임 중복 확인을 해주세요.');
             return;
         }
         // 이메일 형식 검사 (간단하게)
@@ -329,16 +379,41 @@ export default function RegisterPage() {
                         {/* 닉네임 */}
                         <div>
                             <label htmlFor="nickname" className="sr-only">닉네임</label>
-                            <input
-                                id="nickname"
-                                name="nickname"
-                                type="text"
-                                required
-                                className="input-field"
-                                placeholder="닉네임"
-                                value={formData.nickname}
-                                onChange={handleChange}
-                            />
+                            {/* [NEW] 닉네임 입력과 버튼을 묶을 div (flex 사용을 위해) */}
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <input
+                                    id="nickname"
+                                    name="nickname"
+                                    type="text"
+                                    required
+                                    // [NEW] flex-grow: 1 (CSS를 style로 간단히 적용)
+                                    className="input-field"
+                                    style={{ flex: 1 }} 
+                                    placeholder="닉네임"
+                                    value={formData.nickname}
+                                    onChange={handleChange}
+                                />
+                                <button
+                                    type="button" // 👈 중요: form submit을 방지
+                                    onClick={handleCheckNickname}
+                                    disabled={isSubmitting}
+                                    // [NEW] 버튼 스타일 (register-button 재활용 및 크기 조절)
+                                    className="register-button"
+                                    style={{ width: 'auto', padding: '0.75rem 1rem' }} 
+                                >
+                                    중복 확인
+                                </button>
+                            </div>
+                            {/* [NEW] 닉네임 에러/성공 메시지 표시 */}
+                            {nicknameError && (
+                                <p style={{ 
+                                    color: nicknameChecked ? 'green' : '#735048', 
+                                    fontSize: '0.875rem', 
+                                    marginTop: '0.5rem' 
+                                }}>
+                                    {nicknameError}
+                                </p>
+                            )}
                         </div>
 
                         {/* 회원가입 버튼 */}

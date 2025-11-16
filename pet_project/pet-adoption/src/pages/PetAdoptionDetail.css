@@ -1,0 +1,335 @@
+/* ===============================================
+ * 🌟 몽글몽글 테마 (전역 설정)
+ * =============================================== */
+:root {
+    --brand-primary: #735048;
+    --brand-primary-dark: #594C3C;
+    --brand-primary-light: #F2E2CE;
+    --bg-main: #F2EDE4;
+    --bg-card: #ffffff;
+    --border-color: #F2CBBD;
+    --border-color-light: #F2E2CE;
+    --text-primary: #374151;
+    --text-light: #6b7280;
+    --danger-color: #991b1b;
+    --danger-color-light: #be123c; /* rose-700 */
+    --brand-danger-bg: #fff1f2; /* rose-50 */
+    --brand-danger-text: #9f1239; /* rose-900 */
+    --brand-danger-border: #fecdd3; /* rose-200 */
+}
+
+/* ===============================================
+ * 1. 메인 레이아웃
+ * =============================================== */
+.adoption-detail-container {
+    min-height: 100vh;
+    background-color: var(--bg-main);
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+    /* 🌟 [수정] <style> 태그에서 CSS 파일로 옮겼으므로, 패딩을 여기에 추가 */
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+.adoption-detail-container *, .adoption-detail-container *:before, .adoption-detail-container *:after {
+    box-sizing: inherit;
+}
+
+.adoption-detail-container.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+    /* 🌟 [추가] 로딩 화면이 페이지 전체를 덮도록 */
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 100vh;
+}
+.spinner-large {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border-top: 4px solid var(--brand-primary);
+    border-right: 4px solid transparent;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error-card {
+    text-align: center;
+    padding: 2.5rem;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: var(--danger-color);
+}
+.icon-large {
+    width: 3rem;
+    height: 3rem;
+    color: #B91C1C;
+    margin: 0 auto 1rem;
+}
+.loading-text {
+    color: var(--brand-primary-dark);
+    font-weight: 500;
+}
+
+/* ===============================================
+ * 2. 헤더
+ * =============================================== */
+.header {
+    background-color: var(--bg-card);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--border-color-light);
+    /* 🌟 [수정] detail-container의 패딩을 제거했으므로 헤더에 상단 패딩 추가 */
+    padding-top: 1rem;
+}
+.header-content {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+.back-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+    text-decoration: none;
+    transition: color 0.15s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+.back-button:hover { color: var(--brand-primary); }
+
+/* ===============================================
+ * 3. 메인 콘텐츠 (상세)
+ * =============================================== */
+.main-content {
+    max-width: 1024px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+.post-card {
+    background-color: var(--bg-card);
+    border-radius: 16px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+.post-layout {
+    display: flex;
+    flex-direction: column; /* 🌟 모바일 기본 */
+}
+@media (min-width: 768px) { /* md: */
+    .post-layout {
+        flex-direction: row; /* 데스크탑에서 가로 배치 */
+    }
+}
+
+.image-column {
+    width: 100%;
+    height: 300px; /* 모바일 높이 */
+}
+@media (min-width: 768px) {
+    .image-column {
+        width: 50%;
+        height: auto; /* 🌟 높이 자동 */
+    }
+}
+.main-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.info-column {
+    width: 100%;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+@media (min-width: 768px) {
+    .info-column {
+        width: 50%;
+    }
+}
+
+.pet-name {
+    font-size: 2.25rem; /* text-4xl */
+    font-weight: 700;
+    color: var(--brand-primary-dark);
+    margin-bottom: 0.25rem;
+}
+.pet-region {
+    font-size: 1.125rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+}
+.status-입양가능 { background-color: #3b8a3e; }
+.status-상담중 { background-color: #fbbf24; }
+.status-입양완료 { background-color: #9ca3af; }
+
+.info-grid {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr; /* 🌟 모바일 기본 */
+    gap: 0.75rem;
+}
+@media (min-width: 640px) { /* sm: */
+    .info-grid {
+         grid-template-columns: repeat(2, 1fr); /* 🌟 태블릿 2열 */
+    }
+}
+.info-item {
+    display: flex;
+    align-items: center;
+    color: var(--text-primary);
+}
+.info-label {
+    font-weight: 500;
+    width: 100px; /* w-24 */
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+}
+.info-value {
+    font-weight: 600;
+    color: var(--brand-primary-dark);
+}
+
+.button-group {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+.button {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+.button.secondary {
+    border: 1px solid var(--brand-primary);
+    color: var(--brand-primary);
+}
+.button.secondary:hover {
+    background-color: var(--bg-main);
+}
+.button.danger {
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+}
+.button.danger:hover {
+    background-color: var(--danger-color-light);
+}
+
+.description-area {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color-light);
+}
+.description-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--brand-primary-dark);
+    margin-bottom: 1rem;
+}
+.description-content {
+    color: var(--text-primary);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    margin-bottom: 2rem;
+}
+.description-content p {
+    margin: 0; /* 🌟 <p> 태그의 기본 마진 제거 */
+}
+
+.apply-area {
+    text-align: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color-light);
+}
+.button.primary {
+    background-color: var(--brand-primary);
+    color: white;
+    border: none;
+}
+.button.primary:hover:not(:disabled) {
+    background-color: var(--brand-primary-dark);
+}
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.apply-button {
+    padding: 0.75rem 2.5rem;
+    font-size: 1.125rem;
+    width: 100%;
+}
+@media (min-width: 768px) {
+    .apply-button {
+        width: auto;
+        margin: 0 auto;
+    }
+}
+.spinner-sm {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    border-top: 2px solid white;
+    border-right: 2px solid transparent;
+    animation: spin 1s linear infinite;
+}
+.login-prompt {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    margin-top: 0.75rem;
+}
+.link {
+    color: var(--brand-primary);
+    text-decoration: underline;
+}
+.link:hover {
+    color: var(--brand-primary-dark);
+}
+.message-box {
+    padding: 1rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+.message-box .icon { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+.message-box.error {
+    background-color: var(--brand-danger-bg);
+    color: var(--brand-danger-text);
+    border-color: var(--brand-danger-border);
+}

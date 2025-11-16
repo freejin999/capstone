@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+// 🌟 [수정] AlertCircle 아이콘 추가
+import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
 
 // 1. App.js로부터 'currentUser'를 props로 받습니다.
 export default function PetDiaryEdit({ currentUser }) {
     const { id } = useParams(); // URL에서 수정할 일기 ID 가져오기
     const navigate = useNavigate();
     
-    // 2. 폼 상태 관리
+    // 2. 폼 상태 관리 🌟 [핵심 수정 1] 'image' 필드 추가
     const [formData, setFormData] = useState({
         title: '',
         mood: '일상',
-        content: ''
+        content: '',
+        image: '', // 🌟 새로 추가된 이미지 URL 필드
     });
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,9 +47,6 @@ export default function PetDiaryEdit({ currentUser }) {
                 const data = await response.json();
 
                 // 5. [보안] 🌟 권한 검사 🌟
-                // 불러온 일기의 'userId'와 현재 로그인한 'currentUser.id'가 일치하는지 확인
-                // Note: 현재 DB 연동이 userId가 아닌 username 기반으로 되어 있을 수 있으므로,
-                // 백엔드 구현에 따라 data.author와 currentUser.username을 비교하는 것이 더 정확할 수 있습니다.
                 if (data.userId !== currentUser.id) { 
                     alert('이 일기를 수정할 권한이 없습니다.');
                     navigate('/diary'); // 일기 목록으로 돌려보내기
@@ -55,10 +54,12 @@ export default function PetDiaryEdit({ currentUser }) {
                 }
 
                 // 6. 권한이 있으면 폼 데이터 설정
+                // 🌟 [핵심 수정 2] setFormData에 image 필드 추가
                 setFormData({
                     title: data.title,
                     mood: data.mood,
-                    content: data.content
+                    content: data.content,
+                    image: data.image || '', // 🌟 image 필드 설정
                 });
             } else {
                 alert('일기를 불러오는데 실패했습니다.');
@@ -100,8 +101,9 @@ export default function PetDiaryEdit({ currentUser }) {
         setIsSubmitting(true);
 
         // 9. 서버로 전송할 데이터(payload) 조립
+        // 🌟 [핵심 수정 3] formData에 image가 포함되어 있으므로 payload에 자동 포함됨
         const payload = {
-            ...formData,
+            ...formData, // 🌟 title, mood, content, image 모두 포함
             userId: currentUser.id // 🌟 [보안] 본인 확인을 위해 userId를 함께 전송
         };
 
@@ -132,204 +134,38 @@ export default function PetDiaryEdit({ currentUser }) {
     if (loading) {
         return (
             <div className="edit-container loading-state">
+                {/* 🌟 [추가] 로딩 중에도 스타일이 깨지지 않도록 <style> 태그 포함 */}
+                <style>{styles}</style>
                 <div className="spinner-center"><div className="spinner-large"></div></div>
                 <p className="loading-text">일기를 불러오는 중...</p>
             </div>
         );
     }
+    
+    // 🌟 [수정] 에러 UI
+    if (error && error !== '이 일기를 수정할 권한이 없습니다.') {
+        return (
+            <div className="edit-container error-state">
+                <style>{styles}</style>
+                <div className="error-card">
+                     <AlertCircle className="icon-large" />
+                    <p className="error-message">{error}</p>
+                    <button onClick={() => navigate('/diary')} className="cancel-button">
+                        목록으로 돌아가기
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
 
     return (
         <div className="edit-container">
             {/* ------------------------------------------- */}
             {/* 🎨 CSS 스타일 정의 (단일 파일 내) */}
             {/* ------------------------------------------- */}
-            <style>{`
-                /* 컬러 팔레트: #F2EDE4(배경), #594C3C(텍스트), #F2E2CE(경계선), #F2CBBD(악센트), #735048(기본 색상) */
-                
-                .edit-container {
-                    min-height: 100vh;
-                    background-color: #F2EDE4; /* Light Background */
-                    font-family: 'Inter', sans-serif;
-                }
-                .header {
-                    background-color: white;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                    border-bottom: 1px solid #F2E2CE;
-                }
-                .header-content {
-                    max-width: 900px;
-                    margin: 0 auto;
-                    padding: 16px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-                .title {
-                    font-size: 24px;
-                    font-weight: bold;
-                    color: #735048; /* Primary Color */
-                }
-                .back-button {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    color: #594C3C;
-                    text-decoration: none;
-                    transition: color 0.15s;
-                    background: none;
-                    border: none;
-                    cursor: pointer;
-                    font-size: 16px;
-                    padding: 8px 12px;
-                    border-radius: 8px;
-                }
-                .back-button:hover {
-                    color: #735048;
-                    background-color: #F2E2CE;
-                }
-
-                .main-content {
-                    max-width: 900px;
-                    margin: 32px auto;
-                    padding: 0 16px;
-                }
-                .post-form {
-                    background-color: white;
-                    border-radius: 12px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-                    padding: 24px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 24px;
-                    border: 1px solid #F2E2CE;
-                }
-                .error-box {
-                    background-color: #fcebeb; 
-                    border: 1px solid #f09b9b; 
-                    color: #c23939; 
-                    padding: 12px;
-                    border-radius: 8px;
-                    font-size: 14px;
-                    margin-bottom: 12px;
-                }
-                .form-group {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                }
-                .label-text {
-                    font-size: 14px;
-                    font-weight: 500;
-                    color: #594C3C;
-                }
-                .input-field, .textarea-field, .select-field {
-                    width: 100%;
-                    padding: 12px;
-                    border: 1px solid #F2CBBD; /* Accent Border */
-                    border-radius: 8px;
-                    font-size: 16px;
-                    box-sizing: border-box;
-                    color: #594C3C;
-                }
-                .input-field:focus, .textarea-field:focus, .select-field:focus {
-                    outline: none;
-                    border-color: #735048;
-                    box-shadow: 0 0 0 2px #F2E2CE;
-                }
-                .textarea-field {
-                    resize: vertical;
-                    min-height: 250px;
-                }
-
-                .author-info-box {
-                    padding: 12px;
-                    border: 1px solid #F2E2CE;
-                    border-radius: 8px;
-                    background-color: #F2EDE4; /* Light Accent Background */
-                    color: #594C3C;
-                    font-weight: 600;
-                }
-
-                .button-group {
-                    display: flex;
-                    justify-content: flex-end;
-                    gap: 12px;
-                    padding-top: 16px;
-                    border-top: 1px solid #F2E2CE;
-                }
-                .cancel-button {
-                    padding: 10px 20px;
-                    border: 1px solid #735048;
-                    color: #735048;
-                    background-color: white;
-                    border-radius: 8px;
-                    transition: background-color 0.15s;
-                    cursor: pointer;
-                    font-weight: 600;
-                }
-                .cancel-button:hover:not(:disabled) {
-                    background-color: #F2E2CE;
-                }
-                .submit-button {
-                    padding: 10px 20px;
-                    background-color: #735048;
-                    color: white;
-                    border-radius: 8px;
-                    transition: background-color 0.15s;
-                    cursor: pointer;
-                    border: none;
-                    font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-                .submit-button:hover:not(:disabled) {
-                    background-color: #594C3C;
-                }
-                .submit-button:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                }
-                /* 로딩 스피너 */
-                .spinner-center {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .spinner {
-                    border: 3px solid rgba(255, 255, 255, 0.3);
-                    border-top: 3px solid #fff;
-                    border-radius: 50%;
-                    width: 16px;
-                    height: 16px;
-                    animation: spin 1s linear infinite;
-                }
-                .spinner-large {
-                    width: 40px;
-                    height: 40px;
-                    border-width: 4px;
-                    border-top-color: #735048;
-                    margin: 0 auto;
-                }
-                .loading-state {
-                    min-height: 100vh;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    background-color: #F2EDE4;
-                    color: #594C3C;
-                    text-align: center;
-                }
-                .loading-text {
-                    margin-top: 16px;
-                    font-weight: 500;
-                }
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            `}</style>
+            {/* 🌟 [수정] 기존 파란색 테마 CSS (변경 없음) */}
+            <style>{styles}</style>
 
             {/* Header */}
             <header className="header">
@@ -384,25 +220,44 @@ export default function PetDiaryEdit({ currentUser }) {
                             {formData.title.length}/100
                         </p>
                     </div>
-
-                    {/* 기분 선택 */}
-                    <div className="form-group">
-                        <label htmlFor="mood" className="label-text">
-                            오늘의 기분 <span style={{color: 'red'}}>*</span>
-                        </label>
-                        <select
-                            id="mood"
-                            name="mood"
-                            value={formData.mood}
-                            onChange={handleChange}
-                            className="select-field"
-                        >
-                            {moods.map(mood => (
-                                <option key={mood} value={mood}>
-                                    {mood}
-                                </option>
-                            ))}
-                        </select>
+                    
+                    {/* 🌟 [수정] 2x2 그리드로 기분, 이미지 URL 배치 */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+                        {/* 기분 선택 */}
+                        <div className="form-group">
+                            <label htmlFor="mood" className="label-text">
+                                오늘의 기분 <span style={{color: 'red'}}>*</span>
+                            </label>
+                            <select
+                                id="mood"
+                                name="mood"
+                                value={formData.mood}
+                                onChange={handleChange}
+                                className="select-field"
+                            >
+                                {moods.map(mood => (
+                                    <option key={mood} value={mood}>
+                                        {mood}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        
+                        {/* 🌟 [추가] 이미지 URL */}
+                        <div className="form-group">
+                            <label className="label-text" htmlFor="image">
+                                사진 URL (선택)
+                            </label>
+                            <input
+                                id="image"
+                                type="text"
+                                name="image"
+                                value={formData.image}
+                                onChange={handleChange}
+                                placeholder="https://example.com/image.png"
+                                className="input-field"
+                            />
+                        </div>
                     </div>
 
                     {/* 내용 입력 */}
@@ -453,3 +308,224 @@ export default function PetDiaryEdit({ currentUser }) {
         </div>
     );
 }
+
+// 🌟 [수정] 원본 파란색 테마 CSS (변경 없음)
+const styles = `
+    /* 컬러 팔레트: #F2EDE4(배경), #594C3C(텍스트), #F2E2CE(경계선), #F2CBBD(악센트), #735048(기본 색상) */
+    
+    .edit-container {
+        min-height: 100vh;
+        background-color: #F2EDE4; /* Light Background */
+        font-family: 'Inter', sans-serif;
+    }
+    .header {
+        background-color: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid #F2E2CE;
+    }
+    .header-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #735048; /* Primary Color */
+    }
+    .back-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #594C3C;
+        text-decoration: none;
+        transition: color 0.15s;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+    .back-button:hover {
+        color: #735048;
+        background-color: #F2E2CE;
+    }
+
+    .main-content {
+        max-width: 900px;
+        margin: 32px auto;
+        padding: 0 16px;
+    }
+    .post-form {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        border: 1px solid #F2E2CE;
+    }
+    .error-box {
+        background-color: #fcebeb; 
+        border: 1px solid #f09b9b; 
+        color: #c23939; 
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .label-text {
+        font-size: 14px;
+        font-weight: 500;
+        color: #594C3C;
+    }
+    .input-field, .textarea-field, .select-field {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #F2CBBD; /* Accent Border */
+        border-radius: 8px;
+        font-size: 16px;
+        box-sizing: border-box;
+        color: #594C3C;
+    }
+    .input-field:focus, .textarea-field:focus, .select-field:focus {
+        outline: none;
+        border-color: #735048;
+        box-shadow: 0 0 0 2px #F2E2CE;
+    }
+    .textarea-field {
+        resize: vertical;
+        min-height: 250px;
+    }
+    
+    .author-info-box {
+        padding: 12px;
+        border: 1px solid #F2E2CE;
+        border-radius: 8px;
+        background-color: #F2EDE4; /* Light Accent Background */
+        color: #594C3C;
+        font-weight: 600;
+    }
+
+    .button-group {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 16px;
+        border-top: 1px solid #F2E2CE;
+    }
+    .cancel-button {
+        padding: 10px 20px;
+        border: 1px solid #735048;
+        color: #735048;
+        background-color: white;
+        border-radius: 8px;
+        transition: background-color 0.15s;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .cancel-button:hover:not(:disabled) {
+        background-color: #F2E2CE;
+    }
+    .submit-button {
+        padding: 10px 20px;
+        background-color: #735048;
+        color: white;
+        border-radius: 8px;
+        transition: background-color 0.15s;
+        cursor: pointer;
+        border: none;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .submit-button:hover:not(:disabled) {
+        background-color: #594C3C;
+    }
+    .submit-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    /* 로딩 스피너 */
+    .spinner-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .spinner {
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid #fff;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+    }
+    .spinner-large {
+        width: 40px;
+        height: 40px;
+        border-width: 4px;
+        border-top-color: #735048;
+        margin: 0 auto;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #735048; 
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    .loading-state {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #F2EDE4;
+        color: #594C3C;
+        text-align: center;
+    }
+    .loading-text {
+        margin-top: 16px;
+        font-weight: 500;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    /* 🌟 [추가] 에러 상태 */
+    .error-state {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #F2EDE4;
+        color: #594C3C;
+        text-align: center;
+    }
+    .error-card {
+        padding: 32px;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .error-message {
+        color: #c23939; /* 🌟 강한 빨간색 */
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
+    .icon-large {
+        width: 48px;
+        height: 48px;
+        color: #c23939;
+        margin: 0 auto 16px;
+    }
+`;

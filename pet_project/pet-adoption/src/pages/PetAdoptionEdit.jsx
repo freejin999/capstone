@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
+// 🌟 [수정] 몽글몽글한 폼 CSS 임포트 (Write와 Edit이 공유)
+import './PetProductReviewWrite.css'; 
 
 // 1. App.js로부터 'currentUser'를 props로 받습니다.
 export default function PetAdoptionEdit({ currentUser }) {
@@ -49,9 +51,9 @@ export default function PetAdoptionEdit({ currentUser }) {
             if (response.ok) {
                 const data = await response.json();
                 
-                // 6. 💡 [보안] 본인 확인
-                // Note: 현재 DB 연동이 userId가 아닌 author(username) 기반이므로 임시로 author로 확인
-                if (data.author !== currentUser.username) { 
+                // 6. 💡 [보안 수정] 
+                // data.author(username) 대신 data.userId(숫자ID)로 비교합니다.
+                if (data.userId !== currentUser.id) { 
                     alert('이 공고를 수정할 권한이 없습니다.');
                     navigate(`/adoption/${id}`); // 상세 페이지로 튕기기
                     return;
@@ -76,7 +78,6 @@ export default function PetAdoptionEdit({ currentUser }) {
         } catch (err) {
             console.error('공고 조회 오류:', err);
             setError(err.message || '서버와의 연결에 실패했습니다.');
-            // navigate('/adoption'); // 오류 시 리다이렉트는 사용자에게 확인 후 처리
         } finally {
             setLoading(false);
         }
@@ -132,21 +133,25 @@ export default function PetAdoptionEdit({ currentUser }) {
     // 11. 로딩 UI
     if (loading) {
         return (
-            <div className="write-container loading-state">
-                <div className="spinner-center"><div className="spinner-large"></div></div>
-                <p className="loading-text">공고 정보를 불러오는 중...</p>
+            <div className="review-form-page-wrapper loading">
+                <div className="spinner"></div>
+                <p>공고 정보를 불러오는 중...</p>
             </div>
         );
     }
     
     // 에러 발생 시
-    if (error && error !== '이 공고를 수정할 권한이 없습니다.') {
+    if (error) {
         return (
-            <div className="write-container error-state">
-                <div className="error-card">
-                    <p className="error-message">{error}</p>
-                    <button onClick={() => navigate('/adoption')} className="cancel-button">
-                        목록으로 돌아가기
+            <div className="review-form-page-wrapper loading">
+                 <div className="error-box">
+                    <AlertCircle className="icon-large" />
+                    <p>😭 {error}</p>
+                    <button
+                        onClick={() => navigate('/adoption')} 
+                        className="button primary-button"
+                    >
+                        목록으로
                     </button>
                 </div>
             </div>
@@ -155,266 +160,61 @@ export default function PetAdoptionEdit({ currentUser }) {
 
 
     return (
-        <div className="write-container">
-            {/* ------------------------------------------- */}
-            {/* 🎨 CSS 스타일 정의 (단일 파일 내) */}
-            {/* ------------------------------------------- */}
-            <style>{`
-                /* 컬러 팔레트: #F2EDE4(배경), #594C3C(텍스트), #F2E2CE(경계선), #F2CBBD(악센트), #735048(기본 색상) */
-                
-                .write-container {
-                    min-height: 100vh;
-                    background-color: #F2EDE4; /* Light Background */
-                    font-family: 'Inter', sans-serif;
-                }
-                .header {
-                    background-color: white;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                    border-bottom: 1px solid #F2E2CE;
-                }
-                .header-content {
-                    max-width: 900px;
-                    margin: 0 auto;
-                    padding: 16px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-                .title {
-                    font-size: 24px;
-                    font-weight: bold;
-                    color: #735048; /* Primary Color */
-                }
-                .back-button {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    color: #594C3C;
-                    text-decoration: none;
-                    transition: color 0.15s;
-                    background: none;
-                    border: none;
-                    cursor: pointer;
-                    font-size: 16px;
-                    padding: 8px 12px;
-                    border-radius: 8px;
-                }
-                .back-button:hover {
-                    color: #735048;
-                    background-color: #F2E2CE;
-                }
-
-                .main-content {
-                    max-width: 900px;
-                    margin: 32px auto;
-                    padding: 0 16px;
-                }
-                .post-form {
-                    background-color: white;
-                    border-radius: 12px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-                    padding: 24px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 24px;
-                    border: 1px solid #F2E2CE;
-                }
-                .error-box {
-                    background-color: #fcebeb; 
-                    border: 1px solid #f09b9b; 
-                    color: #c23939; 
-                    padding: 12px;
-                    border-radius: 8px;
-                    font-size: 14px;
-                    margin-bottom: 12px;
-                }
-                .form-grid {
-                    display: grid;
-                    grid-template-columns: repeat(1, 1fr);
-                    gap: 24px;
-                }
-                @media (min-width: 768px) {
-                    .form-grid.cols-2 {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                    .form-grid.cols-3 {
-                        grid-template-columns: repeat(3, 1fr);
-                    }
-                    .form-grid.cols-full {
-                        grid-column: 1 / -1;
-                    }
-                }
-
-                .form-group {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                }
-                .label-text {
-                    font-size: 14px;
-                    font-weight: 500;
-                    color: #594C3C;
-                }
-                .input-field, .textarea-field, .select-field {
-                    width: 100%;
-                    padding: 12px;
-                    border: 1px solid #F2CBBD; /* Accent Border */
-                    border-radius: 8px;
-                    font-size: 16px;
-                    box-sizing: border-box;
-                    color: #594C3C;
-                }
-                .input-field:focus, .textarea-field:focus, .select-field:focus {
-                    outline: none;
-                    border-color: #735048;
-                    box-shadow: 0 0 0 2px #F2E2CE;
-                }
-                .textarea-field {
-                    resize: vertical;
-                    min-height: 150px;
-                }
-
-                .author-info-box {
-                    padding: 12px;
-                    border: 1px solid #F2E2CE;
-                    border-radius: 8px;
-                    background-color: #F2EDE4; /* Light Accent Background */
-                    color: #594C3C;
-                    font-weight: 600;
-                }
-
-                .button-group {
-                    display: flex;
-                    justify-content: flex-end;
-                    gap: 12px;
-                    padding-top: 16px;
-                    border-top: 1px solid #F2E2CE;
-                }
-                .cancel-button {
-                    padding: 10px 20px;
-                    border: 1px solid #735048;
-                    color: #735048;
-                    background-color: white;
-                    border-radius: 8px;
-                    transition: background-color 0.15s;
-                    cursor: pointer;
-                    font-weight: 600;
-                }
-                .cancel-button:hover:not(:disabled) {
-                    background-color: #F2E2CE;
-                }
-                .submit-button {
-                    padding: 10px 20px;
-                    background-color: #735048;
-                    color: white;
-                    border-radius: 8px;
-                    transition: background-color 0.15s;
-                    cursor: pointer;
-                    border: none;
-                    font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-                .submit-button:hover:not(:disabled) {
-                    background-color: #594C3C;
-                }
-                .submit-button:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                }
-                /* 로딩 스피너 */
-                .spinner-center {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .spinner {
-                    border: 3px solid rgba(255, 255, 255, 0.3);
-                    border-top: 3px solid #fff;
-                    border-radius: 50%;
-                    width: 16px;
-                    height: 16px;
-                    animation: spin 1s linear infinite;
-                }
-                .spinner-large {
-                    width: 40px;
-                    height: 40px;
-                    border-width: 4px;
-                    border-top-color: #735048;
-                    margin: 0 auto;
-                }
-                .loading-state {
-                    min-height: 100vh;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    background-color: #F2EDE4;
-                    color: #594C3C;
-                    text-align: center;
-                }
-                .loading-text {
-                    margin-top: 16px;
-                    font-weight: 500;
-                }
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            `}</style>
-
+        // 🌟 [수정] CSS 클래스명 변경
+        <div className="review-form-page-wrapper">
+            {/* 🌟 [제거] <style> 블록 전체 삭제 */}
+            
             {/* Header */}
-            <header className="header">
-                <div className="header-content">
-                    <h1 className="title">입양 공고 수정</h1>
+            <header className="form-header">
+                <div className="form-header-container">
+                    <h1 className="form-title">입양 공고 수정</h1>
                     <button
                         onClick={() => navigate(`/adoption/${id}`)}
-                        className="back-button"
+                        className="button-link"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <ArrowLeft className="icon-sm" />
                         수정 취소
                     </button>
                 </div>
             </header>
 
             {/* Main Content */}
-            <main className="main-content">
-                <form onSubmit={handleSubmit} className="post-form">
+            <main className="form-main-container">
+                <form onSubmit={handleSubmit} className="form-card">
                     
                     {/* 에러 메시지 */}
                     {error && (
-                        <div className="error-box" role="alert">
+                        <div className="message-box error" role="alert">
                             {error}
                         </div>
                     )}
 
                     {/* 작성자 정보 (로그인 정보 표시) */}
                     <div className="form-group">
-                        <label className="label-text">
+                        <label className="form-label">
                             공고 작성자
                         </label>
-                        <div className="author-info-box input-field" style={{padding: '12px'}}>
+                        <div className="form-input" style={{ backgroundColor: '#f9f9f9', color: '#555' }}>
                             {currentUser ? (
-                                <span className="author-name">{currentUser.nickname || currentUser.username}</span>
+                                <span>{currentUser.nickname || currentUser.username}</span>
                             ) : (
                                 <span style={{color: '#c23939'}}>로그인 정보 없음</span>
                             )}
                         </div>
                     </div>
 
-                    {/* 10. 💡 [추가] 입양 상태 변경 */}
+                    {/* 입양 상태 변경 */}
                     <div className="form-group">
-                        <label className="label-text">입양 상태 <span style={{color: 'red'}}>*</span></label>
-                        <select name="status" value={formData.status} onChange={handleChange} className="select-field">
+                        <label className="form-label">입양 상태 <span className="required-star">*</span></label>
+                        <select name="status" value={formData.status} onChange={handleChange} className="form-input">
                             {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
                     </div>
 
                     {/* 동물 이름 */}
                     <div className="form-group">
-                        <label className="label-text">
-                            동물 이름 <span style={{color: 'red'}}>*</span>
+                        <label className="form-label">
+                            동물 이름 <span className="required-star">*</span>
                         </label>
                         <input
                             type="text"
@@ -422,45 +222,45 @@ export default function PetAdoptionEdit({ currentUser }) {
                             value={formData.name}
                             onChange={handleChange}
                             placeholder="예: 복돌이"
-                            className="input-field"
+                            className="form-input"
                             required
                         />
                     </div>
 
                     {/* 2x2 그리드: 종류, 품종 */}
-                    <div className="form-grid cols-2">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
                         {/* 종류 */}
                         <div className="form-group">
-                            <label className="label-text">종류 <span style={{color: 'red'}}>*</span></label>
-                            <select name="species" value={formData.species} onChange={handleChange} className="select-field">
+                            <label className="form-label">종류 <span className="required-star">*</span></label>
+                            <select name="species" value={formData.species} onChange={handleChange} className="form-input">
                                 {speciesOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                             </select>
                         </div>
                         {/* 품종 */}
                         <div className="form-group">
-                            <label className="label-text">품종 <span style={{color: 'red'}}>*</span></label>
-                            <input type="text" name="breed" value={formData.breed} onChange={handleChange} placeholder="예: 믹스, 코숏, 푸들" className="input-field" required />
+                            <label className="form-label">품종 <span className="required-star">*</span></label>
+                            <input type="text" name="breed" value={formData.breed} onChange={handleChange} placeholder="예: 믹스, 코숏, 푸들" className="form-input" required />
                         </div>
                     </div>
 
                     {/* 3x3 그리드: 나이, 성별, 크기 */}
-                    <div className="form-grid cols-3">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
                         {/* 나이 */}
                         <div className="form-group">
-                            <label className="label-text">나이 (살) <span style={{color: 'red'}}>*</span></label>
-                            <input type="number" name="age" value={formData.age} onChange={handleChange} placeholder="숫자만 입력 (예: 3)" className="input-field" min="0" required />
+                            <label className="form-label">나이 (살) <span className="required-star">*</span></label>
+                            <input type="number" name="age" value={formData.age} onChange={handleChange} placeholder="숫자만 입력 (예: 3)" className="form-input" min="0" required />
                         </div>
                         {/* 성별 */}
                         <div className="form-group">
-                            <label className="label-text">성별 <span style={{color: 'red'}}>*</span></label>
-                            <select name="gender" value={formData.gender} onChange={handleChange} className="select-field">
+                            <label className="form-label">성별 <span className="required-star">*</span></label>
+                            <select name="gender" value={formData.gender} onChange={handleChange} className="form-input">
                                 {genderOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                             </select>
                         </div>
                         {/* 크기 */}
                         <div className="form-group">
-                            <label className="label-text">크기 <span style={{color: 'red'}}>*</span></label>
-                            <select name="size" value={formData.size} onChange={handleChange} className="select-field">
+                            <label className="form-label">크기 <span className="required-star">*</span></label>
+                            <select name="size" value={formData.size} onChange={handleChange} className="form-input">
                                 {sizeOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                             </select>
                         </div>
@@ -468,24 +268,24 @@ export default function PetAdoptionEdit({ currentUser }) {
 
                     {/* 발견 지역 */}
                     <div className="form-group">
-                        <label className="label-text">
-                            발견/보호 지역 <span style={{color: 'red'}}>*</span>
+                        <label className="form-label">
+                            발견/보호 지역 <span className="required-star">*</span>
                         </label>
-                        <input type="text" name="region" value={formData.region} onChange={handleChange} placeholder="예: 서울시 강남구" className="input-field" required />
+                        <input type="text" name="region" value={formData.region} onChange={handleChange} placeholder="예: 서울시 강남구" className="form-input" required />
                     </div>
 
                     {/* 이미지 URL */}
                     <div className="form-group">
-                        <label className="label-text">
+                        <label className="form-label">
                             사진 URL (선택)
                         </label>
-                        <input type="text" name="image" value={formData.image} onChange={handleChange} placeholder="https://example.com/image.png" className="input-field" />
+                        <input type="text" name="image" value={formData.image} onChange={handleChange} placeholder="https://example.com/image.png" className="form-input" />
                     </div>
 
                     {/* 상세 설명 */}
                     <div className="form-group">
-                        <label className="label-text">
-                            상세 설명 <span style={{color: 'red'}}>*</span>
+                        <label className="form-label">
+                            상세 설명 <span className="required-star">*</span>
                         </label>
                         <textarea
                             name="description"
@@ -493,17 +293,17 @@ export default function PetAdoptionEdit({ currentUser }) {
                             onChange={handleChange}
                             placeholder="동물의 성격, 건강 상태, 발견 당시 상황 등을 자세히 적어주세요."
                             rows={10}
-                            className="textarea-field"
+                            className="form-input" // 🌟 [수정] textarea-field -> form-input
                             required
                         />
                     </div>
 
                     {/* 버튼 영역 */}
-                    <div className="button-group">
+                    <div className="form-footer">
                         <button
                             type="button"
                             onClick={() => navigate(`/adoption/${id}`)}
-                            className="cancel-button"
+                            className="button secondary-button"
                             disabled={isSubmitting}
                         >
                             취소
@@ -511,16 +311,16 @@ export default function PetAdoptionEdit({ currentUser }) {
                         <button
                             type="submit"
                             disabled={isSubmitting || !currentUser}
-                            className="submit-button"
+                            className="button primary-button"
                         >
                             {isSubmitting ? (
-                                <span className="spinner-center">
-                                    <span className="spinner"></span>
+                                <>
+                                    <div className="spinner-sm"></div>
                                     수정 중...
-                                </span>
+                                </>
                             ) : (
                                 <>
-                                    <Save className="w-4 h-4" />
+                                    <Save className="icon-sm" />
                                     수정 완료
                                 </>
                             )}

@@ -214,15 +214,25 @@ app.post('/api/register', async (req, res) => {
         return res.status(400).json({ message: '모든 필드를 입력해주세요.' });
     }
     try {
-        const [existingUsers] = await pool.query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email]);
+        // ✅ 수정: nickname도 함께 검사
+        const [existingUsers] = await pool.query(
+            'SELECT * FROM users WHERE username = ? OR email = ? OR nickname = ?', 
+            [username, email, nickname]
+        );
+
         if (existingUsers.length > 0) {
+            // ✅ 수정: 어떤 것이 중복되었는지 정확히 알려줌
             if (existingUsers[0].username === username) {
                 return res.status(409).json({ message: '이미 사용 중인 아이디입니다.' }); 
             }
             if (existingUsers[0].email === email) {
                 return res.status(409).json({ message: '이미 사용 중인 이메일입니다.' });
             }
+            if (existingUsers[0].nickname === nickname) {
+                return res.status(409).json({ message: '이미 사용 중인 닉네임입니다.' });
+            }
         }
+
         const hashedPassword = await bcrypt.hash(password, 10); 
         const sql = `
             INSERT INTO users (username, password, email, nickname) 
@@ -296,13 +306,16 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
+// 🌟 [핵심 수정 1] 게시글 상세 (GET /api/posts/:id) - 조회수 증가 로직 제거
 app.get('/api/posts/:id', async (req, res) => {
     const postId = parseInt(req.params.id);
     if (isNaN(postId)) {
         return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
     }
+    
     try {
-        await pool.query('UPDATE posts SET views = views + 1 WHERE id = ?', [postId]);
+        // 🌟 [제거] await pool.query('UPDATE posts SET views = views + 1 WHERE id = ?', [postId]);
+
         const sql = `
             SELECT p.*, COUNT(c.id) AS comments 
             FROM posts p
@@ -311,15 +324,35 @@ app.get('/api/posts/:id', async (req, res) => {
             GROUP BY p.id;
         `;
         const [rows] = await pool.query(sql, [postId]);
+
         if (rows.length === 0) {
             return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
         }
+        
         const post = rows[0];
         post.likedUsers = post.likedUsers ? JSON.parse(post.likedUsers) : [];
+        
         res.json(post);
     } catch (error) {
         console.error('DB 조회/업데이트 중 오류 발생 (GET /api/posts/:id):', error);
         res.status(500).json({ message: '서버 오류: 게시글을 불러오지 못했습니다.' });
+    }
+});
+
+// 🌟 [핵심 추가 2] 조회수 증가 API (POST /api/posts/:id/view)
+app.post('/api/posts/:id/view', async (req, res) => {
+    const postId = parseInt(req.params.id);
+    if (isNaN(postId)) {
+        return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
+    }
+    
+    try {
+        // 🌟 조회수 1 증가
+        await pool.query('UPDATE posts SET views = views + 1 WHERE id = ?', [postId]);
+        res.status(200).json({ message: '조회수가 1 증가했습니다.' });
+    } catch (error) {
+        console.error('DB 업데이트 중 오류 발생 (POST /api/posts/:id/view):', error);
+        res.status(500).json({ message: '서버 오류: 조회수 증가에 실패했습니다.' });
     }
 });
 
@@ -688,17 +721,24 @@ app.get('/api/diaries/entry/:id', async (req, res) => {
     }
 });
 
+// 🌟 [핵심 수정 1] '일기' 작성 (POST /api/diaries) - image 추가
 app.post('/api/diaries', async (req, res) => {
-    const { title, mood, content, userId } = req.body;
+    // 🌟 1. image 필드 받기
+    const { title, mood, content, userId, image } = req.body;
+    
     if (!title || !mood || !content || !userId) {
-        return res.status(400).json({ message: "모든 필드(title, mood, content, userId)가 필요합니다." });
+        // image는 선택 사항이므로 유효성 검사에서 제외
+        return res.status(400).json({ message: "필수 필드(title, mood, content, userId)가 필요합니다." });
     }
+
     try {
         const sql = `
-            INSERT INTO diaries (title, mood, content, userId) 
-            VALUES (?, ?, ?, ?)
+            INSERT INTO diaries (title, mood, content, userId, image) 
+            VALUES (?, ?, ?, ?, ?)
         `;
-        const [result] = await pool.query(sql, [title, mood, content, userId]);
+        // 🌟 2. image 필드 추가 (없으면 null)
+        const [result] = await pool.query(sql, [title, mood, content, userId, image || null]);
+        
         res.status(201).json({ message: '일기가 성공적으로 등록되었습니다.', diaryId: result.insertId });
     } catch (error) {
         console.error('DB 삽입 중 오류 발생 (POST /api/diaries):', error);
@@ -706,19 +746,24 @@ app.post('/api/diaries', async (req, res) => {
     }
 });
 
+// 🌟 [핵심 수정 2] '일기' 수정 (PUT /api/diaries/:id) - image 추가
 app.put('/api/diaries/:id', async (req, res) => {
     const { id } = req.params; 
-    const { title, mood, content, userId } = req.body; 
+    // 🌟 1. image 필드 받기
+    const { title, mood, content, userId, image } = req.body; 
+    
     if (!title || !mood || !content || !userId) {
-        return res.status(400).json({ message: "모든 필드(title, mood, content, userId)가 필요합니다." });
+        return res.status(400).json({ message: "필수 필드(title, mood, content, userId)가 필요합니다." });
     }
     try {
         const sql = `
             UPDATE diaries 
-            SET title = ?, mood = ?, content = ? 
+            SET title = ?, mood = ?, content = ?, image = ?
             WHERE id = ? AND userId = ?
         `;
-        const [result] = await pool.query(sql, [title, mood, content, id, userId]);
+        // 🌟 2. image 필드 추가 (없으면 null)
+        const [result] = await pool.query(sql, [title, mood, content, image || null, id, userId]);
+        
         if (result.affectedRows === 0) {
             return res.status(403).json({ message: '일기를 수정할 권한이 없거나 해당 일기를 찾을 수 없습니다.' });
         }
@@ -1016,6 +1061,8 @@ async function initializeDatabase() {
         // 10. [NEW] 🚨 comments 테이블에 authorUsername 컬럼 추가 (댓글 작성자 ID)
         await safeAddColumn('comments', 'authorUsername', "VARCHAR(100) DEFAULT 'anonymous'");
 
+        // 11. [NEW] 🚨 diaries 테이블에 image 컬럼 추가
+        await safeAddColumn('diaries', 'image', "VARCHAR(512)");
 
         console.log('✅ 모든 테이블과 컬럼 구조가 최신 상태입니다.');
 

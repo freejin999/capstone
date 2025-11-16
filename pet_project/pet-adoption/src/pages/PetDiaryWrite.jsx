@@ -6,11 +6,12 @@ import { ArrowLeft, Send } from 'lucide-react';
 export default function PetDiaryWrite({ currentUser }) {
     const navigate = useNavigate();
     
-    // 2. 폼 상태 관리
+    // 2. 폼 상태 관리 🌟 [수정] 'image' 필드 추가
     const [formData, setFormData] = useState({
         title: '',
         mood: '일상', // 기본값
         content: '',
+        image: '', // 🌟 새로 추가된 이미지 URL 필드
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
@@ -52,10 +53,11 @@ export default function PetDiaryWrite({ currentUser }) {
 
         // 6. 서버로 전송할 데이터(payload) 조립
         const payload = {
-            ...formData,
+            ...formData, // 🌟 title, mood, content, image 모두 포함
             // 🌟 로그인한 사용자의 고유 ID(숫자)를 'userId'로 설정
             userId: currentUser.id, 
-            author: currentUser.nickname, // 작성자 닉네임 추가
+            // 🌟 [제거] 'author' 필드는 diaries 테이블에 없습니다.
+            // author: currentUser.nickname, 
         };
 
         try {
@@ -87,6 +89,7 @@ export default function PetDiaryWrite({ currentUser }) {
             {/* ------------------------------------------- */}
             {/* 🎨 CSS 스타일 정의 (단일 파일 내) */}
             {/* ------------------------------------------- */}
+            {/* 🌟 [수정] 기존의 파란색 테마 CSS (변경 없음) */}
             <style>{`
                 /* 컬러 팔레트: #F2EDE4(배경), #594C3C(텍스트), #F2E2CE(경계선), #F2CBBD(악센트), #735048(기본 색상) */
                 
@@ -316,24 +319,43 @@ export default function PetDiaryWrite({ currentUser }) {
                         </p>
                     </div>
 
-                    {/* 기분 선택 */}
-                    <div className="form-group">
-                        <label htmlFor="mood" className="label-text">
-                            오늘의 기분 <span style={{color: 'red'}}>*</span>
-                        </label>
-                        <select
-                            id="mood"
-                            name="mood"
-                            value={formData.mood}
-                            onChange={handleChange}
-                            className="select-field"
-                        >
-                            {moods.map(mood => (
-                                <option key={mood} value={mood}>
-                                    {mood}
-                                </option>
-                            ))}
-                        </select>
+                    {/* 🌟 [수정] 2x2 그리드로 기분, 이미지 URL 배치 */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+                        {/* 기분 선택 */}
+                        <div className="form-group">
+                            <label htmlFor="mood" className="label-text">
+                                오늘의 기분 <span style={{color: 'red'}}>*</span>
+                            </label>
+                            <select
+                                id="mood"
+                                name="mood"
+                                value={formData.mood}
+                                onChange={handleChange}
+                                className="select-field"
+                            >
+                                {moods.map(mood => (
+                                    <option key={mood} value={mood}>
+                                        {mood}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* 🌟 [추가] 이미지 URL */}
+                        <div className="form-group">
+                            <label className="label-text" htmlFor="image">
+                                사진 URL (선택)
+                            </label>
+                            <input
+                                id="image"
+                                type="text"
+                                name="image"
+                                value={formData.image}
+                                onChange={handleChange}
+                                placeholder="https://example.com/image.png"
+                                className="input-field"
+                            />
+                        </div>
                     </div>
 
                     {/* 내용 입력 */}
