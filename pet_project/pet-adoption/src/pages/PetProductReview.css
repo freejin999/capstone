@@ -94,7 +94,7 @@
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 1rem;
     flex-wrap: wrap; /* 🌟 모바일 반응형 */
-    gap: 1rem; /* 🌟 모바일 반응형 */
+    gap: 10rem; /* 🌟 모바일 반응형 */
 }
 .review-title {
     font-size: 1.875rem; /* text-3xl */
