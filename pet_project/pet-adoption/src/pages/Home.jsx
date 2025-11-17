@@ -1,11 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
-// 🌟 [수정] react-router-dom에서 실제 Link를 임포트합니다.
 import { Link } from 'react-router-dom';
-// 🌟 [수정] BookOpen 아이콘 추가
 import { ChevronRight, Bell, Heart, Bot, Star, MessageSquare, BookOpen } from 'lucide-react'; 
 
+// 🌟 [핵심 수정 1]
+// 'src/pages/' 폴더에 실제 이미지 파일이 있다고 가정하고 import 합니다.
+// (만약 'src/assets/images/' 폴더에 넣으셨다면, './'를 '../assets/images/'로 수정하세요)
+import bannerImg1 from '../assets/images/banner1.jpg'; 
+import bannerImg2 from '../assets/images/banner2.jpg'; 
+import bannerImg3 from '../assets/images/banner3.jpg'; 
+
 // --- CSS Block for Styling ---
-// (이전과 동일한 몽글몽글 디자인 CSS)
+// (디자인 CSS는 변경 없습니다)
 const styles = `
 .home-container {
   min-height: 100vh;
@@ -39,30 +44,47 @@ const styles = `
   flex-direction: column;
   gap: 1.5rem;
 }
-/* Carousel Styles */
+
+/* 🌟 Carousel Styles */
 .carousel-wrapper {
-  height: 20rem; 
+  height: 22.5rem; 
   border-radius: 0.75rem;
   overflow: hidden;
   box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-  position: relative; /* 🌟 Dot를 위해 relative 추가 */
+  position: relative;
 }
 .slide-item {
-  position: absolute; /* 🌟 [수정] position: absolute 추가 */
+  position: absolute;
   top: 0; right: 0; bottom: 0; left: 0;
   transition: opacity 700ms;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white; /* 텍스트는 밝게 유지 */
-  font-size: 1.5rem; /* 폰트 크기 조정 */
-  line-height: 2.25rem;
-  font-weight: 700;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+  background-size: cover; /* 👈 [핵심 수정] 'contain' -> 'cover' (꽉 채우기)로 복구 */
+  background-repeat: no-repeat; /* 👈 [제거] cover 사용 시 필요 없음 */
+  background-position: center 40%; /* 👈 [핵심 수정] 'center' -> 'center 25%' (이미지의 상단 1/4 지점에 초점) */
 }
-.slide-color-1 { background: linear-gradient(to right, #F2CBBD, #735048); } /* C4 to C5 */
-.slide-color-2 { background: linear-gradient(to right, #735048, #594C3C); } /* C5 to C2 */
-.slide-color-3 { background: linear-gradient(to right, #F2CBBD, #594C3C); } /* C4 to C2 */
+.slide-overlay {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 70%);
+    display: flex;
+    align-items: center; 
+}
+.slide-content {
+    padding: 2rem 3rem; 
+    color: white;
+    width: 60%; 
+}
+.slide-title {
+    font-size: 2.25rem; /* text-4xl */
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+.slide-subtitle {
+    font-size: 1.125rem; /* text-xl */
+    font-weight: 400;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
 .carousel-dots {
   position: absolute;
   bottom: 1rem;
@@ -80,13 +102,14 @@ const styles = `
   transition: all 150ms;
   background-color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
-  border: none; /* 🌟 [추가] 버튼 기본 테두리 제거 */
+  border: none;
 }
 .dot-active {
   background-color: white;
   width: 1.5rem;
 }
-/* Animal Card Styles (추천 동물에 사용) */
+
+/* ( ... 나머지 CSS 스타일 (AnimalCard, MenuBox 등) ... ) */
 .card-wrapper {
   background-color: white;
   border-radius: 0.5rem;
@@ -126,7 +149,6 @@ const styles = `
   font-size: 0.75rem; /* text-xs */
   color: #735048; /* C5: Secondary Text Color */
 }
-/* Quick Menu Styles (unchanged) */
 .menu-box {
   background-color: white;
   border-radius: 0.5rem;
@@ -171,14 +193,12 @@ const styles = `
   font-weight: 500;
   color: #594C3C; /* 🌟 [추가] 텍스트 색상 */
 }
-/* Notice Styles (color updated) */
 .notice-wrapper {
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
   padding: 1rem;
 }
-/* Sticky style for sidebar notice */
 .sticky-notice {
     position: sticky;
     top: 5rem;
@@ -240,7 +260,6 @@ const styles = `
   font-size: 0.75rem;
   color: #735048; /* C5: Secondary date color */
 }
-/* Question/Latest Post Board Styles */
 .question-list-container {
     display: flex;
     flex-direction: column;
@@ -285,7 +304,6 @@ const styles = `
 .question-comments {
     white-space: nowrap;
 }
-/* General Styles (color updated) */
 .section-header {
   display: flex;
   align-items: center;
@@ -323,9 +341,7 @@ const styles = `
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
-/* Custom Color Classes for Icons/Accents */
 .text-icon-color { color: #594C3C; /* C2 */ }
-/* Banner Ad (color updated) */
 .ad-banner {
     background: linear-gradient(to bottom right, #F2EDE4, #F2E2CE); /* C1 to C3 */
     border-radius: 0.5rem;
@@ -335,13 +351,12 @@ const styles = `
 }
 .ad-text-1 { color: #735048; /* C5 */ font-size: 0.875rem; margin-bottom: 0.5rem; }
 .ad-text-2 { color: #735048; /* C5 */ font-size: 0.75rem; }
-/* AI Consultant Styles */
 .ai-consultant-card {
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
   padding: 1rem;
-  margin-bottom: 1.5rem; /* Separator for ad banner */
+  
 }
 .ai-input {
   width: 100%;
@@ -412,26 +427,18 @@ const styles = `
 // API 키 (비워둠)
 const apiKey = ""; 
 
-/**
- * Gemini API 호출 함수 (Google Search Grounding 포함)
- * (이 함수는 수정되지 않았습니다 - 기존 로직 100% 동일)
- */
+// ( ... Gemini API ... )
 const callGeminiApi = async (prompt) => {
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
     const systemPrompt = "당신은 반려동물 전문가입니다. 사용자의 질문에 대해 명확하고 도움이 되는 답변을 제공하며, 항상 사용자 친화적이고 공감하는 태도를 유지해야 합니다. 전문적인 조언이 필요한 경우, 수의사와 상담하도록 안내하세요. 답변은 한국어로 제공합니다.";
-    
     const payload = {
         contents: [{ parts: [{ text: prompt }] }],
         tools: [{ "google_search": {} }],
-        systemInstruction: {
-            parts: [{ text: systemPrompt }]
-        },
+        systemInstruction: { parts: [{ text: systemPrompt }] },
     };
-
     let response = null;
     let attempt = 0;
     const maxRetries = 5;
-
     while (attempt < maxRetries) {
         try {
             response = await fetch(apiUrl, {
@@ -439,16 +446,13 @@ const callGeminiApi = async (prompt) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-
             if (response.ok) {
                 const result = await response.json();
                 const candidate = result.candidates?.[0];
-
                 if (candidate && candidate.content?.parts?.[0]?.text) {
                     const text = candidate.content.parts[0].text;
                     let sources = [];
                     const groundingMetadata = candidate.groundingMetadata;
-
                     if (groundingMetadata && groundingMetadata.groundingAttributions) {
                         sources = groundingMetadata.groundingAttributions
                             .map(attribution => ({
@@ -478,13 +482,29 @@ const callGeminiApi = async (prompt) => {
     return { text: "최대 재시도 횟수를 초과했습니다. 다시 시도해 주세요.", sources: [] };
 };
 
-
-// 캐러셀 컴포넌트 (수정 없음)
 function Carousel() {
+  // 🌟 [핵심 수정 2]
+  // 슬라이드 데이터에서 로컬 import 대신 import한 변수 사용
   const slides = [
-    { id: 1, text: "사지말고 입양하세요 🧡", colorClass: "slide-color-1" },
-    { id: 2, text: "오늘의 추천 동물들을 만나보세요!", colorClass: "slide-color-2" },
-    { id: 3, text: "따뜻한 가족이 되어주세요 😊", colorClass: "slide-color-3" },
+    { 
+        id: 1, 
+        // 🌟 [수정] JSX Fragment(<>)와 <br /> 태그를 사용해 줄바꿈
+        title: <>다양한 정보!<br />다양한 만남!</>, 
+        subtitle: <>이곳에서 많은 정보와<br />반려인들을 만나보세요!</>,
+        imageUrl: bannerImg1
+    },
+    { 
+        id: 2, 
+        title: "봄맞이 용품 특가!", 
+        subtitle: "사료, 간식, 장난감 최대 30% 할인",
+        imageUrl: bannerImg2 // 👈 [수정]
+    },
+    { 
+        id: 3, 
+        title: "소중한 순간을 기록하세요", 
+        subtitle: "반려동물 일기장으로 매일의 추억을 간직하세요.",
+        imageUrl: bannerImg3 // 👈 [수정]
+    },
   ];
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -500,10 +520,18 @@ function Carousel() {
       {slides.map((slide, index) => (
         <div
           key={slide.id}
-          className={`slide-item ${slide.colorClass}`}
-          style={{ opacity: index === currentSlide ? 1 : 0 }}
+          className="slide-item"
+          style={{ 
+              backgroundImage: `url(${slide.imageUrl})`, // 👈 [수정] 변수 사용
+              opacity: index === currentSlide ? 1 : 0 
+          }}
         >
-          {slide.text}
+            <div className="slide-overlay">
+                <div className="slide-content">
+                    <h2 className="slide-title">{slide.title}</h2>
+                    <p className="slide-subtitle">{slide.subtitle}</p>
+                </div>
+            </div>
         </div>
       ))}
       <div className="carousel-dots">
@@ -522,8 +550,7 @@ function Carousel() {
   );
 }
 
-// 동물 카드 컴포넌트 (추천 동물에 사용)
-// 🌟 [수정] age prop은 "2살" 같이 '살'이 포함된 string으로 받으므로, 템플릿에서 '살'을 제거합니다.
+// ( ... AnimalCard, NoticeItem, QuestionItem, AiConsultant ... )
 const AnimalCard = ({ id, name, imageSrc, age, gender }) => (
   <Link to={`/adoption/${id}`} className="card-wrapper">
     <div className="card-image-box">
@@ -531,14 +558,10 @@ const AnimalCard = ({ id, name, imageSrc, age, gender }) => (
     </div>
     <div className="card-info">
       <h3 className="card-title">{name}</h3>
-      {/* 🌟 [수정] {age}살 -> {age} 로 변경 */}
       <p className="card-meta">{age} · {gender}</p>
     </div>
   </Link>
 );
-
-// 공지사항 아이템
-// 🌟 [수정] Link 태그로 감싸서 실제 상세 페이지로 이동
 const NoticeItem = ({ id, title, date, isNew }) => (
   <Link to={`/board/${id}`} className="notice-item">
     <div className="notice-left">
@@ -548,9 +571,6 @@ const NoticeItem = ({ id, title, date, isNew }) => (
     <span className="notice-date">{date}</span>
   </Link>
 );
-
-// 질문 게시판/최신글 아이템
-// 🌟 [수정] Link 태그로 감싸서 실제 상세 페이지로 이동
 const QuestionItem = ({ id, title, user, comments }) => (
   <Link to={`/board/${id}`} className="question-item">
     <span className="question-title">{title}</span>
@@ -560,29 +580,24 @@ const QuestionItem = ({ id, title, user, comments }) => (
     </div>
   </Link>
 );
-
-// AI 건강 조언가 컴포넌트 (수정 없음)
 function AiConsultant() {
+    // ... (AiConsultant 로직) ...
     const [question, setQuestion] = useState('');
     const [response, setResponse] = useState(null);
     const [loading, setLoading] = useState(false);
-
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
         if (!question.trim()) return;
-
         setLoading(true);
         setResponse(null);
-
         const result = await callGeminiApi(question.trim());
-
         setResponse(result);
         setLoading(false);
     }, [question]);
 
     return (
         <div className="ai-consultant-card">
-            <h3 className="notice-title" style={{ marginBottom: '0.75rem' }}> {/* mb-3 */}
+            <h3 className="notice-title" style={{ marginBottom: '0.75rem' }}>
                 <Bot className="w-4 h-4" />
                 AI 반려동물 조언가
             </h3>
@@ -602,7 +617,6 @@ function AiConsultant() {
                     {loading ? '답변 생성 중...' : '조언 요청'}
                 </button>
             </form>
-
             <div className="ai-response-box">
                 {loading ? (
                     <div className="ai-response-loading">AI가 답변을 준비하고 있습니다...</div>
@@ -626,10 +640,9 @@ function AiConsultant() {
     );
 }
 
-// 🌟 [수정] App.js에서 'currentUser'를 props로 받습니다.
+// ( ... Home 컴포넌트 ... )
 export default function Home({ currentUser }) {
   
-  // 🌟 [추가] DB 데이터를 저장할 상태
   const [notices, setNotices] = useState([]);
   const [latestPosts, setLatestPosts] = useState([]);
   const [qaPosts, setQaPosts] = useState([]);
@@ -637,40 +650,32 @@ export default function Home({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 🌟 [추가] 서버에서 모든 데이터를 가져오는 useEffect
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // 1. 게시글 (공지, 최신글, 질문) 데이터 가져오기
         const postsResponse = await fetch('http://localhost:3001/api/posts');
         if (!postsResponse.ok) throw new Error('게시글 목록을 불러올 수 없습니다.');
         const allPosts = await postsResponse.json();
         
-        // 2. 입양 공고 (추천 동물) 데이터 가져오기
         const adoptionResponse = await fetch('http://localhost:3001/api/adoption');
         if (!adoptionResponse.ok) throw new Error('입양 공고를 불러올 수 없습니다.');
         const allAdoptionPosts = await adoptionResponse.json();
 
-        // 3. 데이터 분류 및 상태 업데이트
         const noticePosts = allPosts
           .filter(p => p.isNotice === 1 || p.isNotice === true)
           .slice(0, 5);
         
         const regularPosts = allPosts
           .filter(p => p.isNotice !== 1 && p.isNotice !== true)
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // 최신순 정렬
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); 
 
         setNotices(noticePosts);
-        
-        // 🌟 [핵심 수정] '최신글'을 '자유게시판' 카테고리만 필터링
         setLatestPosts(regularPosts.filter(p => p.category === '자유게시판').slice(0, 5));
-        
         setQaPosts(regularPosts.filter(p => p.category === '질문답변').slice(0, 4));
         
-        // 4. 추천 동물 (랜덤 4개)
         const shuffledAnimals = allAdoptionPosts.sort(() => 0.5 - Math.random());
         setRecommendedAnimals(shuffledAnimals.slice(0, 4));
 
@@ -681,15 +686,13 @@ export default function Home({ currentUser }) {
         setLoading(false);
       }
     };
-
     fetchHomeData();
-  }, []); // 처음 로드 시 1회 실행
+  }, []); 
 
-  // 🌟 [추가] 로딩 및 에러 처리 UI
   if (loading) {
     return (
       <div className="home-container" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#594C3C' }}>
-        <style>{styles}</style> {/* 🌟 스타일 태그 추가 */}
+        <style>{styles}</style> 
         <div className="spinner-large" style={{ borderTopColor: '#735048' }}></div>
         <p style={{ marginTop: '1rem', fontSize: '1.25rem' }}>페이지를 불러오는 중...</p>
       </div>
@@ -698,7 +701,7 @@ export default function Home({ currentUser }) {
   if (error) {
      return (
       <div className="home-container" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <style>{styles}</style> {/* 🌟 스타일 태그 추가 */}
+        <style>{styles}</style> 
         <div style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)', textAlign: 'center' }}>
             <h2 style={{ color: '#735048', fontSize: '1.5rem', marginBottom: '1rem' }}>데이터 로딩 실패</h2>
             <p style={{ color: '#594C3C', marginBottom: '1.5rem' }}>{error}</p>
@@ -761,7 +764,7 @@ export default function Home({ currentUser }) {
               <div className="menu-box">
                 <div className="section-header">
                   <h2 className="section-title">📝 질문 게시판</h2>
-                  <Link to="/board" className="section-link"> {/* 🌟 [수정] /board?category=... -> /board */}
+                  <Link to="/board" className="section-link"> 
                     더보기 <ChevronRight className="w-4 h-4" />
                   </Link>
                 </div>
@@ -770,9 +773,9 @@ export default function Home({ currentUser }) {
                     qaPosts.map(post => (
                       <QuestionItem 
                         key={post.id}
-                        id={post.id} // 🌟 Link를 위해 id 전달
+                        id={post.id} 
                         title={post.title} 
-                        user={post.authorNickname || post.author} // 🌟 닉네임 우선 표시
+                        user={post.authorNickname || post.author} 
                         comments={post.comments} 
                       />
                     ))
@@ -795,9 +798,9 @@ export default function Home({ currentUser }) {
                     latestPosts.map(post => (
                       <QuestionItem 
                         key={post.id}
-                        id={post.id} // 🌟 Link를 위해 id 전달
+                        id={post.id} 
                         title={post.title} 
-                        user={post.authorNickname || post.author} // 🌟 닉네임 우선 표시
+                        user={post.authorNickname || post.author} 
                         comments={post.comments} 
                       />
                     ))
@@ -823,7 +826,6 @@ export default function Home({ currentUser }) {
                           id={animal.id} 
                           name={animal.name}
                           imageSrc={animal.image || `https://placehold.co/400x400/F2E2CE/594C3C?text=${animal.name}`}
-                          // 🌟 [수정] "살"을 붙여서 string으로 전달
                           age={`${animal.age}살`}
                           gender={animal.gender}
                         />
