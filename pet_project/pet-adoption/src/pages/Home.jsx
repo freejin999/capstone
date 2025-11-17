@@ -359,7 +359,7 @@ const styles = `
   
 }
 .ai-input {
-  width: 100%;
+  width: 90%;
   padding: 0.75rem;
   border: 1px solid #F2E2CE; /* C3 */
   border-radius: 0.375rem;

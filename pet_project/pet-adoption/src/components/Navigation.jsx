@@ -120,6 +120,24 @@ const styles = `
     color: #735048; /* C5: Accent Hover */
 }
 
+/* 🌟 데스크탑 회원가입 버튼 */
+.desktop-register-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #735048;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 150ms;
+    text-decoration: none;
+}
+.desktop-register-button:hover {
+    background-color: #594C3C;
+}
+
 /* Logout Button */
 .logout-button {
     display: flex;
@@ -255,17 +273,17 @@ const styles = `
     background-color: #F2CBBD; /* C4 */
 }
 
-/* Mobile Login/Register */
+/* 🌟 Mobile Login/Register - 가로 배치 */
 .mobile-login-register {
     padding-left: 1.25rem;
     padding-right: 1.25rem;
     display: flex;
-    flex-direction: column;
+    flex-direction: row; /* 🌟 가로 배치 */
     gap: 0.75rem;
 }
 .mobile-login-link {
     display: block;
-    width: 100%;
+    flex: 1; /* 🌟 동일한 너비 */
     background-color: #735048; /* C5 */
     color: white;
     text-align: center;
@@ -281,7 +299,7 @@ const styles = `
 }
 .mobile-register-link {
     display: block;
-    width: 100%;
+    flex: 1; /* 🌟 동일한 너비 */
     background-color: #F2E2CE; /* C3 */
     color: #594C3C; /* C2 */
     text-align: center;
@@ -383,10 +401,9 @@ export default function Navigation({ currentUser, handleLogout }) {
                                     </Link>
                                     <Link
                                         to="/register"
-                                        className="mobile-login-link" // 재사용 가능한 스타일
-                                        style={{ backgroundColor: '#735048', color: 'white', padding: '0.5rem 0.75rem', borderRadius: '0.375rem' }}
+                                        className="desktop-register-button"
                                     >
-                                        <UserPlus className="w-4 h-4 mr-2" />
+                                        <UserPlus className="w-4 h-4" />
                                         회원가입
                                     </Link>
                                 </>
@@ -461,7 +478,7 @@ export default function Navigation({ currentUser, handleLogout }) {
                                 </button>
                             </div>
                         ) : (
-                            // 🌟 로그아웃 상태일 때
+                            // 🌟 로그아웃 상태일 때 - 가로 배치
                             <div className="mobile-login-register">
                                 <Link
                                     to="/login"

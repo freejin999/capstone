@@ -32,8 +32,7 @@ export default function BoardWebsite() {
                 views: post.views || 0,
                 likes: post.likes || 0,
                 comments: post.comments || 0,
-                isNotice: post.category === '공지사항', // 카테고리 기반으로 공지 여부 결정
-                // post.likedUsers는 이미 서버에서 파싱되어 왔다고 가정
+                isNotice: post.isNotice === 1 || post.isNotice === true, 
             }));
 
             setPosts(formattedData);
@@ -144,10 +143,15 @@ export default function BoardWebsite() {
                     font-size: 16px;
                     box-sizing: border-box;
                 }
+                .search-input:focus {
+                    outline: none;
+                    border-color: #735048;
+                    box-shadow: 0 0 0 2px #F2E2CE;
+                }
                 .write-button {
                     background-color: #735048; /* Primary Color */
                     color: white;
-                    padding: 12px 24px;
+                    padding: 10px 20px;
                     border-radius: 8px;
                     font-weight: 600;
                     display: flex;
@@ -156,6 +160,8 @@ export default function BoardWebsite() {
                     white-space: nowrap;
                     transition: background-color 0.15s;
                     text-decoration: none;
+                    border: none;
+                    cursor: pointer;
                 }
                 .write-button:hover {
                     background-color: #594C3C; /* Darker Brown */
@@ -184,16 +190,15 @@ export default function BoardWebsite() {
                         gap: 16px;
                     }
                 }
+                
+                /* 🌟 [수정] .post-row (div)가 레이아웃을 담당 */
                 .post-row {
                     padding: 12px 24px;
-                    border-bottom: 1px solid #F2E2CE;
                     cursor: pointer;
-                    transition: background-color 0.15s;
                     color: #594C3C;
+                    display: block; /* 🌟 [추가] 모바일용 */
                 }
-                .post-row:hover {
-                    background-color: #F2E2CE;
-                }
+                
                 @media (min-width: 768px) {
                     .post-row {
                         display: grid;
@@ -201,19 +206,34 @@ export default function BoardWebsite() {
                         gap: 16px;
                     }
                 }
+                
+                /* 🌟 [수정] .link-style (Link)이 구분선과 호버 효과를 담당 */
                 .link-style {
-                    text-decoration: none;
+                    text-decoration: none; /* 👈 [유지] 전체 밑줄 제거 */
                     color: inherit;
                     display: block;
+                    border-bottom: 1px solid #F2E2CE; /* 👈 [핵심] 구분선 */
+                    transition: background-color 0.15s;
                 }
+                .link-style:hover {
+                     background-color: #F2E2CE; /* 👈 호버 효과 */
+                }
+                
+                /* 🌟 [수정] 마지막 <Link>의 밑줄을 제거 */
+                .post-list > .link-style:last-child {
+                    border-bottom: none;
+                }
+
                 .post-title-link {
                     font-weight: 500;
                     color: #735048; /* Primary Color */
                     transition: color 0.15s;
+                    /* 🌟 [제거] text-decoration: underline; (항상 밑줄 X) */
                 }
-                .post-title-link:hover {
-                    text-decoration: underline;
-                    color: #594C3C;
+                /* 🌟 [수정] .link-style에 호버 시 .post-title-link에 밑줄 */
+                .link-style:hover .post-title-link {
+                    text-decoration: underline; /* 👈 [추가] (호버 시 밑줄 O) */
+                    color: #594C3C; 
                 }
 
                 .notice-row {
@@ -315,57 +335,63 @@ export default function BoardWebsite() {
 
                     {/* Notice Posts */}
                     {noticePosts.map(post => (
+                        // 🌟 [핵심 수정] <Link>가 <div.post-row>를 감싸는 구조로 변경
                         <Link 
                             to={`/board/${post.id}`} 
                             key={post.id}
-                            className="post-row notice-row"
+                            className="link-style" 
                         >
-                            <div style={{gridColumn: '1/2', display: 'flex', justifyContent: 'center', alignItems: 'center'}}><span className="notice-badge">공지</span></div>
-                            <div style={{gridColumn: '2/4', display: 'flex', alignItems: 'center'}}>{post.category}</div>
-                            <div style={{gridColumn: '4/9', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                <span className="post-title-link">{post.title}</span>
-                                <span style={{display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#735048'}}>
-                                    <MessageSquare className="w-4 h-4" />
-                                    {post.comments}
-                                </span>
+                            <div className="post-row notice-row">
+                                <div style={{gridColumn: '1/2', display: 'flex', justifyContent: 'center', alignItems: 'center'}}><span className="notice-badge">공지</span></div>
+                                <div style={{gridColumn: '2/4', display: 'flex', alignItems: 'center'}}>{post.category}</div>
+                                <div style={{gridColumn: '4/9', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                    <span className="post-title-link">{post.title}</span>
+                                    <span style={{display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#735048'}}>
+                                        <MessageSquare className="w-4 h-4" />
+                                        {post.comments}
+                                    </span>
+                                </div>
+                                <div style={{gridColumn: '9/11', display: 'flex', alignItems: 'center', fontSize: '14px'}}>{post.author}</div>
+                                <div style={{gridColumn: '11/12', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px'}}>{post.views}</div>
+                                <div style={{gridColumn: '12/13', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px'}}>{post.date ? post.date.slice(5) : '날짜없음'}</div>
                             </div>
-                            <div style={{gridColumn: '9/11', display: 'flex', alignItems: 'center', fontSize: '14px'}}>{post.author}</div>
-                            <div style={{gridColumn: '11/12', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px'}}>{post.views}</div>
-                            <div style={{gridColumn: '12/13', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px'}}>{post.date ? post.date.slice(5) : '날짜없음'}</div>
                         </Link>
                     ))}
 
                     {/* Regular Posts */}
                     {currentPosts.map(post => (
+                        // 🌟 [핵심 수정] <Link>가 <div.post-row>를 감싸는 구조로 변경
                         <Link
                             to={`/board/${post.id}`}
                             key={post.id}
-                            className="post-row"
+                            className="link-style"
                         >
-                            <div style={{gridColumn: '1/2', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>{post.id}</div>
-                            <div style={{gridColumn: '2/4', display: 'flex', alignItems: 'center'}}>{post.category}</div>
-                            <div style={{gridColumn: '4/9', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                <span className="post-title-link">{post.title}</span>
-                                <span style={{display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#735048'}}>
-                                    <MessageSquare className="w-4 h-4" />
-                                    {post.comments}
-                                </span>
-                                <span style={{display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#F2CBBD'}}>
-                                    <ThumbsUp className="w-4 h-4" />
-                                    {post.likes}
-                                </span>
-                            </div>
-                            <div style={{gridColumn: '9/11', display: 'flex', alignItems: 'center', fontSize: '14px'}}>{post.author}</div>
-                            <div style={{gridColumn: '11/12', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px'}}>{post.views}</div>
-                            <div style={{gridColumn: '12/13', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px'}}>
-                                {post.date ? post.date.slice(5) : (post.createdAt ? post.createdAt.slice(5, 10) : '날짜없음')}
+                            <div className="post-row">
+                                <div style={{gridColumn: '1/2', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>{post.id}</div>
+                                <div style={{gridColumn: '2/4', display: 'flex', alignItems: 'center'}}>{post.category}</div>
+                                <div style={{gridColumn: '4/9', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                    <span className="post-title-link">{post.title}</span>
+                                    <span style={{display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#735048'}}>
+                                        <MessageSquare className="w-4 h-4" />
+                                        {post.comments}
+                                    </span>
+                                    <span style={{display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#F2CBBD'}}>
+                                        <ThumbsUp className="w-4 h-4" />
+                                        {post.likes}
+                                    </span>
+                                </div>
+                                <div style={{gridColumn: '9/11', display: 'flex', alignItems: 'center', fontSize: '14px'}}>{post.author}</div>
+                                <div style={{gridColumn: '11/12', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px'}}>{post.views}</div>
+                                <div style={{gridColumn: '12/13', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px'}}>
+                                    {post.date ? post.date.slice(5) : (post.createdAt ? post.createdAt.slice(5, 10) : '날짜없음')}
+                                </div>
                             </div>
                         </Link>
                     ))}
                     
                     {/* 게시글이 없을 때 표시 */}
                     {posts.length === 0 && (
-                        <div className="text-center py-12 text-gray-500">
+                        <div style={{textAlign: 'center', padding: '48px 0', color: '#594C3C'}}>
                             아직 등록된 게시글이 없습니다.
                         </div>
                     )}

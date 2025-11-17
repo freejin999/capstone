@@ -3,53 +3,61 @@
  * =============================================== */
 :root {
     /* 🌟 요청하신 새 컬러 팔레트 적용 */
-    --brand-primary: #735048;       /* (수정) 중간-어두운 갈색 (메인 버튼/텍스트) */
-    --brand-primary-dark: #594C3C;    /* (수정) 가장 어두운 갈색 (호버/진한 텍스트) */
-    --brand-primary-light: #F2E2CE;  /* (수정) 중간 베이지 (활성 탭 배경) */
-    --brand-primary-text: #735048;   /* (수정) 중간-어두운 갈색 (헤더 텍스트) */
+    --brand-primary: #735048;
+    --brand-primary-dark: #594C3C;
+    --brand-primary-light: #F2E2CE;
+    --brand-primary-text: #735048;
     
-    /* (수정) 몽글몽글한 느낌을 위한 악센트/배경 */
-    --bg-main: #F2EDE4;             /* (수정) 가장 밝은 베이지 (전체 배경) */
-    --bg-card: #ffffff;            /* (유지) 카드는 흰색으로 유지 (대비) */
-    --border-color: #F2CBBD;       /* (수정) 피치/핑크색 (테두리) */
-    --border-color-light: #F2E2CE;  /* (수정) 중간 베이지 (연한 테두리) */
+    --bg-main: #F2EDE4;
+    --bg-card: #ffffff;
+    --border-color: #F2CBBD;
+    --border-color-light: #F2E2CE;
 
-    /* (유지) 기능성 색상 (에러, 성공, 정보) - 이 색상들은 유지하는 것이 좋습니다. */
-    --brand-danger: #e11d48; /* rose-600 */
-    --brand-danger-bg: #fff1f2; /* rose-50 */
-    --brand-danger-border: #fecdd3; /* rose-200 */
-    --brand-danger-text: #9f1239; /* rose-900 */
+    --brand-danger: #e11d48;
+    --brand-danger-bg: #fff1f2;
+    --brand-danger-border: #fecdd3;
+    --brand-danger-text: #9f1239;
     
-    --brand-success-bg: #ecfdf5; /* emerald-50 */
-    --brand-success-text: #065f46; /* emerald-800 */
-    --brand-success-border: #a7f3d0; /* emerald-200 */
+    --brand-success-bg: #ecfdf5;
+    --brand-success-text: #065f46;
+    --brand-success-border: #a7f3d0;
     
-    --brand-info-bg: #f0f9ff; /* sky-50 */
-    --brand-info-text: #0c4a6e; /* sky-800 */
-    --brand-info-border: #bae6fd; /* sky-200 */
+    --brand-info-bg: #f0f9ff;
+    --brand-info-text: #0c4a6e;
+    --brand-info-border: #bae6fd;
 
-    --text-primary: #374151; /* gray-700 */
-    --text-light: #6b7280; /* gray-500 */
+    --text-primary: #374151;
+    --text-light: #6b7280;
 }
 
 /* ===============================================
- * 1. 메인 레이아웃
+ * 1. 메인 레이아웃 (🌟 최대 너비 제한 추가)
  * =============================================== */
-/* ... (기존 코드와 동일) ... */
+body {
+    background-color: var(--bg-main); /* 🌟 전체 배경색 */
+}
+
 .profile-page-wrapper {
     background-color: var(--bg-main); 
     min-height: 100vh;
-    padding: 3rem 1rem;
-    box-sizing: border-box; 
+    padding: 2rem 1.5rem; /* 🌟 패딩 줄임 */
+    box-sizing: border-box;
+    
+    /* 🌟 최대 너비 제한 및 중앙 정렬 */
+    max-width: 1200px; /* 원하는 최대 너비로 조정 가능 (예: 900px, 1000px) */
+    margin: 0 auto; /* 중앙 정렬 */
 }
-.profile-page-wrapper *, .profile-page-wrapper *:before, .profile-page-wrapper *:after {
+
+.profile-page-wrapper *, 
+.profile-page-wrapper *:before, 
+.profile-page-wrapper *:after {
     box-sizing: inherit; 
 }
-/* ... (중간 생략) ... */
+
 .profile-header {
-    font-size: 2.25rem; 
+    font-size: 2rem; /* 🌟 폰트 크기 약간 줄임 */
     font-weight: 800; 
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     color: var(--brand-primary-text); 
     border-bottom: 1px solid var(--border-color); 
     padding-bottom: 1rem;
@@ -58,10 +66,9 @@
 /* ===============================================
  * 2. 탭 메뉴
  * =============================================== */
-/* ... (기존 코드와 동일) ... */
 .profile-tabs-container {
     display: flex;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     background-color: var(--bg-card);
     border-radius: 16px; 
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
@@ -69,11 +76,12 @@
     gap: 0.5rem; 
     overflow-x: auto;
 }
+
 .tab-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.25rem; 
+    padding: 0.75rem 1rem; /* 🌟 좌우 패딩 약간 줄임 */
     font-weight: 600; 
     white-space: nowrap;
     border-radius: 12px; 
@@ -83,14 +91,17 @@
     cursor: pointer;
     transition: all 0.2s ease-in-out;
 }
+
 .tab-item .icon {
     width: 1.25rem;
     height: 1.25rem;
 }
+
 .tab-item:hover {
     background-color: var(--bg-main); 
     color: var(--brand-primary-text); 
 }
+
 .tab-item.active {
     background-color: var(--brand-primary-light); 
     color: var(--brand-primary-text); 
@@ -99,32 +110,32 @@
 /* ===============================================
  * 3. 공통 카드 및 폼 요소
  * =============================================== */
-/* ... (기존 코드와 동일 - 버튼 왼쪽 정렬 수정 포함) ... */
 .profile-content-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 2rem; 
+    gap: 1.5rem; /* 🌟 간격 약간 줄임 */
 }
 
 .profile-card {
     background-color: var(--bg-card);
-    padding: 2rem;
+    padding: 1.5rem; /* 🌟 패딩 줄임 */
     border-radius: 16px; 
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
     gap: 0; 
 }
+
 .profile-card > * {
-    margin-top: 1.5rem; 
+    margin-top: 1.25rem; /* 🌟 간격 약간 줄임 */
 }
+
 .profile-card > *:first-child {
     margin-top: 0; 
 }
 
-
 .card-header {
-    font-size: 1.5rem; 
+    font-size: 1.375rem; /* 🌟 폰트 크기 약간 줄임 */
     font-weight: 700; 
     color: var(--brand-primary-text); 
     display: flex;
@@ -138,6 +149,7 @@
     width: 1.5rem; 
     height: 1.5rem;
 }
+
 .icon-main.icon-amber { color: var(--brand-primary); } 
 .icon-main.icon-danger { color: var(--brand-danger); } 
 
@@ -145,12 +157,14 @@
     display: flex;
     flex-direction: column;
 }
+
 .form-label {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-light);
     margin-bottom: 0.25rem;
 }
+
 .form-input,
 .form-input-readonly {
     width: 100%;
@@ -161,16 +175,19 @@
     font-family: inherit; 
     font-size: 1rem;
 }
+
 .form-input:focus,
 .form-input.danger-focus:focus {
     border-color: var(--brand-primary); 
     box-shadow: 0 0 0 2px var(--brand-primary-light); 
     outline: none;
 }
+
 .form-input.danger-focus:focus {
     border-color: var(--brand-danger);
     box-shadow: 0 0 0 2px var(--brand-danger-bg);
 }
+
 .form-input-readonly {
     background-color: #f3f4f6; 
     color: var(--text-light);
@@ -178,20 +195,24 @@
     align-items: center;
     gap: 0.5rem;
 }
+
 .icon-sm { width: 1.25rem; height: 1.25rem; color: #9ca3af; }
+
 .form-row {
     display: flex;
     gap: 0.75rem;
 }
+
 .form-row .flex-1 { flex: 1; }
 
 .card-footer {
     display: flex;
-    justify-content: flex-start; /* 🌟 버튼 왼쪽 정렬 */
-    padding-top: 1.5rem; 
-    margin-top: 1.5rem; 
+    justify-content: flex-start;
+    padding-top: 1.25rem; /* 🌟 패딩 약간 줄임 */
+    margin-top: 1.25rem; 
     border-top: 1px solid var(--border-color-light); 
 }
+
 .card-footer.danger { 
     border-top-color: var(--brand-danger-border); 
 } 
@@ -206,20 +227,24 @@
     transition: all 0.2s ease;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
+
 .button:hover {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
     transform: translateY(-2px);
 }
+
 .button.primary {
     background-color: var(--brand-primary); 
     color: white;
 }
+
 .button.primary:hover { background-color: var(--brand-primary-dark); } 
 
 .button.danger {
     background-color: var(--brand-danger);
     color: white;
 }
+
 .button.danger:hover { background-color: #be123c; } 
 
 .button.secondary-light {
@@ -227,6 +252,7 @@
     color: var(--brand-primary-text); 
     font-size: 0.875rem;
 }
+
 .button.secondary-light:hover { 
     background-color: var(--bg-main); 
 }
@@ -236,21 +262,26 @@
     background-color: var(--brand-danger-bg);
     box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.03);
 }
+
 .card-header.danger-light-text {
     color: var(--brand-danger-text);
     border-bottom-color: var(--brand-danger-border);
 }
+
 .icon-main.icon-danger-light { color: var(--brand-danger-text); }
+
 .card-description.danger {
     color: var(--brand-danger-text);
     font-size: 0.875rem;
 }
+
 .card-footer-text {
     display: flex;
-    justify-content: flex-start; /* 🌟 버튼 왼쪽 정렬 */
+    justify-content: flex-start;
     padding-top: 1rem;
-    margin-top: 1.5rem; 
+    margin-top: 1.25rem; /* 🌟 간격 약간 줄임 */
 }
+
 .button-link-danger {
     font-size: 0.875rem;
     color: var(--text-light);
@@ -259,12 +290,13 @@
     background: none;
     border: none;
 }
+
 .button-link-danger:hover {
     color: var(--brand-danger);
     text-decoration: underline;
 }
 
-/* 메시지 박스 (기능색 유지) */
+/* 메시지 박스 */
 .message-box {
     padding: 1rem;
     border-radius: 12px;
@@ -273,40 +305,45 @@
     gap: 0.75rem;
     border: 1px solid;
 }
+
 .message-box .icon { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+
 .message-box.success {
     background-color: var(--brand-success-bg);
     color: var(--brand-success-text);
     border-color: var(--brand-success-border);
 }
+
 .message-box.error {
     background-color: var(--brand-danger-bg);
     color: var(--brand-danger-text);
     border-color: var(--brand-danger-border);
 }
+
 .message-box.info {
     background-color: var(--brand-info-bg);
     color: var(--brand-info-text);
     border-color: var(--brand-info-border);
 }
 
-
 /* ===============================================
- * 4. 입양 신청 내역 (ApplicationContent)
+ * 4. 입양 신청 내역
  * =============================================== */
 .card-placeholder {
     color: var(--text-light);
     text-align: center;
     padding: 1.5rem 0;
 }
+
 .card-placeholder.error { color: var(--brand-danger); }
 
 .application-list {
-    margin-top: 1.5rem;
+    margin-top: 1.25rem; /* 🌟 간격 약간 줄임 */
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
+
 .application-card {
     padding: 1.25rem;
     background-color: var(--bg-main); 
@@ -317,15 +354,18 @@
     transition: all 0.2s ease;
     cursor: pointer;
 }
+
 .application-card:hover {
     background-color: var(--brand-primary-light); 
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
+
 .application-pet-name {
     font-weight: 700;
     font-size: 1.125rem;
     color: var(--brand-primary-text); 
 }
+
 .application-meta {
     display: flex;
     align-items: center;
@@ -335,14 +375,16 @@
     gap: 1rem;
     flex-wrap: wrap; 
 }
+
 .meta-item {
     display: flex;
     align-items: center;
     gap: 0.25rem;
 }
+
 .icon-xs { width: 0.75rem; height: 0.75rem; }
 
-/* 상태 배지 (기능색 유지) */
+/* 상태 배지 */
 .status-badge {
     padding: 0.25rem 1rem;
     font-size: 0.875rem;
@@ -350,47 +392,49 @@
     font-weight: 600;
     white-space: nowrap; 
 }
+
 .status-pending { background-color: #fef08a; color: #a16207; } 
 .status-success { background-color: #dcfce7; color: #166534; } 
 .status-danger { background-color: #fee2e2; color: #991b1b; } 
 
-/* 🌟 [추가] '나의 댓글' 탭 스타일 */
+/* 나의 댓글 탭 스타일 */
 .comment-content {
     font-weight: 500;
     color: var(--text-primary);
-    /* 1줄 말줄임표 */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 400px; /* 🌟 댓글 내용이 너무 길어지지 않게 */
+    max-width: 350px; /* 🌟 최대 너비 약간 줄임 */
 }
+
 .meta-item-post {
     font-style: italic;
     color: var(--text-light);
     font-size: 0.875rem;
-    /* 1줄 말줄임표 */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 200px; /* 🌟 원본 글 제목이 너무 길어지지 않게 */
+    max-width: 180px; /* 🌟 최대 너비 약간 줄임 */
 }
 
-
 /* ===============================================
- * 5. 나의 게시글 (ActivityContent)
+ * 5. 나의 게시글
  * =============================================== */
 .activity-table-wrapper {
     overflow-x: auto;
     margin-top: 1rem;
 }
+
 .activity-table {
     min-width: 100%;
     border-collapse: collapse; 
     width: 100%; 
 }
+
 .activity-table thead {
     background-color: var(--bg-main); 
 }
+
 .activity-table th {
     padding: 0.75rem 1rem;
     text-align: left;
@@ -400,18 +444,22 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
+
 .activity-table th.text-center { text-align: center; }
 
 .activity-table tbody tr {
     transition: background-color 0.2s ease;
     border-bottom: 1px solid #f3f4f6; 
 }
+
 .activity-table tbody tr:last-child {
     border-bottom: none; 
 }
+
 .activity-table tbody tr:hover {
     background-color: var(--bg-main); 
 }
+
 .activity-table td {
     padding: 1rem;
     white-space: nowrap;
@@ -419,6 +467,7 @@
     color: var(--text-light);
     vertical-align: middle; 
 }
+
 .activity-table td.text-center { text-align: center; }
 
 .table-link {
@@ -426,6 +475,7 @@
     color: var(--brand-primary-dark); 
     cursor: pointer;
 }
+
 .table-link:hover {
     color: var(--brand-primary); 
     text-decoration: underline;
@@ -436,6 +486,7 @@
     justify-content: center;
     gap: 0.5rem;
 }
+
 .action-button {
     background: none;
     border: none;
@@ -443,17 +494,55 @@
     cursor: pointer;
     transition: color 0.2s ease;
 }
+
 .action-button .icon-xs { width: 1rem; height: 1rem; }
 .action-button.edit { color: var(--brand-primary); } 
 .action-button.edit:hover { color: var(--brand-primary-dark); } 
 .action-button.delete { color: var(--brand-danger); }
 .action-button.delete:hover { color: #b91c1c; } 
 
-/* 모바일용 테이블 (반응형) */
+/* ===============================================
+ * 6. 반응형 디자인
+ * =============================================== */
+/* 태블릿 */
+@media (max-width: 1024px) {
+    .profile-page-wrapper {
+        max-width: 900px; /* 태블릿에서 더 줄임 */
+        padding: 1.5rem 1rem;
+    }
+}
+
+/* 모바일 */
 @media (max-width: 768px) {
+    .profile-page-wrapper {
+        padding: 1rem;
+    }
+    
+    .profile-header {
+        font-size: 1.75rem;
+    }
+    
+    .card-header {
+        font-size: 1.25rem;
+    }
+    
+    .profile-card {
+        padding: 1.25rem;
+    }
+    
+    .comment-content {
+        max-width: 250px;
+    }
+    
+    .meta-item-post {
+        max-width: 150px;
+    }
+    
+    /* 테이블 반응형 */
     .activity-table thead {
         display: none;
     }
+    
     .activity-table tr {
         display: block;
         margin-bottom: 1rem;
@@ -462,6 +551,7 @@
         overflow: hidden;
         box-shadow: 0 2px 4px rgba(0,0,0,0.03);
     }
+    
     .activity-table td {
         display: block;
         text-align: right;
@@ -470,7 +560,9 @@
         white-space: normal;
         border-bottom: 1px solid #f3f4f6;
     }
+    
     .activity-table td:last-child { border-bottom: none; }
+    
     .activity-table td::before {
         content: attr(data-label);
         position: absolute;
@@ -480,6 +572,23 @@
         font-weight: 600;
         color: var(--brand-primary-text); 
     }
+    
     .activity-table td.text-center { text-align: right; }
     .table-actions { justify-content: flex-end; }
+}
+
+/* 소형 모바일 */
+@media (max-width: 480px) {
+    .profile-page-wrapper {
+        padding: 0.75rem;
+    }
+    
+    .profile-header {
+        font-size: 1.5rem;
+    }
+    
+    .tab-item {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
 }
