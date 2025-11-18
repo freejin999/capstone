@@ -463,7 +463,7 @@ const styles = `
 
 
 // API 키 (비워둠)
-const apiKey = "AIzaSyAN-wjd_Nk6bTitFpFi5W30d-eKrcRUw90"; 
+const apiKey = ""; 
 
 // ( ... Gemini API ... )
 const callGeminiApi = async (prompt) => {
