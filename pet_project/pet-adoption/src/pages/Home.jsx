@@ -1,16 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Bell, Heart, Bot, Star, MessageSquare, BookOpen } from 'lucide-react'; 
+import { ChevronRight, Bell, Heart, Bot, Star, MessageSquare, BookOpen, RefreshCw, Send } from 'lucide-react'; // 🌟 RefreshCw, Send 추가
 
 // 🌟 [핵심 수정 1]
-// 'src/pages/' 폴더에 실제 이미지 파일이 있다고 가정하고 import 합니다.
-// (만약 'src/assets/images/' 폴더에 넣으셨다면, './'를 '../assets/images/'로 수정하세요)
+// 로컬 파일 import 시도를 제거합니다. (파일이 해당 경로에 존재하지 않아 오류 발생)
 import bannerImg1 from '../assets/images/banner1.jpg'; 
 import bannerImg2 from '../assets/images/banner2.jpg'; 
 import bannerImg3 from '../assets/images/banner3.jpg'; 
 
 // --- CSS Block for Styling ---
-// (디자인 CSS는 변경 없습니다)
 const styles = `
 .home-container {
   min-height: 100vh;
@@ -47,7 +45,7 @@ const styles = `
 
 /* 🌟 Carousel Styles */
 .carousel-wrapper {
-  height: 22.5rem; 
+  height: 20rem; 
   border-radius: 0.75rem;
   overflow: hidden;
   box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
@@ -57,9 +55,8 @@ const styles = `
   position: absolute;
   top: 0; right: 0; bottom: 0; left: 0;
   transition: opacity 700ms;
-  background-size: cover; /* 👈 [핵심 수정] 'contain' -> 'cover' (꽉 채우기)로 복구 */
-  background-repeat: no-repeat; /* 👈 [제거] cover 사용 시 필요 없음 */
-  background-position: center 40%; /* 👈 [핵심 수정] 'center' -> 'center 25%' (이미지의 상단 1/4 지점에 초점) */
+  background-size: cover;
+  background-position: center 25%;
 }
 .slide-overlay {
     width: 100%;
@@ -351,12 +348,13 @@ const styles = `
 }
 .ad-text-1 { color: #735048; /* C5 */ font-size: 0.875rem; margin-bottom: 0.5rem; }
 .ad-text-2 { color: #735048; /* C5 */ font-size: 0.75rem; }
+
+/* 🌟 AI Consultant Styles - Updated for Scroll & Reset */
 .ai-consultant-card {
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
   padding: 1rem;
-  
 }
 .ai-input {
   width: 90%;
@@ -373,24 +371,45 @@ const styles = `
     box-shadow: 0 0 0 2px var(--brand-primary-light);
     outline: none;
 }
+
+/* 🌟 [수정] 버튼 그룹 스타일 */
+.ai-button-group {
+    display: flex;
+    gap: 0.5rem;
+}
 .ai-button {
-  width: 100%;
+  flex: 1;
   padding: 0.75rem;
-  background-color: #735048; /* C5 */
-  color: white;
-  font-weight: 600;
   border-radius: 0.375rem;
   transition: background-color 150ms;
   cursor: pointer;
   border: none; 
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
-.ai-button:hover:not(:disabled) {
-  background-color: #594C3C; /* C2 */
+.ai-button.primary {
+    background-color: #735048; /* C5 */
+    color: white;
+}
+.ai-button.primary:hover:not(:disabled) {
+    background-color: #594C3C; /* C2 */
+}
+.ai-button.secondary {
+    background-color: #F2E2CE; /* C3 */
+    color: #735048; /* C5 */
+}
+.ai-button.secondary:hover:not(:disabled) {
+    background-color: #F2CBBD; /* C4 */
 }
 .ai-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* 🌟 [수정] 답변 박스 스타일 (스크롤 추가) */
 .ai-response-box {
   margin-top: 1rem;
   padding: 1rem;
@@ -400,9 +419,28 @@ const styles = `
   font-size: 0.875rem;
   color: #594C3C;
   white-space: pre-wrap;
-  min-height: 80px;
+  
+  /* 🌟 핵심: 내용이 길어지면 스크롤 생김 (드롭다운 느낌) */
+  max-height: 250px; 
+  overflow-y: auto;
   line-height: 1.6; 
 }
+/* 스크롤바 커스텀 (선택사항 - 몽글몽글 느낌) */
+.ai-response-box::-webkit-scrollbar {
+    width: 8px;
+}
+.ai-response-box::-webkit-scrollbar-track {
+    background: #F2EDE4; 
+    border-radius: 4px;
+}
+.ai-response-box::-webkit-scrollbar-thumb {
+    background: #F2CBBD; 
+    border-radius: 4px;
+}
+.ai-response-box::-webkit-scrollbar-thumb:hover {
+    background: #735048; 
+}
+
 .ai-response-loading {
   text-align: center;
   padding: 1rem;
@@ -420,12 +458,12 @@ const styles = `
 .ai-citation p {
     margin-bottom: 0.25rem; 
 }
-`;
+`; 
 // --- End CSS Block ---
 
 
 // API 키 (비워둠)
-const apiKey = ""; 
+const apiKey = "AIzaSyAN-wjd_Nk6bTitFpFi5W30d-eKrcRUw90"; 
 
 // ( ... Gemini API ... )
 const callGeminiApi = async (prompt) => {
@@ -483,27 +521,24 @@ const callGeminiApi = async (prompt) => {
 };
 
 function Carousel() {
-  // 🌟 [핵심 수정 2]
-  // 슬라이드 데이터에서 로컬 import 대신 import한 변수 사용
   const slides = [
     { 
         id: 1, 
-        // 🌟 [수정] JSX Fragment(<>)와 <br /> 태그를 사용해 줄바꿈
         title: <>다양한 정보!<br />다양한 만남!</>, 
         subtitle: <>이곳에서 많은 정보와<br />반려인들을 만나보세요!</>,
-        imageUrl: bannerImg1
+        imageUrl: bannerImg1 
     },
     { 
         id: 2, 
         title: "봄맞이 용품 특가!", 
         subtitle: "사료, 간식, 장난감 최대 30% 할인",
-        imageUrl: bannerImg2 // 👈 [수정]
+        imageUrl: bannerImg2
     },
     { 
         id: 3, 
         title: "소중한 순간을 기록하세요", 
         subtitle: "반려동물 일기장으로 매일의 추억을 간직하세요.",
-        imageUrl: bannerImg3 // 👈 [수정]
+        imageUrl: bannerImg3 
     },
   ];
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -522,7 +557,7 @@ function Carousel() {
           key={slide.id}
           className="slide-item"
           style={{ 
-              backgroundImage: `url(${slide.imageUrl})`, // 👈 [수정] 변수 사용
+              backgroundImage: `url(${slide.imageUrl})`, 
               opacity: index === currentSlide ? 1 : 0 
           }}
         >
@@ -550,7 +585,7 @@ function Carousel() {
   );
 }
 
-// ( ... AnimalCard, NoticeItem, QuestionItem, AiConsultant ... )
+// ( ... AnimalCard, NoticeItem, QuestionItem ... )
 const AnimalCard = ({ id, name, imageSrc, age, gender }) => (
   <Link to={`/adoption/${id}`} className="card-wrapper">
     <div className="card-image-box">
@@ -580,11 +615,13 @@ const QuestionItem = ({ id, title, user, comments }) => (
     </div>
   </Link>
 );
+
+// 🌟 [수정] AI 조언가 컴포넌트 (초기화 기능 추가)
 function AiConsultant() {
-    // ... (AiConsultant 로직) ...
     const [question, setQuestion] = useState('');
     const [response, setResponse] = useState(null);
     const [loading, setLoading] = useState(false);
+
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
         if (!question.trim()) return;
@@ -594,6 +631,13 @@ function AiConsultant() {
         setResponse(result);
         setLoading(false);
     }, [question]);
+
+    // 🌟 [추가] 초기화 핸들러
+    const handleReset = () => {
+        setQuestion('');
+        setResponse(null);
+        setLoading(false);
+    };
 
     return (
         <div className="ai-consultant-card">
@@ -609,13 +653,24 @@ function AiConsultant() {
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                 />
-                <button
-                    type="submit"
-                    className="ai-button"
-                    disabled={loading || !question.trim()}
-                >
-                    {loading ? '답변 생성 중...' : '조언 요청'}
-                </button>
+                {/* 🌟 [수정] 버튼 그룹 (요청/초기화) */}
+                <div className="ai-button-group">
+                    <button
+                        type="submit"
+                        className="ai-button primary"
+                        disabled={loading || !question.trim()}
+                    >
+                        {loading ? '답변 생성 중...' : <> <Send className="w-4 h-4"/> 조언 요청 </>}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleReset}
+                        className="ai-button secondary"
+                        disabled={loading || (!question && !response)}
+                    >
+                        <RefreshCw className="w-4 h-4"/> 초기화
+                    </button>
+                </div>
             </form>
             <div className="ai-response-box">
                 {loading ? (

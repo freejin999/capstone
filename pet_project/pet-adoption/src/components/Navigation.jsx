@@ -1,321 +1,12 @@
 import React, { useState } from 'react';
-// import { Link } from 'react-router-dom'; // <--- react-router-dom 사용 대신 자체 Link 정의
-import { PawPrint, LogOut, User, LogIn, UserPlus } from 'lucide-react';
+// 💡 Link를 react-router-dom에서 import 합니다.
+import { Link } from 'react-router-dom';
+// 🌟 [수정] PawPrint 아이콘 제거 (이미지로 대체)
+import { LogOut, User, LogIn, UserPlus } from 'lucide-react';
 
-// [수정] react-router-dom이 없는 환경을 위해 <a> 태그를 사용하는 Mock Link 정의
-const Link = (props) => {
-    // eslint-disable-next-line jsx-a11y/anchor-has-content
-    return <a href={props.to} {...props} className={props.className}>{props.children}</a>;
-};
-
-// --- CSS Block for Styling ---
-const styles = `
-.nav-bar {
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    height: 4rem; /* h-16 */
-}
-.nav-max-width {
-    max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
-}
-@media (min-width: 640px) { /* sm:px-6 */
-    .nav-max-width {
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-    }
-}
-@media (min-width: 1024px) { /* lg:px-8 */
-    .nav-max-width {
-        padding-left: 2rem;
-        padding-right: 2rem;
-    }
-}
-
-.nav-flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 4rem; /* h-16 */
-}
-
-/* Logo and Main Menu */
-.logo-group {
-    display: flex;
-    align-items: center;
-}
-.logo-link {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #735048; /* C5: Accent Color */
-    text-decoration: none;
-}
-.logo-text {
-    font-weight: 700;
-    font-size: 1.25rem; /* text-xl */
-}
-.desktop-menu {
-    display: none;
-}
-@media (min-width: 768px) { /* md:ml-10 md:flex */
-    .desktop-menu {
-        display: flex;
-        margin-left: 2.5rem;
-        gap: 2rem; /* space-x-8 */
-    }
-}
-.menu-link {
-    color: #594C3C; /* C2: Dark Text */
-    padding: 0.5rem 0.75rem; /* px-3 py-2 */
-    border-radius: 0.375rem;
-    font-size: 0.875rem; /* text-sm */
-    font-weight: 500;
-    transition: color 150ms, background-color 150ms;
-    text-decoration: none;
-}
-.menu-link:hover {
-    color: #735048; /* C5: Accent Hover */
-}
-
-/* Auth Buttons (Desktop) */
-.desktop-auth {
-    display: none;
-    align-items: center;
-    gap: 1rem; /* space-x-4 */
-}
-@media (min-width: 768px) {
-    .desktop-auth {
-        display: flex;
-    }
-}
-
-.welcome-text {
-    font-size: 0.875rem;
-    color: #594C3C; /* C2 */
-}
-.welcome-name {
-    font-weight: 600;
-    color: #735048; /* C5: Accent */
-}
-
-.auth-link {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #594C3C; /* C2 */
-    transition: color 150ms;
-    text-decoration: none;
-}
-.auth-link:hover {
-    color: #735048; /* C5: Accent Hover */
-}
-
-/* 🌟 데스크탑 회원가입 버튼 */
-.desktop-register-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: #735048;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: background-color 150ms;
-    text-decoration: none;
-}
-.desktop-register-button:hover {
-    background-color: #594C3C;
-}
-
-/* Logout Button */
-.logout-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: #F2EDE4; /* C1: Light BG */
-    color: #735048; /* C5: Accent Text */
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: background-color 150ms;
-    border: none;
-    cursor: pointer;
-}
-.logout-button:hover {
-    background-color: #F2E2CE; /* C3: Lighter Hover */
-}
-
-/* Mobile Toggler */
-.mobile-toggler {
-    display: flex;
-    align-items: center;
-}
-@media (min-width: 768px) {
-    .mobile-toggler {
-        display: none;
-    }
-}
-.toggler-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem;
-    border-radius: 0.375rem;
-    color: #594C3C; /* C2 */
-    transition: background-color 150ms;
-    background-color: transparent;
-    border: none;
-}
-.toggler-button:hover {
-    background-color: #F2E2CE; /* C3 */
-}
-.h-6 { height: 1.5rem; }
-.w-6 { width: 1.5rem; }
-
-/* Mobile Menu */
-.mobile-menu {
-    border-top: 1px solid #F2E2CE; /* C3 */
-}
-@media (min-width: 768px) {
-    .mobile-menu {
-        display: none;
-    }
-}
-.mobile-link-group {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-.mobile-menu-link {
-    color: #594C3C;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    font-size: 1rem; /* text-base */
-    font-weight: 500;
-    transition: background-color 150ms;
-    display: block;
-    text-decoration: none;
-}
-.mobile-menu-link:hover {
-    background-color: #F2E2CE; /* C3 */
-    color: #735048;
-}
-
-/* Mobile Auth */
-.mobile-auth-group {
-    padding-top: 1rem;
-    padding-bottom: 0.75rem;
-    border-top: 1px solid #F2E2CE; /* C3 */
-}
-.mobile-auth-content {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-.mobile-auth-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.mobile-auth-user {
-    color: #735048;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-.mobile-mypage-link {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #594C3C;
-    transition: background-color 150ms;
-    text-decoration: none;
-}
-.mobile-mypage-link:hover {
-    background-color: #F2E2CE;
-}
-.mobile-logout-button {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #735048; /* C5 for logout */
-    transition: background-color 150ms;
-    background-color: #F2EDE4; /* C1 */
-    border: none;
-    cursor: pointer;
-}
-.mobile-logout-button:hover {
-    background-color: #F2CBBD; /* C4 */
-}
-
-/* 🌟 Mobile Login/Register - 가로 배치 */
-.mobile-login-register {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-    display: flex;
-    flex-direction: row; /* 🌟 가로 배치 */
-    gap: 0.75rem;
-}
-.mobile-login-link {
-    display: block;
-    flex: 1; /* 🌟 동일한 너비 */
-    background-color: #735048; /* C5 */
-    color: white;
-    text-align: center;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: background-color 150ms;
-    text-decoration: none;
-}
-.mobile-login-link:hover {
-    background-color: #594C3C; /* C2 */
-}
-.mobile-register-link {
-    display: block;
-    flex: 1; /* 🌟 동일한 너비 */
-    background-color: #F2E2CE; /* C3 */
-    color: #594C3C; /* C2 */
-    text-align: center;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: background-color 150ms;
-    text-decoration: none;
-}
-.mobile-register-link:hover {
-    background-color: #F2CBBD; /* C4 */
-}
-`;
-// --- End CSS Block ---
-
+// 🌟 [핵심 수정] 로컬 이미지 import를 제거하고, 웹 URL로 대체합니다.
+// (로컬 파일 경로가 맞지 않아 빌드 오류가 발생하므로, 안정적인 웹 URL로 대체)
+import logoImg from '../assets/images/logo.png'; 
 
 /**
  * 상단 네비게이션 바 컴포넌트
@@ -338,6 +29,320 @@ export default function Navigation({ currentUser, handleLogout }) {
         { name: '반려일기', href: '/diary' }, // 🌟 PrivateRoute로 보호됨
     ];
 
+    // --- CSS Block for Styling ---
+    // (네비게이션 전용 스타일을 내부에 포함)
+    const styles = `
+        .nav-bar {
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            height: 4rem; /* h-16 */
+        }
+        .nav-max-width {
+            max-width: 1280px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        @media (min-width: 640px) { /* sm:px-6 */
+            .nav-max-width {
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+            }
+        }
+        @media (min-width: 1024px) { /* lg:px-8 */
+            .nav-max-width {
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
+        }
+
+        .nav-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 4rem; /* h-16 */
+        }
+
+        /* Logo and Main Menu */
+        .logo-group {
+            display: flex;
+            align-items: center;
+        }
+        .logo-link {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.1rem; /* 간격 조정 */
+            color: #735048; /* C5: Accent Color */
+            text-decoration: none;
+        }
+        .logo-image {
+            height: 3.5rem; /* h-10 (40px) - 로고 크기 조절 */
+            width: auto;    /* 비율 유지 */
+            object-fit: contain;
+        }
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.25rem; /* text-xl */
+            white-space: nowrap;
+        }
+        .desktop-menu {
+            display: none;
+        }
+        @media (min-width: 768px) { /* md:ml-10 md:flex */
+            .desktop-menu {
+                display: flex;
+                margin-left: 2.5rem;
+                gap: 2rem; /* space-x-8 */
+            }
+        }
+        .menu-link {
+            color: #594C3C; /* C2: Dark Text */
+            padding: 0.5rem 0.75rem; /* px-3 py-2 */
+            border-radius: 0.375rem;
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500;
+            transition: color 150ms, background-color 150ms;
+            text-decoration: none;
+        }
+        .menu-link:hover {
+            color: #735048; /* C5: Accent Hover */
+        }
+
+        /* Auth Buttons (Desktop) */
+        .desktop-auth {
+            display: none;
+            align-items: center;
+            gap: 1rem; /* space-x-4 */
+        }
+        @media (min-width: 768px) {
+            .desktop-auth {
+                display: flex;
+            }
+        }
+
+        .welcome-text {
+            font-size: 0.875rem;
+            color: #594C3C; /* C2 */
+        }
+        .welcome-name {
+            font-weight: 600;
+            color: #735048; /* C5: Accent */
+        }
+
+        .auth-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #594C3C; /* C2 */
+            transition: color 150ms;
+            text-decoration: none;
+        }
+        .auth-link:hover {
+            color: #735048; /* C5: Accent Hover */
+        }
+
+        /* 🌟 데스크탑 회원가입 버튼 */
+        .desktop-register-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #735048;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background-color 150ms;
+            text-decoration: none;
+        }
+        .desktop-register-button:hover {
+            background-color: #594C3C;
+        }
+
+        /* Logout Button */
+        .logout-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #F2EDE4; /* C1: Light BG */
+            color: #735048; /* C5: Accent Text */
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background-color 150ms;
+            border: none;
+            cursor: pointer;
+        }
+        .logout-button:hover {
+            background-color: #F2E2CE; /* C3: Lighter Hover */
+        }
+
+        /* Mobile Toggler */
+        .mobile-toggler {
+            display: flex;
+            align-items: center;
+        }
+        @media (min-width: 768px) {
+            .mobile-toggler {
+                display: none;
+            }
+        }
+        .toggler-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            color: #594C3C; /* C2 */
+            transition: background-color 150ms;
+            background-color: transparent;
+            border: none;
+        }
+        .toggler-button:hover {
+            background-color: #F2E2CE; /* C3 */
+        }
+        .h-6 { height: 1.5rem; }
+        .w-6 { width: 1.5rem; }
+
+        /* Mobile Menu */
+        .mobile-menu {
+            border-top: 1px solid #F2E2CE; /* C3 */
+        }
+        @media (min-width: 768px) {
+            .mobile-menu {
+                display: none;
+            }
+        }
+        .mobile-link-group {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .mobile-menu-link {
+            color: #594C3C;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 1rem; /* text-base */
+            font-weight: 500;
+            transition: background-color 150ms;
+            display: block;
+            text-decoration: none;
+        }
+        .mobile-menu-link:hover {
+            background-color: #F2E2CE; /* C3 */
+            color: #735048;
+        }
+
+        /* Mobile Auth */
+        .mobile-auth-group {
+            padding-top: 1rem;
+            padding-bottom: 0.75rem;
+            border-top: 1px solid #F2E2CE; /* C3 */
+        }
+        .mobile-auth-content {
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .mobile-auth-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .mobile-auth-user {
+            color: #735048;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .mobile-mypage-link {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #594C3C;
+            transition: background-color 150ms;
+            text-decoration: none;
+        }
+        .mobile-mypage-link:hover {
+            background-color: #F2E2CE;
+        }
+        .mobile-logout-button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #735048; /* C5 for logout */
+            transition: background-color 150ms;
+            background-color: #F2EDE4; /* C1 */
+            border: none;
+            cursor: pointer;
+        }
+        .mobile-logout-button:hover {
+            background-color: #F2CBBD; /* C4 */
+        }
+
+        /* 🌟 Mobile Login/Register - 가로 배치 */
+        .mobile-login-register {
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+            display: flex;
+            flex-direction: row; /* 🌟 가로 배치 */
+            gap: 0.75rem;
+        }
+        .mobile-login-link {
+            display: block;
+            flex: 1; /* 🌟 동일한 너비 */
+            background-color: #735048; /* C5 */
+            color: white;
+            text-align: center;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 150ms;
+            text-decoration: none;
+        }
+        .mobile-login-link:hover {
+            background-color: #594C3C; /* C2 */
+        }
+        .mobile-register-link {
+            display: block;
+            flex: 1; /* 🌟 동일한 너비 */
+            background-color: #F2E2CE; /* C3 */
+            color: #594C3C; /* C2 */
+            text-align: center;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 150ms;
+            text-decoration: none;
+        }
+        .mobile-register-link:hover {
+            background-color: #F2CBBD; /* C4 */
+        }
+    `;
+
     return (
         <>
             <style>{styles}</style>
@@ -348,7 +353,12 @@ export default function Navigation({ currentUser, handleLogout }) {
                         {/* 1. 로고 및 메인 메뉴 */}
                         <div className="logo-group">
                             <Link to="/" className="logo-link">
-                                <PawPrint className="w-8 h-8" />
+                                {/* 🌟 [수정] 로고 이미지 변경 */}
+                                <img 
+                                    src={logoImg} 
+                                    alt="푸딩의 발자국 로고" 
+                                    className="logo-image"
+                                />
                                 <span className="logo-text">푸딩의 발자국</span>
                             </Link>
                             
