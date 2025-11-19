@@ -526,7 +526,7 @@ function Carousel() {
         id: 1, 
         title: <>다양한 정보!<br />다양한 만남!</>, 
         subtitle: <>이곳에서 많은 정보와<br />반려인들을 만나보세요!</>,
-        imageUrl: bannerImg1 
+        imageUrl: bannerImg1
     },
     { 
         id: 2, 
@@ -538,7 +538,7 @@ function Carousel() {
         id: 3, 
         title: "소중한 순간을 기록하세요", 
         subtitle: "반려동물 일기장으로 매일의 추억을 간직하세요.",
-        imageUrl: bannerImg3 
+        imageUrl: bannerImg3
     },
   ];
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -929,8 +929,8 @@ export default function Home({ currentUser }) {
 
               {/* 광고 배너 */}
               <div className="ad-banner">
-                <p className="ad-text-1">🎁 배너 광고</p>
-                <p className="ad-text-2">300x250</p>
+                <p className="ad-text-1">반려동물 보험, 첫 달 보험료 50% 할인 혜택!</p>
+                <p className="ad-text-2">클릭하고 우리 아이 건강 지켜주세요.</p>
               </div>
             </aside>
           </div>

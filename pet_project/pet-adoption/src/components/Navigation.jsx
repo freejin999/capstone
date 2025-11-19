@@ -1,24 +1,11 @@
 import React, { useState } from 'react';
-// 💡 Link를 react-router-dom에서 import 합니다.
 import { Link } from 'react-router-dom';
-// 🌟 [수정] PawPrint 아이콘 제거 (이미지로 대체)
 import { LogOut, User, LogIn, UserPlus } from 'lucide-react';
 
-// 🌟 [핵심 수정] 로컬 이미지 import를 제거하고, 웹 URL로 대체합니다.
-// (로컬 파일 경로가 맞지 않아 빌드 오류가 발생하므로, 안정적인 웹 URL로 대체)
 import logoImg from '../assets/images/logo.png'; 
 
-/**
- * 상단 네비게이션 바 컴포넌트
- * @param {object} props
- * @param {object | null} props.currentUser - App.js에서 전달받은 로그인한 사용자 정보 (null이면 비로그인)
- * @param {function} props.handleLogout - App.js에서 전달받은 로그아웃 함수
- */
 export default function Navigation({ currentUser, handleLogout }) {
-    // 모바일 햄버거 메뉴를 위한 상태
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-    // 🌟 로그인 상태 확인: isLoggedIn (boolean) 대신 currentUser (object)가 존재하는지 확인
     const isLoggedIn = !!currentUser;
 
     const navLinks = [
@@ -26,19 +13,19 @@ export default function Navigation({ currentUser, handleLogout }) {
         { name: '입양하기', href: '/adoption' },
         { name: '커뮤니티', href: '/board' },
         { name: '용품 리뷰', href: '/reviews' },
-        { name: '반려일기', href: '/diary' }, // 🌟 PrivateRoute로 보호됨
+        { name: '반려일기', href: '/diary' },
     ];
 
-    // --- CSS Block for Styling ---
-    // (네비게이션 전용 스타일을 내부에 포함)
     const styles = `
         .nav-bar {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 1); /* 🌟 약간의 투명도로 고급스러움 유지 */
+            backdrop-filter: blur(10px); /* 🌟 뒤 콘텐츠 블러 처리 */
+            -webkit-backdrop-filter: blur(10px); /* Safari 지원 */
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
             z-index: 50;
-            height: 4rem; /* h-16 */
+            height: 4rem;
         }
         .nav-max-width {
             max-width: 1280px;
@@ -47,13 +34,13 @@ export default function Navigation({ currentUser, handleLogout }) {
             padding-left: 1rem;
             padding-right: 1rem;
         }
-        @media (min-width: 640px) { /* sm:px-6 */
+        @media (min-width: 640px) {
             .nav-max-width {
                 padding-left: 1.5rem;
                 padding-right: 1.5rem;
             }
         }
-        @media (min-width: 1024px) { /* lg:px-8 */
+        @media (min-width: 1024px) {
             .nav-max-width {
                 padding-left: 2rem;
                 padding-right: 2rem;
@@ -64,74 +51,143 @@ export default function Navigation({ currentUser, handleLogout }) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 4rem; /* h-16 */
+            height: 4rem;
         }
 
         /* Logo and Main Menu */
         .logo-group {
             display: flex;
             align-items: center;
+            flex: 1;
+            min-width: 0; /* 🌟 추가: 텍스트 오버플로우 방지 */
         }
         .logo-link {
             flex-shrink: 0;
             display: flex;
             align-items: center;
-            gap: 0.1rem; /* 간격 조정 */
-            color: #735048; /* C5: Accent Color */
+            gap: 0.5rem;
+            color: #735048;
             text-decoration: none;
         }
         .logo-image {
-            height: 3.5rem; /* h-10 (40px) - 로고 크기 조절 */
-            width: auto;    /* 비율 유지 */
+            height: 3.5rem;
+            width: auto;
             object-fit: contain;
         }
         .logo-text {
             font-weight: 700;
-            font-size: 1.25rem; /* text-xl */
+            font-size: 1.25rem;
             white-space: nowrap;
         }
+        
+        /* 🌟 태블릿 사이즈 (아이패드) */
+        @media (max-width: 1024px) and (min-width: 768px) {
+            .logo-image {
+                height: 3rem;
+            }
+            .logo-text {
+                font-size: 1.125rem;
+            }
+        }
+        
+        /* 🌟 모바일 사이즈 */
+        @media (max-width: 767px) {
+            .logo-link {
+                gap: 0.25rem;
+            }
+            .logo-image {
+                height: 2.5rem;
+            }
+            .logo-text {
+                font-size: 1rem;
+            }
+        }
+        
+        /* 🌟 작은 모바일 (360px 이하) */
+        @media (max-width: 360px) {
+            .logo-image {
+                height: 2rem;
+            }
+            .logo-text {
+                font-size: 0.875rem;
+            }
+        }
+
         .desktop-menu {
             display: none;
         }
-        @media (min-width: 768px) { /* md:ml-10 md:flex */
+        @media (min-width: 768px) {
             .desktop-menu {
                 display: flex;
                 margin-left: 2.5rem;
-                gap: 2rem; /* space-x-8 */
+                gap: 2rem;
             }
         }
+        /* 🌟 태블릿에서 메뉴 간격 조정 */
+        @media (max-width: 1024px) and (min-width: 768px) {
+            .desktop-menu {
+                margin-left: 1.5rem;
+                gap: 1rem;
+            }
+        }
+        
         .menu-link {
-            color: #594C3C; /* C2: Dark Text */
-            padding: 0.5rem 0.75rem; /* px-3 py-2 */
+            color: #594C3C;
+            padding: 0.5rem 0.75rem;
             border-radius: 0.375rem;
-            font-size: 0.875rem; /* text-sm */
+            font-size: 0.875rem;
             font-weight: 500;
             transition: color 150ms, background-color 150ms;
             text-decoration: none;
+            white-space: nowrap; /* 🌟 추가: 메뉴 항목 줄바꿈 방지 */
         }
         .menu-link:hover {
-            color: #735048; /* C5: Accent Hover */
+            color: #735048;
+        }
+        
+        /* 🌟 태블릿에서 메뉴 폰트 크기 조정 */
+        @media (max-width: 1024px) and (min-width: 768px) {
+            .menu-link {
+                font-size: 0.8125rem;
+                padding: 0.5rem 0.5rem;
+            }
         }
 
         /* Auth Buttons (Desktop) */
         .desktop-auth {
             display: none;
             align-items: center;
-            gap: 1rem; /* space-x-4 */
+            gap: 1rem;
+            flex-shrink: 0; /* 🌟 추가: 버튼 영역 고정 */
         }
         @media (min-width: 768px) {
             .desktop-auth {
                 display: flex;
             }
         }
+        
+        /* 🌟 태블릿에서 인증 영역 간격 조정 */
+        @media (max-width: 1024px) and (min-width: 768px) {
+            .desktop-auth {
+                gap: 0.5rem;
+            }
+        }
 
         .welcome-text {
             font-size: 0.875rem;
-            color: #594C3C; /* C2 */
+            color: #594C3C;
+            white-space: nowrap; /* 🌟 추가 */
         }
         .welcome-name {
             font-weight: 600;
-            color: #735048; /* C5: Accent */
+            color: #735048;
+        }
+        
+        /* 🌟 태블릿에서 환영 메시지 폰트 크기 조정 */
+        @media (max-width: 1024px) and (min-width: 768px) {
+            .welcome-text {
+                font-size: 0.8125rem;
+            }
         }
 
         .auth-link {
@@ -140,15 +196,23 @@ export default function Navigation({ currentUser, handleLogout }) {
             gap: 0.5rem;
             font-size: 0.875rem;
             font-weight: 500;
-            color: #594C3C; /* C2 */
+            color: #594C3C;
             transition: color 150ms;
             text-decoration: none;
+            white-space: nowrap; /* 🌟 추가 */
         }
         .auth-link:hover {
-            color: #735048; /* C5: Accent Hover */
+            color: #735048;
+        }
+        
+        /* 🌟 태블릿에서 인증 링크 폰트 크기 조정 */
+        @media (max-width: 1024px) and (min-width: 768px) {
+            .auth-link {
+                font-size: 0.8125rem;
+                gap: 0.25rem;
+            }
         }
 
-        /* 🌟 데스크탑 회원가입 버튼 */
         .desktop-register-button {
             display: inline-flex;
             align-items: center;
@@ -161,18 +225,27 @@ export default function Navigation({ currentUser, handleLogout }) {
             font-weight: 500;
             transition: background-color 150ms;
             text-decoration: none;
+            white-space: nowrap; /* 🌟 추가 */
         }
         .desktop-register-button:hover {
             background-color: #594C3C;
         }
+        
+        /* 🌟 태블릿에서 회원가입 버튼 크기 조정 */
+        @media (max-width: 1024px) and (min-width: 768px) {
+            .desktop-register-button {
+                font-size: 0.8125rem;
+                padding: 0.5rem 0.75rem;
+                gap: 0.25rem;
+            }
+        }
 
-        /* Logout Button */
         .logout-button {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            background-color: #F2EDE4; /* C1: Light BG */
-            color: #735048; /* C5: Accent Text */
+            background-color: #F2EDE4;
+            color: #735048;
             padding: 0.5rem 0.75rem;
             border-radius: 0.375rem;
             font-size: 0.875rem;
@@ -180,15 +253,26 @@ export default function Navigation({ currentUser, handleLogout }) {
             transition: background-color 150ms;
             border: none;
             cursor: pointer;
+            white-space: nowrap; /* 🌟 추가 */
         }
         .logout-button:hover {
-            background-color: #F2E2CE; /* C3: Lighter Hover */
+            background-color: #F2E2CE;
+        }
+        
+        /* 🌟 태블릿에서 로그아웃 버튼 크기 조정 */
+        @media (max-width: 1024px) and (min-width: 768px) {
+            .logout-button {
+                font-size: 0.8125rem;
+                padding: 0.5rem 0.5rem;
+                gap: 0.25rem;
+            }
         }
 
         /* Mobile Toggler */
         .mobile-toggler {
             display: flex;
             align-items: center;
+            margin-left: 0.5rem; /* 🌟 추가: 햄버거 메뉴와 로고 사이 여백 */
         }
         @media (min-width: 768px) {
             .mobile-toggler {
@@ -201,20 +285,30 @@ export default function Navigation({ currentUser, handleLogout }) {
             justify-content: center;
             padding: 0.5rem;
             border-radius: 0.375rem;
-            color: #594C3C; /* C2 */
+            color: #594C3C;
             transition: background-color 150ms;
             background-color: transparent;
             border: none;
         }
         .toggler-button:hover {
-            background-color: #F2E2CE; /* C3 */
+            background-color: #F2E2CE;
         }
         .h-6 { height: 1.5rem; }
         .w-6 { width: 1.5rem; }
+        
+        /* 🌟 작은 모바일에서 햄버거 버튼 크기 조정 */
+        @media (max-width: 360px) {
+            .toggler-button {
+                padding: 0.25rem;
+            }
+            .h-6 { height: 1.25rem; }
+            .w-6 { width: 1.25rem; }
+        }
 
         /* Mobile Menu */
         .mobile-menu {
-            border-top: 1px solid #F2E2CE; /* C3 */
+            border-top: 1px solid #F2E2CE;
+                background-color: aliceblue;
         }
         @media (min-width: 768px) {
             .mobile-menu {
@@ -234,14 +328,14 @@ export default function Navigation({ currentUser, handleLogout }) {
             color: #594C3C;
             padding: 0.5rem 0.75rem;
             border-radius: 0.375rem;
-            font-size: 1rem; /* text-base */
+            font-size: 1rem;
             font-weight: 500;
             transition: background-color 150ms;
             display: block;
             text-decoration: none;
         }
         .mobile-menu-link:hover {
-            background-color: #F2E2CE; /* C3 */
+            background-color: #F2E2CE;
             color: #735048;
         }
 
@@ -249,7 +343,7 @@ export default function Navigation({ currentUser, handleLogout }) {
         .mobile-auth-group {
             padding-top: 1rem;
             padding-bottom: 0.75rem;
-            border-top: 1px solid #F2E2CE; /* C3 */
+            border-top: 1px solid #F2E2CE;
         }
         .mobile-auth-content {
             padding-left: 1.25rem;
@@ -291,28 +385,27 @@ export default function Navigation({ currentUser, handleLogout }) {
             border-radius: 0.375rem;
             font-size: 1rem;
             font-weight: 500;
-            color: #735048; /* C5 for logout */
+            color: #735048;
             transition: background-color 150ms;
-            background-color: #F2EDE4; /* C1 */
+            background-color: #F2EDE4;
             border: none;
             cursor: pointer;
         }
         .mobile-logout-button:hover {
-            background-color: #F2CBBD; /* C4 */
+            background-color: #F2CBBD;
         }
 
-        /* 🌟 Mobile Login/Register - 가로 배치 */
         .mobile-login-register {
             padding-left: 1.25rem;
             padding-right: 1.25rem;
             display: flex;
-            flex-direction: row; /* 🌟 가로 배치 */
+            flex-direction: row;
             gap: 0.75rem;
         }
         .mobile-login-link {
             display: block;
-            flex: 1; /* 🌟 동일한 너비 */
-            background-color: #735048; /* C5 */
+            flex: 1;
+            background-color: #735048;
             color: white;
             text-align: center;
             padding: 0.5rem 0.75rem;
@@ -323,13 +416,13 @@ export default function Navigation({ currentUser, handleLogout }) {
             text-decoration: none;
         }
         .mobile-login-link:hover {
-            background-color: #594C3C; /* C2 */
+            background-color: #594C3C;
         }
         .mobile-register-link {
             display: block;
-            flex: 1; /* 🌟 동일한 너비 */
-            background-color: #F2E2CE; /* C3 */
-            color: #594C3C; /* C2 */
+            flex: 1;
+            background-color: #F2E2CE;
+            color: #594C3C;
             text-align: center;
             padding: 0.5rem 0.75rem;
             border-radius: 0.375rem;
@@ -339,8 +432,12 @@ export default function Navigation({ currentUser, handleLogout }) {
             text-decoration: none;
         }
         .mobile-register-link:hover {
-            background-color: #F2CBBD; /* C4 */
+            background-color: #F2CBBD;
         }
+        
+        /* 🌟 유틸리티 클래스 */
+        .hidden { display: none; }
+        .block { display: block; }
     `;
 
     return (
@@ -350,10 +447,8 @@ export default function Navigation({ currentUser, handleLogout }) {
                 <div className="nav-max-width">
                     <div className="nav-flex">
                         
-                        {/* 1. 로고 및 메인 메뉴 */}
                         <div className="logo-group">
                             <Link to="/" className="logo-link">
-                                {/* 🌟 [수정] 로고 이미지 변경 */}
                                 <img 
                                     src={logoImg} 
                                     alt="푸딩의 발자국 로고" 
@@ -362,7 +457,6 @@ export default function Navigation({ currentUser, handleLogout }) {
                                 <span className="logo-text">푸딩의 발자국</span>
                             </Link>
                             
-                            {/* 데스크탑 메인 메뉴 */}
                             <div className="desktop-menu">
                                 {navLinks.map((link) => (
                                     <Link
@@ -376,43 +470,28 @@ export default function Navigation({ currentUser, handleLogout }) {
                             </div>
                         </div>
 
-                        {/* 2. 로그인/로그아웃 버튼 (데스크탑) */}
                         <div className="desktop-auth">
                             {isLoggedIn ? (
-                                // 🌟 로그인 상태일 때 (currentUser가 존재함)
                                 <>
                                     <span className="welcome-text">
                                         <span className="welcome-name">{currentUser.nickname}</span>님, 환영합니다!
                                     </span>
-                                    <Link
-                                        to="/mypage"
-                                        className="auth-link"
-                                    >
+                                    <Link to="/mypage" className="auth-link">
                                         <User className="w-4 h-4" />
                                         마이페이지
                                     </Link>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="logout-button"
-                                    >
+                                    <button onClick={handleLogout} className="logout-button">
                                         <LogOut className="w-4 h-4" />
                                         로그아웃
                                     </button>
                                 </>
                             ) : (
-                                // 🌟 로그아웃 상태일 때 (currentUser가 null임)
                                 <>
-                                    <Link
-                                        to="/login"
-                                        className="auth-link"
-                                    >
+                                    <Link to="/login" className="auth-link">
                                         <LogIn className="w-4 h-4" />
                                         로그인
                                     </Link>
-                                    <Link
-                                        to="/register"
-                                        className="desktop-register-button"
-                                    >
+                                    <Link to="/register" className="desktop-register-button">
                                         <UserPlus className="w-4 h-4" />
                                         회원가입
                                     </Link>
@@ -420,7 +499,6 @@ export default function Navigation({ currentUser, handleLogout }) {
                             )}
                         </div>
                         
-                        {/* 3. 모바일 햄버거 버튼 */}
                         <div className="mobile-toggler">
                             <button
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -444,14 +522,13 @@ export default function Navigation({ currentUser, handleLogout }) {
                     </div>
                 </div>
 
-                {/* 4. 모바일 메뉴 (펼쳐졌을 때) */}
                 <div id="mobile-menu" className={`mobile-menu ${isMenuOpen ? 'block' : 'hidden'}`}>
                     <div className="mobile-link-group">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.name}
                                 to={link.href}
-                                onClick={() => setIsMenuOpen(false)} // 🌟 메뉴 클릭 시 닫기
+                                onClick={() => setIsMenuOpen(false)}
                                 className="mobile-menu-link"
                             >
                                 {link.name}
@@ -459,10 +536,8 @@ export default function Navigation({ currentUser, handleLogout }) {
                         ))}
                     </div>
                     
-                    {/* 모바일 로그인/로그아웃 영역 */}
                     <div className="mobile-auth-group">
                         {isLoggedIn ? (
-                            // 🌟 로그인 상태일 때
                             <div className="mobile-auth-content">
                                 <div className="mobile-auth-status">
                                     <User className="w-5 h-5" style={{ color: '#735048' }} />
@@ -488,7 +563,6 @@ export default function Navigation({ currentUser, handleLogout }) {
                                 </button>
                             </div>
                         ) : (
-                            // 🌟 로그아웃 상태일 때 - 가로 배치
                             <div className="mobile-login-register">
                                 <Link
                                     to="/login"

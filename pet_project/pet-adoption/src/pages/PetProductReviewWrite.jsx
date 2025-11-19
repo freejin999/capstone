@@ -1,28 +1,30 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, Star } from 'lucide-react';
-// 🌟 [추가] 몽글몽글 디자인 CSS 파일 임포트
+import { ArrowLeft, Send, Star, Upload, X } from 'lucide-react'; // 🌟 Upload, X 아이콘 추가
 import './PetProductReviewWrite.css'; 
 
-// 1. App.js로부터 'currentUser'를 props로 받습니다.
 export default function PetProductReviewWrite({ currentUser }) {
     const navigate = useNavigate();
     
-    // 2. 폼 데이터 상태
     const [formData, setFormData] = useState({
         productName: '',
-        category: '사료', // 기본값
+        category: '사료',
         rating: 0,
         content: '',
-        image: '', // 이미지 URL (간단하게 텍스트 입력으로 처리)
+        image: '', 
     });
-    const [ratingHover, setRatingHover] = useState(0); // 별점 호버 상태
+    const [ratingHover, setRatingHover] = useState(0);
+    
+    // 🌟 [추가] 파일 업로드 관련 상태
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [uploadMethod, setUploadMethod] = useState('file'); // 'file' or 'url'
+    
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
     const categories = ['사료', '간식', '장난감', '미용', '위생용품', '급식기', '외출용품', '기타'];
 
-    // (기능 로직은 기존과 100% 동일합니다)
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -30,6 +32,38 @@ export default function PetProductReviewWrite({ currentUser }) {
 
     const handleRatingClick = (rate) => {
         setFormData(prev => ({ ...prev, rating: rate }));
+    };
+
+    // 🌟 [추가] 파일 선택 핸들러
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // 유효성 검사
+            if (!file.type.startsWith('image/')) {
+                alert('이미지 파일만 업로드 가능합니다.');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('파일 크기는 5MB 이하여야 합니다.');
+                return;
+            }
+            
+            setImageFile(file);
+            
+            // 미리보기 생성
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // 🌟 [추가] 이미지 제거 핸들러
+    const handleRemoveImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+        setFormData(prev => ({ ...prev, image: '' }));
     };
 
     const handleSubmit = async (e) => {
@@ -54,14 +88,36 @@ export default function PetProductReviewWrite({ currentUser }) {
 
         setIsSubmitting(true);
 
-        const payload = {
-            ...formData,
-            userId: currentUser.id,
-            authorUsername: currentUser.username, 
-            authorNickname: currentUser.nickname 
-        };
-
         try {
+            let finalImageUrl = formData.image; // 기본값 (URL 입력 방식일 때)
+
+            // 🌟 [핵심] 파일 업로드 방식이고 파일이 선택되었다면
+            if (uploadMethod === 'file' && imageFile) {
+                const uploadFormData = new FormData();
+                uploadFormData.append('image', imageFile);
+
+                // 이미지 먼저 업로드
+                const uploadResponse = await fetch('http://localhost:3001/api/upload/image', {
+                    method: 'POST',
+                    body: uploadFormData,
+                });
+
+                if (uploadResponse.ok) {
+                    const uploadResult = await uploadResponse.json();
+                    finalImageUrl = uploadResult.imageUrl; // 서버에서 받은 URL로 교체
+                } else {
+                    throw new Error('이미지 업로드에 실패했습니다.');
+                }
+            }
+
+            const payload = {
+                ...formData,
+                image: finalImageUrl, // 최종 URL 사용
+                userId: currentUser.id,
+                authorUsername: currentUser.username, 
+                authorNickname: currentUser.nickname 
+            };
+
             const response = await fetch('http://localhost:3001/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -77,41 +133,31 @@ export default function PetProductReviewWrite({ currentUser }) {
             }
         } catch (apiError) {
             console.error('리뷰 작성 오류:', apiError);
-            setError('서버 연결에 실패했습니다.');
+            setError(apiError.message || '서버 연결에 실패했습니다.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        // 🌟 [수정] 모든 className을 새 CSS 파일 기준으로 변경
         <div className="review-form-page-wrapper">
-            {/* Header */}
             <header className="form-header">
                 <div className="form-header-container">
                     <h1 className="form-title">새 리뷰 작성</h1>
-                    <button
-                        onClick={() => navigate('/reviews')}
-                        className="button-link"
-                    >
-                        <ArrowLeft className="icon-sm" />
-                        목록으로
+                    <button onClick={() => navigate('/reviews')} className="button-link">
+                        <ArrowLeft className="icon-sm" /> 목록으로
                     </button>
                 </div>
             </header>
 
-            {/* Main Content */}
             <main className="form-main-container">
                 <form onSubmit={handleSubmit} className="form-card">
-                    
-                    {/* 에러 메시지 */}
                     {error && (
                         <div className="message-box error">
                             <span className="block sm:inline">{error}</span>
                         </div>
                     )}
 
-                    {/* 제품명 */}
                     <div className="form-group">
                         <label className="form-label" htmlFor="productName">
                             제품명 <span className="required-star">*</span>
@@ -127,7 +173,6 @@ export default function PetProductReviewWrite({ currentUser }) {
                         />
                     </div>
 
-                    {/* 카테고리 선택 */}
                     <div className="form-group">
                         <label className="form-label" htmlFor="category">
                             카테고리 <span className="required-star">*</span>
@@ -140,14 +185,11 @@ export default function PetProductReviewWrite({ currentUser }) {
                             className="form-input"
                         >
                             {categories.map(category => (
-                                <option key={category} value={category}>
-                                    {category}
-                                </option>
+                                <option key={category} value={category}>{category}</option>
                             ))}
                         </select>
                     </div>
 
-                    {/* 별점 */}
                     <div className="form-group">
                         <label className="form-label">
                             별점 <span className="required-star">*</span>
@@ -164,13 +206,7 @@ export default function PetProductReviewWrite({ currentUser }) {
                                         onMouseLeave={() => setRatingHover(0)}
                                         className="star-button"
                                     >
-                                        <Star
-                                            className={`star ${
-                                                rate <= (ratingHover || formData.rating)
-                                                    ? 'filled'
-                                                    : ''
-                                            }`}
-                                        />
+                                        <Star className={`star ${rate <= (ratingHover || formData.rating) ? 'filled' : ''}`} />
                                     </button>
                                 );
                             })}
@@ -178,23 +214,77 @@ export default function PetProductReviewWrite({ currentUser }) {
                         </div>
                     </div>
 
-                    {/* 이미지 URL */}
+                    {/* 🌟 [변경] 이미지 업로드 섹션 */}
                     <div className="form-group">
-                        <label className="form-label" htmlFor="image">
-                            제품 이미지 URL (선택)
-                        </label>
-                        <input
-                            id="image"
-                            type="text"
-                            name="image"
-                            value={formData.image}
-                            onChange={handleChange}
-                            placeholder="https://example.com/image.png"
-                            className="form-input"
-                        />
+                        <label className="form-label">사진 등록 (선택)</label>
+                        
+                        {/* 탭 버튼 */}
+                        <div className="upload-tabs">
+                            <button
+                                type="button"
+                                className={`tab-button ${uploadMethod === 'file' ? 'active' : ''}`}
+                                onClick={() => setUploadMethod('file')}
+                            >
+                                📁 파일 업로드
+                            </button>
+                            <button
+                                type="button"
+                                className={`tab-button ${uploadMethod === 'url' ? 'active' : ''}`}
+                                onClick={() => {
+                                    setUploadMethod('url');
+                                    handleRemoveImage();
+                                }}
+                            >
+                                🔗 URL 입력
+                            </button>
+                        </div>
+
+                        {/* 파일 업로드 UI */}
+                        {uploadMethod === 'file' && (
+                            <label className={`file-upload-area ${imagePreview ? 'has-file' : ''}`}>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                    className="hidden-file-input"
+                                />
+                                {!imagePreview ? (
+                                    <div className="upload-placeholder">
+                                        <Upload className="icon-upload" />
+                                        <p>클릭하여 사진을 선택하세요</p>
+                                        <span className="upload-hint">JPG, PNG (최대 5MB)</span>
+                                    </div>
+                                ) : (
+                                    <div className="image-preview-container">
+                                        <img src={imagePreview} alt="미리보기" className="image-preview" />
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleRemoveImage();
+                                            }}
+                                            className="remove-image-btn"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                )}
+                            </label>
+                        )}
+
+                        {/* URL 입력 UI */}
+                        {uploadMethod === 'url' && (
+                            <input
+                                type="text"
+                                name="image"
+                                value={formData.image}
+                                onChange={handleChange}
+                                placeholder="https://example.com/image.png"
+                                className="form-input"
+                            />
+                        )}
                     </div>
 
-                    {/* 내용 입력 */}
                     <div className="form-group">
                         <label className="form-label" htmlFor="content">
                             리뷰 내용 <span className="required-star">*</span>
@@ -210,7 +300,6 @@ export default function PetProductReviewWrite({ currentUser }) {
                         />
                     </div>
 
-                    {/* 버튼 영역 */}
                     <div className="form-footer">
                         <button
                             type="button"

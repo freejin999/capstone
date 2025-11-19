@@ -1,14 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react'; // 🌟 useRef 임포트
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Eye, ThumbsUp, MessageSquare, Calendar, User, Trash2, Edit, Save, X } from 'lucide-react'; // 🌟 Save, X 아이콘 추가
+import { ArrowLeft, Eye, ThumbsUp, MessageSquare, Calendar, User, Trash2, Edit, Save, X } from 'lucide-react';
 
 // ===============================================
-// 💡 [핵심 수정] CommentItem 컴포넌트를 BoardDetail 함수 *밖으로* 이동
+// 1. 개별 댓글 컴포넌트 (BoardDetail 밖으로 분리)
 // ===============================================
-/**
- * 개별 댓글 컴포넌트
- * (BoardDetail 밖으로 분리하여 불필요한 리렌더링 및 포커스 상실 방지)
- */
 const CommentItem = ({ 
     comment, 
     currentUser, 
@@ -20,7 +16,7 @@ const CommentItem = ({
     onDelete,
     onTextChange 
 }) => {
-    // 🌟 본인 댓글인지 확인 (authorUsername 기준)
+    // 본인 댓글인지 확인
     const isOwner = currentUser && currentUser.username === comment.authorUsername;
 
     return (
@@ -32,13 +28,13 @@ const CommentItem = ({
                 </span>
             </div>
             
-            {/* 🌟 수정 모드일 때 <textarea> 렌더링 */}
+            {/* 수정 모드일 때 입력창 표시 */}
             {isEditing ? (
                 <div className="comment-edit-form">
                     <textarea
                         className="comment-textarea edit"
                         value={editedContent}
-                        onChange={(e) => onTextChange(e.target.value)} // 👈 부모의 setEditingCommentText 호출
+                        onChange={(e) => onTextChange(e.target.value)}
                     />
                     <div className="comment-actions">
                         <button 
@@ -56,11 +52,11 @@ const CommentItem = ({
                     </div>
                 </div>
             ) : (
-                // 기존 댓글 내용
+                // 평소에는 댓글 내용 표시
                 <p className="comment-content">{comment.content}</p>
             )}
 
-            {/* 🌟 본인 댓글이고, 수정 모드가 아닐 때만 '수정/삭제' 버튼 표시 */}
+            {/* 본인 댓글이고 수정 모드가 아닐 때 버튼 표시 */}
             {isOwner && !isEditing && (
                 <div className="comment-actions">
                     <button 
@@ -83,7 +79,7 @@ const CommentItem = ({
 
 
 // ===============================================
-// 💡 메인 BoardDetail 컴포넌트
+// 2. 메인 상세 페이지 컴포넌트
 // ===============================================
 export default function BoardDetail({ currentUser }) {
     const { id } = useParams();
@@ -100,14 +96,13 @@ export default function BoardDetail({ currentUser }) {
     const [editingCommentId, setEditingCommentId] = useState(null); 
     const [editingCommentText, setEditingCommentText] = useState(''); 
     
-    // 🌟 [핵심 수정] React.StrictMode의 2회 실행을 방지하기 위한 Ref
+    // 조회수 중복 증가 방지용 Ref
     const viewCountFetched = useRef(false);
 
     // ----------------------------------------------------
-    // 🔥 데이터 로드 (게시글 상세 + 댓글)
+    // 초기 데이터 로드
     // ----------------------------------------------------
     useEffect(() => {
-        // 🌟 [핵심 수정] 조회수 증가 API를 분리하여 1회만 호출
         const incrementView = async () => {
             try {
                 await fetch(`http://localhost:3001/api/posts/${id}/view`, { method: 'POST' });
@@ -116,18 +111,17 @@ export default function BoardDetail({ currentUser }) {
             }
         };
 
-        // React.StrictMode에서 2번 실행되는 것을 방지
         if (viewCountFetched.current === false) {
-            incrementView(); // 1. 조회수 1 증가 (1회만 실행)
-            viewCountFetched.current = true; // 2. 플래그를 true로 설정
+            incrementView(); 
+            viewCountFetched.current = true; 
         }
 
-        fetchPostDetail(); // 3. 게시글 데이터 가져오기 (조회수 증가 로직 없음)
+        fetchPostDetail(); 
         fetchComments(); 
         
-    }, [id]); // id가 바뀔 때만 실행
+    }, [id]);
 
-    // 좋아요 상태 초기화 (post, currentUser 변경 시)
+    // 좋아요 상태 동기화
     useEffect(() => {
         if (post) { 
             if (currentUser && post.likedUsers && post.likedUsers.includes(currentUser.username)) {
@@ -138,7 +132,7 @@ export default function BoardDetail({ currentUser }) {
         }
     }, [post, currentUser]); 
 
-    // 🌟 [수정] 조회수 증가 로직이 제거된 API 호출 함수
+    // 게시글 상세 정보 가져오기
     const fetchPostDetail = async () => {
         try {
             setLoading(true);
@@ -162,8 +156,8 @@ export default function BoardDetail({ currentUser }) {
         }
     };
     
+    // 댓글 목록 가져오기
     const fetchComments = async () => {
-        // ... (기존 코드와 동일) ...
         try {
             const response = await fetch(`http://localhost:3001/api/posts/${id}/comments`);
             if (response.ok) {
@@ -178,10 +172,9 @@ export default function BoardDetail({ currentUser }) {
     };
 
     // ----------------------------------------------------
-    // 💡 댓글 작성 처리 (currentUser 연동)
+    // 핸들러 함수들 (댓글, 좋아요, 삭제)
     // ----------------------------------------------------
     const handleCommentSubmit = async (e) => {
-        // ... (기존 코드와 동일) ...
         e.preventDefault();
         if (!currentUser) {
             alert('댓글을 작성하려면 로그인이 필요합니다.');
@@ -216,10 +209,6 @@ export default function BoardDetail({ currentUser }) {
         }
     };
 
-    // ----------------------------------------------------
-    // 🌟 [NEW] 댓글 수정/삭제 핸들러
-    // ----------------------------------------------------
-    // ... (기존 코드와 동일) ...
     const handleCommentEdit = (comment) => {
         setEditingCommentId(comment.id);
         setEditingCommentText(comment.content);
@@ -285,11 +274,7 @@ export default function BoardDetail({ currentUser }) {
         }
     };
 
-    // ----------------------------------------------------
-    // 💡 '좋아요' 핸들러 (currentUser 연동)
-    // ----------------------------------------------------
     const handleLike = async () => {
-        // ... (기존 코드와 동일) ...
         if (!currentUser) {
             alert('좋아요를 누르려면 로그인이 필요합니다.');
             navigate('/login');
@@ -316,11 +301,7 @@ export default function BoardDetail({ currentUser }) {
         }
     };
 
-    // ----------------------------------------------------
-    // 💡 '게시글 삭제' 핸들러 (currentUser 연동)
-    // ----------------------------------------------------
     const handleDelete = async () => {
-        // ... (기존 코드와 동일) ...
         if (!currentUser) {
             alert('삭제할 권한이 없습니다. (로그인 필요)');
             return;
@@ -355,10 +336,9 @@ export default function BoardDetail({ currentUser }) {
 
 
     // ----------------------------------------------------
-    // 렌더링
+    // 렌더링 (UI)
     // ----------------------------------------------------
     if (loading) {
-        // ... (기존 코드와 동일) ...
         return (
             <div className="detail-container loading-state">
                 <div className="spinner-large"></div>
@@ -367,14 +347,10 @@ export default function BoardDetail({ currentUser }) {
         );
     }
     if (error) {
-        // ... (기존 코드와 동일) ...
         return (
             <div className="detail-container error-state">
                 <p className="error-message">{error}</p>
-                <button
-                    onClick={() => navigate('/board')}
-                    className="primary-button"
-                >
+                <button onClick={() => navigate('/board')} className="primary-button">
                     목록으로 돌아가기
                 </button>
             </div>
@@ -385,11 +361,10 @@ export default function BoardDetail({ currentUser }) {
 
     return (
         <div className="detail-container">
-            {/* ------------------------------------------- */}
-            {/* 🎨 CSS 스타일 정의 (단일 파일 내) */}
-            {/* ------------------------------------------- */}
+            {/* =============================================== */}
+            {/* CSS 스타일 정의 */}
+            {/* =============================================== */}
             <style>{`
-                /* ( ... 기존 스타일 ... ) */
                 .detail-container {
                     min-height: 100vh;
                     background-color: #F2EDE4; 
@@ -471,7 +446,6 @@ export default function BoardDetail({ currentUser }) {
                     overflow: hidden;
                 }
 
-                /* ( ... .post-header, .post-body 등 기존 스타일 ... ) */
                 .post-header {
                     padding: 24px;
                     border-bottom: 1px solid #F2E2CE;
@@ -479,7 +453,7 @@ export default function BoardDetail({ currentUser }) {
                 .category-badge {
                     display: inline-block;
                     padding: 4px 12px;
-                    border-radius: 9999px; /* rounded-full */
+                    border-radius: 9999px;
                     font-size: 14px;
                     font-weight: 500;
                     margin-bottom: 12px;
@@ -507,17 +481,32 @@ export default function BoardDetail({ currentUser }) {
                     align-items: center;
                     gap: 4px;
                 }
+                
                 .post-body {
                     padding: 24px;
                 }
+                
+                /* 🌟 [추가된 이미지 스타일] */
+                .post-image-container {
+                    margin-bottom: 24px;
+                    text-align: center;
+                    border-radius: 8px;
+                }
+                .post-image {
+                    max-width: 70%;
+                    max-height: 600px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                    object-fit: contain;
+                }
+                
                 .post-content {
                     color: #594C3C;
                     line-height: 1.7;
-                    white-space: pre-wrap; /* 줄바꿈 유지 */
+                    white-space: pre-wrap;
                     min-height: 200px;
                 }
 
-                /* ( ... .like-area, .like-button 등 기존 스타일 ... ) */
                 .like-area {
                     padding: 24px;
                     border-top: 1px solid #F2E2CE;
@@ -533,7 +522,7 @@ export default function BoardDetail({ currentUser }) {
                     font-weight: bold;
                     font-size: 18px;
                     color: white;
-                    background-color: #735048; /* Primary Color */
+                    background-color: #735048;
                     border: none;
                     cursor: pointer;
                     transition: all 0.3s ease-in-out;
@@ -548,7 +537,7 @@ export default function BoardDetail({ currentUser }) {
                     cursor: not-allowed;
                 }
                 .like-button.liked {
-                    background-color: #EF4444; /* Red for liked */
+                    background-color: #EF4444;
                     box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
                 }
                 .like-button.liked:hover:not(:disabled) {
@@ -563,10 +552,9 @@ export default function BoardDetail({ currentUser }) {
                     animation: heartBeat 0.5s ease-in-out;
                 }
 
-                /* 댓글 영역 스타일 */
                 .comments-area {
                     padding: 24px;
-                    background-color: #F2EDE4; /* Light Background */
+                    background-color: #F2EDE4;
                 }
                 .comments-header {
                     font-size: 20px;
@@ -591,7 +579,7 @@ export default function BoardDetail({ currentUser }) {
                     resize: none;
                     font-size: 14px;
                     margin-bottom: 12px;
-                    font-family: inherit; /* 🌟 폰트 상속 */
+                    font-family: inherit;
                 }
                 .comment-submit-area {
                     display: flex;
@@ -649,7 +637,6 @@ export default function BoardDetail({ currentUser }) {
                     word-break: break-word; 
                 }
 
-                /* 🌟 [NEW] 댓글 수정 폼 */
                 .comment-edit-form {
                     margin-top: 8px;
                 }
@@ -658,7 +645,6 @@ export default function BoardDetail({ currentUser }) {
                     min-height: 80px;
                 }
 
-                /* 🌟 [NEW] 댓글 수정/삭제 버튼 */
                 .comment-actions {
                     display: flex;
                     gap: 8px;
@@ -675,43 +661,41 @@ export default function BoardDetail({ currentUser }) {
                     cursor: pointer;
                     transition: all 0.2s ease;
                 }
-                .action-button-small .w-4 { width: 16px; height: 16px; } /* 아이콘 크기 */
+                .action-button-small .w-4 { width: 16px; height: 16px; } 
                 
                 .action-button-small.edit {
-                    color: #735048; /* brand-primary-text */
-                    background-color: #F2E2CE; /* brand-primary-light */
+                    color: #735048; 
+                    background-color: #F2E2CE;
                     border-color: #F2E2CE;
                 }
                 .action-button-small.edit:hover {
-                    background-color: #e4d2bc; /* 살짝 어둡게 */
+                    background-color: #e4d2bc; 
                 }
                 .action-button-small.delete {
-                    color: #991B1B; /* danger-color */
-                    background-color: #fee2e2; /* red-100 */
+                    color: #991B1B; 
+                    background-color: #fee2e2; 
                     border-color: #fee2e2;
                 }
                 .action-button-small.delete:hover {
-                    background-color: #fecdd3; /* red-200 */
+                    background-color: #fecdd3;
                 }
                 .action-button-small.save {
                     color: white;
-                    background-color: #735048; /* brand-primary */
+                    background-color: #735048; 
                     border-color: #735048;
                 }
                 .action-button-small.save:hover {
-                    background-color: #594C3C; /* brand-primary-dark */
+                    background-color: #594C3C;
                 }
                 .action-button-small.cancel {
-                    color: #6b7280; /* text-light */
-                    background-color: #e5e7eb; /* gray-200 */
+                    color: #6b7280; 
+                    background-color: #e5e7eb; 
                     border-color: #e5e7eb;
                 }
                 .action-button-small.cancel:hover {
-                    background-color: #d1d5db; /* gray-300 */
+                    background-color: #d1d5db;
                 }
 
-
-                /* 하단 버튼 그룹 스타일 */
                 .bottom-actions {
                     margin-top: 24px;
                     display: flex;
@@ -738,12 +722,12 @@ export default function BoardDetail({ currentUser }) {
                     background-color: #F2E2CE;
                 }
                 .delete-button {
-                    background-color: #B91C1C; /* Red 700 */
+                    background-color: #B91C1C;
                     color: white;
                     border: none;
                 }
                 .delete-button:hover {
-                    background-color: #991B1B; /* Darker Red */
+                    background-color: #991B1B;
                 }
             `}</style>
             
@@ -777,6 +761,17 @@ export default function BoardDetail({ currentUser }) {
                     
                     {/* 게시글 본문 */}
                     <div className="post-body">
+                        {/* 🌟 [이미지 렌더링 영역 추가] */}
+                        {post.image && (
+                            <div className="post-image-container">
+                                <img 
+                                    src={post.image} 
+                                    alt="게시글 첨부 이미지" 
+                                    className="post-image" 
+                                />
+                            </div>
+                        )}
+                        
                         <div className="post-content">
                             {post.content}
                         </div>
@@ -799,7 +794,7 @@ export default function BoardDetail({ currentUser }) {
                         </button>
                     </div>
 
-                    {/* 💡 댓글 영역 */}
+                    {/* 댓글 영역 */}
                     <div className="comments-area">
                         <h3 className="comments-header">
                             댓글 {post.comments}개
@@ -837,7 +832,6 @@ export default function BoardDetail({ currentUser }) {
                                         key={comment.id} 
                                         comment={comment} 
                                         currentUser={currentUser} 
-                                        // 🌟 [수정] 수정에 필요한 모든 props 전달
                                         isEditing={editingCommentId === comment.id}
                                         editedContent={editingCommentText}
                                         onEdit={handleCommentEdit}

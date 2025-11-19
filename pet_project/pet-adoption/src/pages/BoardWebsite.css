@@ -1,0 +1,247 @@
+/* BoardWebsite.css */
+
+/* 기본 배경 및 폰트 설정 */
+.board-container {
+    min-height: 100vh;
+    background-color: #F2EDE4; /* Light Background */
+    padding: 30px 0;
+    font-family: 'Inter', sans-serif;
+}
+
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+.board-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #735048; /* Primary Color */
+    margin-bottom: 20px;
+}
+
+/* 카테고리 탭 */
+.category-tabs {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+    display: flex;
+    overflow-x: auto;
+    border: 1px solid #F2E2CE;
+}
+
+.category-button {
+    padding: 12px 20px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 0.15s, color 0.15s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #594C3C;
+}
+
+.category-button:hover {
+    background-color: #F2E2CE;
+}
+
+.category-button.active {
+    color: #735048;
+    border-bottom: 2px solid #735048;
+    font-weight: 700;
+}
+
+/* 검색 및 글쓰기 버튼 영역 */
+.search-area {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.search-input-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #A0A0A0;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 12px 12px 40px;
+    border: 1px solid #F2CBBD;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #735048;
+    box-shadow: 0 0 0 2px #F2E2CE;
+}
+
+.write-button {
+    background-color: #735048;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    transition: background-color 0.15s;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.write-button:hover {
+    background-color: #594C3C;
+}
+
+/* 게시글 목록 (테이블 형태) */
+.post-list {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border: 1px solid #F2E2CE;
+}
+
+/* 헤더 (PC 화면) */
+.table-header {
+    display: none;
+    padding: 12px 24px;
+    background-color: #F2EDE4;
+    border-bottom: 1px solid #F2E2CE;
+    font-weight: 600;
+    color: #594C3C;
+}
+
+@media (min-width: 768px) {
+    .table-header {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 16px;
+    }
+}
+
+/* 게시글 행 (Row) */
+.post-row {
+    padding: 12px 24px;
+    cursor: pointer;
+    color: #594C3C;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+@media (min-width: 768px) {
+    .post-row {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 16px;
+        align-items: center;
+    }
+}
+
+/* 링크 스타일 (행 전체 클릭 영역) */
+.link-style {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border-bottom: 1px solid #F2E2CE;
+    transition: background-color 0.15s;
+}
+
+.link-style:hover {
+    background-color: #F2E2CE;
+}
+
+.post-list > .link-style:last-child {
+    border-bottom: none;
+}
+
+.post-title-link {
+    font-weight: 500;
+    color: #735048;
+    transition: color 0.15s;
+}
+
+.link-style:hover .post-title-link {
+    text-decoration: underline;
+    color: #594C3C;
+}
+
+/* 공지사항 스타일 */
+.notice-row {
+    background-color: #fff7f2;
+    font-weight: 600;
+    border-left: 4px solid #735048;
+}
+
+.notice-badge {
+    background-color: #735048;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* 페이지네이션 */
+.pagination-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.page-button {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #F2E2CE;
+    background-color: white;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    color: #594C3C;
+    font-weight: 500;
+}
+
+.page-button:hover:not(:disabled) {
+    background-color: #F2E2CE;
+}
+
+.page-button.active {
+    background-color: #735048;
+    color: white;
+    border-color: #735048;
+}
+
+.page-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* BoardWebsite.css 맨 아래에 추가 */
+
+/* 🌟 게시글 목록 썸네일 스타일 */
+.post-thumbnail {
+    width: 40px;           /* 너비 */
+    height: 40px;          /* 높이 */
+    border-radius: 4px;    /* 모서리 둥글게 */
+    object-fit: cover;     /* 이미지가 찌그러지지 않고 꽉 차게 */
+    border: 1px solid #F2E2CE;
+    flex-shrink: 0;        /* 공간이 부족해도 찌그러지지 않음 */
+}
