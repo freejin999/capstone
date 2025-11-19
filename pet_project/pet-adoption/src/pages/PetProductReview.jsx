@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
-// 🌟 1. [추가] ChevronUp, ChevronDown 아이콘 임포트
-import { Star, Heart, Search, Plus, Edit, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+// 🌟 [수정] ChevronUp, ChevronDown 아이콘 임포트
+import { Star, Heart, Search, Plus, Edit, Trash2, ChevronDown, ChevronUp, Image as ImageIcon } from 'lucide-react'; // ImageIcon 추가
 import { Link, useNavigate } from 'react-router-dom';
 import './PetProductReview.css'; 
+
+// 🌟 [핵심 수정] 로컬 파일 import를 사용하여 로고 이미지를 변수에 저장합니다.
+import fallbackLogo from '../assets/images/logo.png'; 
+const DEFAULT_LOGO_URL = fallbackLogo; // import된 로컬 파일 URL을 사용합니다.
+
 
 export default function PetProductReview({ currentUser }) {
     const [reviews, setReviews] = useState([]);
@@ -229,12 +234,13 @@ export default function PetProductReview({ currentUser }) {
                                         {/* (제품 이미지 ...) */}
                                         <div className="card-image-wrapper">
                                             <img
-                                                src={review.image || "https://placehold.co/300x300/F2E2CE/594C3C?text=No+Image"}
+                                                // 🌟 [핵심 수정] 이미지가 없으면 로고 파일로 대체
+                                                src={review.image || DEFAULT_LOGO_URL}
                                                 alt={review.productName}
                                                 className="card-image"
                                                 onError={(e) => {
                                                     e.target.onerror = null; 
-                                                    e.target.src = "https://placehold.co/300x300/F2E2CE/594C3C?text=No+Image"; 
+                                                    e.target.src = DEFAULT_LOGO_URL; // 이미지 로드 오류 시 fallback
                                                 }}
                                             />
                                             <div className="card-badge">

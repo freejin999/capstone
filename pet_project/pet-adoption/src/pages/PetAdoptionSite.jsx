@@ -2,6 +2,71 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Dog, Cat, Bird, AlertCircle, MapPin, Heart } from 'lucide-react';
 
+// 🌟 [핵심 수정] 로고 이미지 파일을 import 합니다. 
+// (파일을 src/assets/images/logo.png 경로에 넣어주세요.)
+import fallbackLogo from '../assets/images/logo.png'; 
+const DEFAULT_LOGO_URL = fallbackLogo; // 이제 로고 이미지 변수를 기본값으로 사용합니다.
+
+// 7. 💡 카드 컴포넌트 (파일 내부에 하나만 존재하도록 정의)
+const AdoptionCard = ({ post }) => {
+    const getSpeciesIcon = (species) => {
+        if (species === '고양이') return <Cat className="w-4 h-4" />;
+        if (species === '기타') return <Bird className="w-4 h-4" />;
+        return <Dog className="w-4 h-4" />; // 기본값 '개'
+    };
+
+    // 🌟 [핵심 수정] post.image가 null이거나 비어있으면 import된 로고 URL을 사용
+    const imageUrl = post.image || DEFAULT_LOGO_URL; 
+
+    return (
+        // 🌟 [수정] .adoption-card -> .list-item-card
+        <Link to={`/adoption/${post.id}`} className="list-item-card">
+            {/* 🌟 1. 사진 (왼쪽) */}
+            <div className="list-image-wrapper">
+                <img
+                    src={imageUrl} // 🌟 수정된 URL 사용
+                    alt={post.name}
+                    className="list-image"
+                    onError={(e) => {
+                        e.target.onerror = null; 
+                        e.target.src = DEFAULT_LOGO_URL; // 이미지 로드 오류 시 fallback
+                    }}
+                />
+                <div className={`status-badge ${'status-' + (post.status || '입양가능')}`}>
+                    {post.status || '입양가능'}
+                </div>
+            </div>
+            {/* 🌟 2. 정보 (오른쪽) */}
+            <div className="list-content">
+                <div className="list-content-header">
+                    <h3 className="pet-name">{post.name}</h3>
+                    <p className="pet-region">
+                        <MapPin className="w-4 h-4" />{post.region}
+                    </p>
+                </div>
+                <div className="pet-details">
+                    <span className="detail-item">
+                        {getSpeciesIcon(post.species)} {post.species}
+                    </span>
+                    <span className="detail-item">
+                        {post.breed}
+                    </span>
+                    <span className="detail-item">
+                        {post.age}살
+                    </span>
+                    <span className="detail-item">
+                        {post.gender}
+                    </span>
+                    <span className="detail-item">
+                        {post.size}
+                    </span>
+                </div>
+            </div>
+        </Link>
+    );
+};
+
+
 // App.js로부터 'currentUser'를 props로 받습니다.
 export default function PetAdoptionSite({ currentUser }) {
     const navigate = useNavigate();
@@ -116,8 +181,6 @@ export default function PetAdoptionSite({ currentUser }) {
         </div>
     );
 }
-
-// 🌟 [수정] 첫 번째 중복 AdoptionCard (lines 121-177)는 삭제되었습니다.
 
 // 🌟 [수정] CSS 스타일 블록 전체 수정
 const styles = `
@@ -361,62 +424,4 @@ const styles = `
             justify-content: center;
         }
     }
-`; // 🌟 [수정] 템플릿 리터럴을 닫는 백틱(`)으로 올바르게 수정했습니다.
-
-// 7. 💡 카드 컴포넌트
-const AdoptionCard = ({ post }) => {
-    const getSpeciesIcon = (species) => {
-        if (species === '고양이') return <Cat className="w-4 h-4" />;
-        if (species === '기타') return <Bird className="w-4 h-4" />;
-        return <Dog className="w-4 h-4" />; // 기본값 '개'
-    };
-
-    return (
-        // 🌟 [수정] .adoption-card -> .list-item-card
-        <Link to={`/adoption/${post.id}`} className="list-item-card">
-            {/* 🌟 1. 사진 (왼쪽) */}
-            <div className="list-image-wrapper">
-                <img
-                    src={post.image || `https://placehold.co/400x400/F2E2CE/594C3C?text=${post.name}`}
-                    alt={post.name}
-                    className="list-image"
-                    onError={(e) => {
-                        e.target.onerror = null; 
-                        e.target.src = `https://placehold.co/400x400/F2E2CE/594C3C?text=${post.name}`;
-                    }}
-                />
-                <div className={`status-badge ${'status-' + (post.status || '입양가능')}`}>
-                    {post.status || '입양가능'}
-                </div>
-            </div>
-            {/* 🌟 2. 정보 (오른쪽) */}
-            <div className="list-content">
-                <div className="list-content-header">
-                    <h3 className="pet-name">{post.name}</h3>
-                    <p className="pet-region">
-                        <MapPin className="w-4 h-4" />{post.region}
-                    </p>
-                </div>
-                <div className="pet-details">
-                    <span className="detail-item">
-                        {getSpeciesIcon(post.species)} {post.species}
-                    </span>
-                    <span className="detail-item">
-                        {post.breed}
-                    </span>
-                    <span className="detail-item">
-                        {post.age}살
-                    </span>
-                    <span className="detail-item">
-                        {post.gender}
-                    </span>
-                    <span className="detail-item">
-                        {post.size}
-                    </span>
-                </div>
-            </div>
-        </Link>
-    );
-};
-
-// 🌟 [수정] 불필요한 PostStats 컴포넌트 정의(lines 480-485)를 삭제했습니다.
+`;

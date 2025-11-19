@@ -8,6 +8,12 @@ import bannerImg1 from '../assets/images/banner1.jpg';
 import bannerImg2 from '../assets/images/banner2.jpg'; 
 import bannerImg3 from '../assets/images/banner3.jpg'; 
 
+// 🌟 [핵심 수정 1] 로컬 파일 import를 사용하여 로고 이미지를 변수에 저장합니다.
+// 파일이 src/assets/images/ 경로에 있어야 합니다.
+import fallbackLogo from '../assets/images/logo.png'; 
+const FALLBACK_LOGO_URL = fallbackLogo; 
+
+
 // --- CSS Block for Styling ---
 const styles = `
 .home-container {
@@ -56,7 +62,7 @@ const styles = `
   top: 0; right: 0; bottom: 0; left: 0;
   transition: opacity 700ms;
   background-size: cover;
-  background-position: center 25%;
+  background-position: center 40%;
 }
 .slide-overlay {
     width: 100%;
@@ -257,9 +263,10 @@ const styles = `
   font-size: 0.75rem;
   color: #735048; /* C5: Secondary date color */
 }
+/* 🌟 [수정] Question/Latest Post List Styles (Image Indicator 추가) */
 .question-list-container {
-    display: flex;
-    flex-direction: column;
+    display: flex;
+    flex-direction: column;
 }
 .question-item {
     display: flex;
@@ -276,6 +283,30 @@ const styles = `
 }
 .question-item:hover {
     background-color: #F2E2CE; /* C3: Light Beige Hover */
+}
+.question-left-content { /* 🌟 [추가] 이미지와 제목을 묶는 컨테이너 */
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+.question-image-indicator { /* 🌟 [수정] 이미지 썸네일 스타일 - 크기는 28x28로 유지하며 내부 이미지 fit 보장 */
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-right: 0.75rem;
+    flex-shrink: 0; 
+    background-color: #F2E2CE;
+    border: 1px solid #F2CBBD; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.question-thumbnail-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 .question-title {
     flex: 1;
@@ -530,8 +561,8 @@ function Carousel() {
     },
     { 
         id: 2, 
-        title: "봄맞이 용품 특가!", 
-        subtitle: "사료, 간식, 장난감 최대 30% 할인",
+        title: "새로운 인연을 기다리는 마음", 
+        subtitle: "따뜻한 가족을 만날 날을 조용히 기다리고 있어요.",
         imageUrl: bannerImg2
     },
     { 
@@ -606,14 +637,33 @@ const NoticeItem = ({ id, title, date, isNew }) => (
     <span className="notice-date">{date}</span>
   </Link>
 );
-const QuestionItem = ({ id, title, user, comments }) => (
-  <Link to={`/board/${id}`} className="question-item">
-    <span className="question-title">{title}</span>
-    <div className="question-meta">
-      <span className="question-user">{user}</span>
-      <span className="question-comments">💬 {comments}</span>
+// 🌟 [수정] QuestionItem 컴포넌트: 이미지가 없을 때 아이콘과 공간을 완전히 제거
+const QuestionItem = ({ id, title, user, comments, imageSrc }) => (
+  <Link to={`/board/${id}`} className="question-item">
+    {/* 🌟 수정: 이미지 유무에 따라 썸네일/아이콘을 조건부 렌더링 */}
+    <div className="question-left-content"> 
+        {imageSrc ? (
+            // 이미지가 있을 경우: 28x28px 크기의 썸네일 컨테이너를 사용하여 게시글 행 높이에 맞게 표시
+            <div className="question-image-indicator">
+                <img 
+                    src={imageSrc} 
+                    alt="Post thumbnail" 
+                    className="question-thumbnail-img"
+                    // 이미지 로드 오류 시 대체 이미지 사용
+                    onError={(e) => { e.target.onerror = null; e.target.src = FALLBACK_LOGO_URL; }} 
+                />
+            </div>
+        ) : (
+            // 이미지가 없을 경우: null을 반환하여 아이콘과 공간을 완전히 제거
+            null 
+        )}
+        <span className="question-title">{title}</span>
     </div>
-  </Link>
+    <div className="question-meta">
+      <span className="question-user">{user}</span>
+      <span className="question-comments">💬 {comments}</span>
+    </div>
+  </Link>
 );
 
 // 🌟 [수정] AI 조언가 컴포넌트 (초기화 기능 추가)
@@ -711,9 +761,13 @@ export default function Home({ currentUser }) {
         setLoading(true);
         setError(null);
 
-        const postsResponse = await fetch('http://localhost:3001/api/posts');
-        if (!postsResponse.ok) throw new Error('게시글 목록을 불러올 수 없습니다.');
-        const allPosts = await postsResponse.json();
+        // 🌟 [수정] 가짜 이미지를 강제로 생성하는 코드를 제거했습니다.
+        const postsResponse = await fetch('http://localhost:3001/api/posts');
+        if (!postsResponse.ok) throw new Error('게시글 목록을 불러올 수 없습니다.');
+        const allPosts = await postsResponse.json();
+        
+        // --- [삭제됨] Mock Image Data Logic --- 
+        // (여기에 있던 map 함수가 서버 데이터를 덮어쓰고 있었습니다)
         
         const adoptionResponse = await fetch('http://localhost:3001/api/adoption');
         if (!adoptionResponse.ok) throw new Error('입양 공고를 불러올 수 없습니다.');
@@ -831,8 +885,9 @@ export default function Home({ currentUser }) {
                         id={post.id} 
                         title={post.title} 
                         user={post.authorNickname || post.author} 
-                        comments={post.comments} 
-                      />
+                        comments={post.comments}
+                        imageSrc={post.image} 
+                      />
                     ))
                   ) : (
                     <p style={{ padding: '1rem 0.5rem', color: '#735048' }}>등록된 질문이 없습니다.</p>
@@ -856,7 +911,8 @@ export default function Home({ currentUser }) {
                         id={post.id} 
                         title={post.title} 
                         user={post.authorNickname || post.author} 
-                        comments={post.comments} 
+                        comments={post.comments}
+                        imageSrc={post.image}
                       />
                     ))
                   ) : (
@@ -868,7 +924,7 @@ export default function Home({ currentUser }) {
               {/* 오늘의 추천 반려동물 (DB 연동) */}
               <div className="menu-box">
                 <div className="section-header">
-                  <h2 className="section-title">🐾 오늘의 추천 반려동물</h2>
+                  <h2 className="section-title">🐾 오늘의 만남</h2>
                   <Link to="/adoption" className="section-link">
                     더보기 <ChevronRight className="w-4 h-4" />
                   </Link>
@@ -880,13 +936,13 @@ export default function Home({ currentUser }) {
                           key={animal.id}
                           id={animal.id} 
                           name={animal.name}
-                          imageSrc={animal.image || `https://placehold.co/400x400/F2E2CE/594C3C?text=${animal.name}`}
+                          imageSrc={animal.image || FALLBACK_LOGO_URL}
                           age={`${animal.age}살`}
                           gender={animal.gender}
                         />
                     ))
                   ) : (
-                     <p style={{ padding: '1rem 0.5rem', color: '#735048', gridColumn: 'span 4' }}>추천할 동물이 없습니다.</p>
+                     <p style={{ padding: '1rem 0.5rem', color: '#735048', gridColumn: 'span 4' }}>아직 소개할 아이들이 없습니다.</p>
                   )}
                 </div>
               </div>

@@ -3,6 +3,11 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 // 🌟 [수정] Image, AlertCircle 아이콘 추가
 import { ArrowLeft, Calendar, Edit, Trash2, Phone, Image, AlertCircle } from 'lucide-react'; 
 
+// 🌟 [핵심 수정] 로컬 파일 import를 사용하여 로고 이미지를 변수에 저장합니다.
+import fallbackLogo from '../assets/images/logo.png'; 
+const DEFAULT_LOGO_URL = fallbackLogo; // import된 로컬 파일 URL을 사용합니다.
+
+
 export default function PetDiaryDetail({ currentUser }) {
     const { id } = useParams(); // URL에서 일기 ID 가져오기
     const navigate = useNavigate();
@@ -161,13 +166,19 @@ export default function PetDiaryDetail({ currentUser }) {
                                 src={diary.image} 
                                 alt={diary.title} 
                                 className="main-image"
-                                onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/600x400/F2E2CE/594C3C?text=Image"; }}
+                                onError={(e) => { e.target.onerror = null; e.target.src=DEFAULT_LOGO_URL; }}
                             />
                         </div>
                     ) : (
-                        <div className="image-placeholder">
-                             <Image className="icon-placeholder" />
-                             <span>사진이 없습니다.</span>
+                         // 🌟 [핵심 수정] 이미지가 없을 때 로고 이미지로 대체
+                         <div className="image-wrapper">
+                            <img 
+                                src={DEFAULT_LOGO_URL} 
+                                alt="로고" 
+                                className="main-image"
+                                style={{ objectFit: 'contain', width: '200px', height: '200px' }} 
+                            />
+                            {/* <span>로고 이미지로 대체되었습니다.</span> */}
                         </div>
                     )}
                     
@@ -321,7 +332,7 @@ const styles = `
  * =============================================== */
 .header {
     background-color: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border-bottom: 1px solid var(--border-color-light);
 }
 .header-content {
@@ -376,6 +387,10 @@ const styles = `
     width: 100%;
     max-height: 500px;
     background-color: var(--bg-main);
+    display: flex; /* 🌟 중앙 정렬용 */
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
 }
 .main-image {
     width: 100%;

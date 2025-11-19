@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Plus, Calendar, Image, Heart } from 'lucide-react';
-// 🌟 [제거] import './PetDiary.css';
+// 🌟 [핵심 수정 1] 로컬 로고 파일 import
+import fallbackLogo from '../assets/images/logo.png'; 
+const DEFAULT_LOGO_URL = fallbackLogo; 
 
 // ===============================================
 // 💡 CSS 스타일 블록
@@ -466,12 +468,14 @@ export default function PetDiary({ currentUser }) {
                                             src={diary.image} 
                                             alt={diary.title} 
                                             className="diary-card-image"
-                                            onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/400x300/F2E2CE/594C3C?text=Image"; }}
+                                            onError={(e) => { e.target.onerror = null; e.target.src=DEFAULT_LOGO_URL; }}
                                         />
                                     ) : (
-                                        <div className="image-placeholder">
-                                            <Image className="icon-placeholder" />
-                                        </div>
+                                        <img 
+                                            src={DEFAULT_LOGO_URL} 
+                                            alt="로고 이미지" 
+                                            className="diary-card-image"
+                                        />
                                     )}
                                 </div>
                                 

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2, Send, AlertCircle, Dog, Cat, Bird, User, Calendar, MapPin } from 'lucide-react';
-// 🌟 [수정] 몽글몽글 디자인 CSS 파일 임포트
-import './PetAdoptionDetail.css'; 
+import { ArrowLeft, Edit, Trash2, Send, AlertCircle, Dog, Cat, Bird, User, Calendar, MapPin, Image } from 'lucide-react'; // 🌟 Image 아이콘 추가
+
+// 🌟 [핵심 수정] 로컬 파일 import를 사용하여 로고 이미지를 변수에 저장합니다.
+// (파일이 src/assets/images/ 경로에 있어야 합니다.)
+import fallbackLogo from '../assets/images/logo.png'; 
+const DEFAULT_LOGO_URL = fallbackLogo; // import된 로컬 파일 URL을 사용합니다.
 
 // 1. App.js로부터 'currentUser'를 props로 받습니다.
 export default function PetAdoptionDetail({ currentUser }) {
@@ -78,10 +81,7 @@ export default function PetAdoptionDetail({ currentUser }) {
 
             if (response.ok) {
                 alert('입양 신청이 완료되었습니다! 마이페이지에서 내역을 확인하세요.');
-                // 4-3. 신청 완료 후 상태 변경 (예: '신청완료'로 버튼 변경 - 여기서는 alert만)
-                // (선택사항) navigate('/mypage'); 
             } else {
-                // (예: 이미 신청한 경우 - 409 Conflict)
                 setError(result.message || '입양 신청에 실패했습니다.');
             }
         } catch (err) {
@@ -133,6 +133,7 @@ export default function PetAdoptionDetail({ currentUser }) {
         return (
             // 🌟 [수정] <style> 태그 제거 (CSS 파일로 분리)
             <div className="adoption-detail-container loading">
+                <style>{styles}</style>
                 <div className="spinner-large"></div>
                 <p className="loading-text">입양 공고를 불러오는 중...</p>
             </div>
@@ -142,6 +143,7 @@ export default function PetAdoptionDetail({ currentUser }) {
     if (error && !post) { // 7. 💡 post가 없을 때만 전체 화면 에러
         return (
             <div className="adoption-detail-container loading">
+                <style>{styles}</style>
                 <div className="error-card">
                     <AlertCircle className="icon-large" />
                     <p className="font-bold mb-2">오류 발생</p>
@@ -171,9 +173,13 @@ export default function PetAdoptionDetail({ currentUser }) {
         return <Dog className="w-4 h-4" />; // 기본값 '개'
     };
     
+    // 🌟 [추가] 이미지 URL 결정
+    const imageUrl = post.image || DEFAULT_LOGO_URL;
+
     return (
         <div className="adoption-detail-container">
-            {/* 🌟 [제거] <style>{detailStyles}</style> 태그 제거 */}
+            {/* 🌟 [추가] CSS 파일을 여기에 포함합니다. */}
+            <style>{styles}</style>
             {/* Header */}
             <header className="header">
                 <div className="header-content">
@@ -194,15 +200,29 @@ export default function PetAdoptionDetail({ currentUser }) {
                     <div className="post-layout">
                         {/* 이미지 */}
                         <div className="image-column">
-                            <img
-                                src={post.image || `https://placehold.co/600x600/F2E2CE/594C3C?text=${post.name}`}
-                                alt={post.name}
-                                className="main-image"
-                                onError={(e) => {
-                                    e.target.onerror = null; 
-                                    e.target.src = `https://placehold.co/600x600/F2E2CE/594C3C?text=${post.name}`;
-                                }}
-                            />
+                            {/* 🌟 [수정] post.image가 없을 때 로고 이미지를 표시합니다. */}
+                            {post.image ? (
+                                <img
+                                    src={imageUrl}
+                                    alt={post.name}
+                                    className="main-image"
+                                    onError={(e) => {
+                                        e.target.onerror = null; 
+                                        e.target.src = DEFAULT_LOGO_URL;
+                                    }}
+                                />
+                            ) : (
+                                <div className="image-placeholder">
+                                    {/* 🌟 [수정] 로고 이미지 표시 (placeholder 대신 실제 img 태그 사용) */}
+                                    <img 
+                                        src={DEFAULT_LOGO_URL} 
+                                        alt="로고" 
+                                        className="main-image" 
+                                        style={{ objectFit: 'contain', width: '200px', height: '200px' }} 
+                                    />
+                                    <span></span>
+                                </div>
+                            )}
                         </div>
                         
                         {/* 기본 정보 */}
@@ -308,4 +328,359 @@ const InfoItem = ({ icon, label, value }) => (
     </div>
 );
 
-// 🌟 [제거] const detailStyles = `...` 블록 전체 삭제
+// 🌟 [수정] CSS 스타일 블록 전체 수정
+const styles = `
+    :root {
+        --brand-primary: #735048;
+        --brand-primary-dark: #594C3C;
+        --brand-primary-light: #F2E2CE;
+        --brand-primary-text: #735048;
+        --bg-main: #F2EDE4;
+        --bg-card: #ffffff;
+        --border-color: #F2CBBD;
+        --border-color-light: #F2E2CE;
+        --text-primary: #374151;
+        --text-light: #6b7280;
+        --danger-color: #991b1b;
+        --danger-color-light: #be123c; /* rose-700 */
+        --brand-danger-bg: #fff1f2; /* rose-50 */
+        --brand-danger-text: #9f1239; /* rose-900 */
+        --brand-danger-border: #fecdd3; /* rose-200 */
+    }
+
+    /* ===============================================
+    * 1. 메인 레이아웃
+    * =============================================== */
+    .adoption-detail-container {
+        min-height: 100vh;
+        background-color: var(--bg-main);
+        font-family: 'Inter', sans-serif;
+        box-sizing: border-box;
+    }
+    .adoption-detail-container *, .adoption-detail-container *:before, .adoption-detail-container *:after {
+        box-sizing: inherit;
+    }
+
+    .adoption-detail-container.loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-light);
+        height: 100vh;
+    }
+    .spinner-large {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        border-top: 4px solid var(--brand-primary);
+        border-right: 4px solid transparent;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-card {
+        text-align: center;
+        padding: 2.5rem;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        color: var(--danger-color);
+    }
+    .icon-large {
+        width: 3rem;
+        height: 3rem;
+        color: #B91C1C;
+        margin: 0 auto 1rem;
+    }
+    .loading-text {
+        color: var(--brand-primary-dark);
+        font-weight: 500;
+    }
+
+    /* ===============================================
+    * 2. 헤더
+    * =============================================== */
+    .header {
+        background-color: var(--bg-card);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid var(--border-color-light);
+    }
+    .header-content {
+        max-width: 1024px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+    .back-button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-light);
+        text-decoration: none;
+        transition: color 0.15s;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+    .back-button:hover { color: var(--brand-primary); }
+
+    /* ===============================================
+    * 3. 메인 콘텐츠 (상세)
+    * =============================================== */
+    .main-content {
+        max-width: 1024px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    .post-card {
+        background-color: var(--bg-card);
+        border-radius: 16px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+    .post-layout {
+        display: flex;
+        flex-direction: column; /* 🌟 모바일 기본 */
+    }
+    @media (min-width: 768px) { /* md: */
+        .post-layout {
+            flex-direction: row; /* 데스크탑에서 가로 배치 */
+        }
+    }
+
+    .image-column {
+        width: 100%;
+        height: 300px; /* 모바일 높이 */
+        background-color: var(--bg-main); /* 🌟 이미지 없을 때 배경색 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    @media (min-width: 768px) {
+        .image-column {
+            width: 50%;
+            height: auto; 
+            padding: 1.5rem;
+        }
+    }
+    .main-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* 🌟 [수정] contain 대신 cover로 유지 (배너 꽉 채우기) */
+    }
+    .image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--border-color);
+        background-color: #f8f8f8;
+        padding: 1rem;
+    }
+    .icon-placeholder {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 0.5rem;
+    }
+    .image-placeholder span {
+        font-size: 0.9rem;
+        color: var(--text-light);
+    }
+
+
+    .info-column {
+        width: 100%;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    @media (min-width: 768px) {
+        .info-column {
+            width: 50%;
+        }
+    }
+
+    .pet-name {
+        font-size: 2.25rem; /* text-4xl */
+        font-weight: 700;
+        color: var(--brand-primary-dark);
+        margin-bottom: 0.25rem;
+    }
+    .pet-region {
+        font-size: 1.125rem;
+        color: var(--text-light);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: white;
+    }
+    .status-입양가능 { background-color: #3b8a3e; }
+    .status-상담중 { background-color: #fbbf24; }
+    .status-입양완료 { background-color: #9ca3af; }
+
+    .info-grid {
+        margin-top: 1.5rem;
+        display: grid;
+        grid-template-columns: 1fr; /* 🌟 모바일 기본 */
+        gap: 0.75rem;
+    }
+    @media (min-width: 640px) { /* sm: */
+        .info-grid {
+             grid-template-columns: repeat(2, 1fr); /* 🌟 태블릿 2열 */
+        }
+    }
+    .info-item {
+        display: flex;
+        align-items: center;
+        color: var(--text-primary);
+        font-size: 0.875rem;
+    }
+    .info-label {
+        font-weight: 500;
+        width: 100px; /* w-24 */
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-light);
+    }
+    .info-value {
+        font-weight: 600;
+        color: var(--brand-primary-dark);
+    }
+
+    .button-group {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+    .button {
+        flex: 1;
+        text-align: center;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .button.secondary {
+        border: 1px solid var(--brand-primary);
+        color: var(--brand-primary);
+    }
+    .button.secondary:hover {
+        background-color: var(--bg-main);
+    }
+    .button.danger {
+        background-color: var(--danger-color);
+        color: white;
+        border: none;
+    }
+    .button.danger:hover {
+        background-color: var(--danger-color-light);
+    }
+
+    .description-area {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color-light);
+    }
+    .description-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--brand-primary-dark);
+        margin-bottom: 1rem;
+    }
+    .description-content {
+        color: var(--text-primary);
+        line-height: 1.7;
+        white-space: pre-wrap;
+        margin-bottom: 2rem;
+    }
+    .description-content p {
+        margin: 0; /* 🌟 <p> 태그의 기본 마진 제거 */
+    }
+
+    .apply-area {
+        text-align: center;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color-light);
+    }
+    .button.primary {
+        background-color: var(--brand-primary);
+        color: white;
+        border: none;
+    }
+    .button.primary:hover:not(:disabled) {
+        background-color: var(--brand-primary-dark);
+    }
+    .button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .apply-button {
+        padding: 0.75rem 2.5rem;
+        font-size: 1.125rem;
+        width: 100%;
+    }
+    @media (min-width: 768px) {
+        .apply-button {
+            width: auto;
+            margin: 0 auto;
+        }
+    }
+    .spinner-sm {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
+        border-top: 2px solid white;
+        border-right: 2px solid transparent;
+        animation: spin 1s linear infinite;
+    }
+    .login-prompt {
+        font-size: 0.875rem;
+        color: var(--text-light);
+        margin-top: 0.75rem;
+    }
+    .link {
+        color: var(--brand-primary);
+        text-decoration: underline;
+    }
+    .link:hover {
+        color: var(--brand-primary-dark);
+    }
+    .message-box {
+        padding: 1rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        border: 1px solid;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+    }
+    .message-box .icon { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+    .message-box.error {
+        background-color: var(--brand-danger-bg);
+        color: var(--brand-danger-text);
+        border-color: var(--brand-danger-border);
+    }
+`;

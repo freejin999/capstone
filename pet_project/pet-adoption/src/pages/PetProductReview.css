@@ -30,13 +30,12 @@
 /* ===============================================
  * 1. 메인 레이아웃
  * =============================================== */
-/* ... (기존 코드와 동일 ... */
 .review-page-wrapper {
     background-color: var(--bg-main);
     min-height: 100vh;
     padding: 2rem 1rem;
     box-sizing: border-box; 
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
 }
 
 .review-page-wrapper *, .review-page-wrapper *:before, .review-page-wrapper *:after {
@@ -85,7 +84,6 @@
 /* ===============================================
  * 2. 헤더 및 검색/필터
  * =============================================== */
-/* ... (기존 코드와 동일 ... */
 .review-header {
     display: flex;
     justify-content: space-between;
@@ -94,7 +92,7 @@
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 1rem;
     flex-wrap: wrap; /* 🌟 모바일 반응형 */
-    gap: 10rem; /* 🌟 모바일 반응형 */
+    gap: 1rem; /* 🌟 모바일 반응형 */
 }
 .review-title {
     font-size: 1.875rem; /* text-3xl */
@@ -291,7 +289,7 @@
     margin-left: 0.25rem;
 }
 
-/* 🌟 [핵심 수정] */
+/* 🌟 리뷰 본문 텍스트 (기본: 닫힌 상태) */
 .card-content {
     font-size: 0.875rem;
     color: var(--text-light);
@@ -299,33 +297,38 @@
     line-height: 1.5;
     word-break: break-word; 
     
+    /* 기본적으로 3줄 높이까지만 표시하고 넘치면 숨김 */
     max-height: 4.5em; /* 1.5em * 3 lines */
     overflow: hidden;
     text-overflow: ellipsis;
     
-    /* 🌟 [수정] 
-     * 닫힐 때(ease-out) 더 부드럽게 느껴지도록 타이밍 함수 변경
-     * 펼쳐지는 속도를 0.3s로 약간 빠르게 조정
-     */
     transition: max-height 0.3s ease-out; 
 }
 
-/* 🌟 [핵심 수정] */
+/* 🌟 리뷰 본문 텍스트 (펼쳐진 상태 - 스크롤 적용) */
 .card-content.expanded {
-    max-height: 1000px; 
+    max-height: 200px; /* 🌟 너무 길어지지 않도록 최대 높이 고정 */
+    overflow-y: auto;  /* 🌟 내용이 넘치면 스크롤 생성 */
     margin-bottom: 0.5rem; 
-    
-    /* 🌟 [수정] 
-     * 펼쳐질 때는 닫힐 때(ease-out)와 반대인 ease-in 사용
-     * (transition 속성은 base 클래스에만 정의해야 중복/충돌이 없습니다)
-     */
+    padding-right: 0.5rem; /* 스크롤바와 내용 사이 여백 */
     transition: max-height 0.4s ease-in; 
-    /* [제거] transition 속성이 base에 있으므로, 여기서는 타이밍만 정의할 수 있으나
-       (transition-timing-function: ease-in;)
-       속도를 다르게 주기 위해 그냥 transition을 사용합니다.
-       (이전 코드에서 transition이 중복 정의되었던 것이 문제의 원인이었을 수 있습니다.)
-    */
 }
+
+/* 🌟 스크롤바 스타일링 (테마에 맞춤) */
+.card-content.expanded::-webkit-scrollbar {
+    width: 6px;
+}
+.card-content.expanded::-webkit-scrollbar-track {
+    background: transparent;
+}
+.card-content.expanded::-webkit-scrollbar-thumb {
+    background-color: var(--border-color-light);
+    border-radius: 10px;
+}
+.card-content.expanded::-webkit-scrollbar-thumb:hover {
+    background-color: var(--border-color);
+}
+
 
 /* "전체 보기" 버튼 스타일 */
 .read-more-button {
@@ -356,31 +359,25 @@
     padding: 1rem;
     border-top: 1px solid var(--bg-main);
     
-    /* 1. [수정] Flexbox 레이아웃으로 변경 */
+    /* Flexbox 레이아웃 */
     display: flex;
     align-items: center; /* 세로 중앙 정렬 */
     justify-content: space-between; /* 양쪽 끝으로 밀기 */
     
-    /* 2. [추가] 모바일에서 세로로 쌓이고, 간격을 줌 */
+    /* 모바일에서 세로로 쌓이고, 간격을 줌 */
     flex-wrap: wrap; 
     gap: 0.75rem; 
 }
 .footer-info {
     display: flex;
     align-items: center;
-    /* 3. [수정] justify-content 변경 (좋아요가 없으므로) */
     justify-content: flex-start;
-    /* 4. [제거] 불필요한 margin-bottom 제거 */
-    /* margin-bottom: 0.75rem; */ 
-    
-    /* 5. [추가] 버튼이 있을 때 너무 커지지 않도록 */
     flex-grow: 1; 
 }
 .author-info {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    /* 6. [추가] 모바일에서 줄바꿈 방지 */
     white-space: nowrap;
 }
 .author-nickname {
@@ -417,7 +414,6 @@
     display: flex;
     gap: 0.5rem;
     justify-content: flex-end;
-    /* 7. [추가] 버튼 영역이 줄어들지 않도록 함 */
     flex-shrink: 0; 
 }
 .action-button {
