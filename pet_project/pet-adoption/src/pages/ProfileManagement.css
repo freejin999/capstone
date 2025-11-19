@@ -67,7 +67,6 @@ body {
  * 2. 탭 메뉴
  * =============================================== */
 .profile-tabs-container {
-    width: 90%;
     display: flex;
     margin-bottom: 1.5rem;
     background-color: var(--bg-card);
@@ -118,7 +117,6 @@ body {
 }
 
 .profile-card {
-    width: 90%;
     background-color: var(--bg-card);
     padding: 1.5rem; /* 🌟 패딩 줄임 */
     border-radius: 16px; 
