@@ -79,7 +79,7 @@ const styles = `
     border-radius: 0.375rem; /* rounded-md */
     position: relative;
     display: block;
-    width: 100%;
+    width: 94%;
     padding: 0.75rem; /* px-3 py-3 */
     border: 1px solid #F2E2CE; /* C3: Light Beige Border */
     placeholder-color: #735048; /* C5 */

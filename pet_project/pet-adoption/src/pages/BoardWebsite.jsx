@@ -1,18 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Eye, MessageSquare, ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom'; // 🌟 useLocation 추가
 
 // 🌟 [핵심] CSS 파일 임포트
 import './BoardWebsite.css';
 
 export default function BoardWebsite() {
+    const location = useLocation(); // 🌟 location 정보 가져오기
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('전체');
+
+    // 🌟 초기값 설정: location.state에 category가 있으면 그것을 사용, 없으면 '전체'
+    const [selectedCategory, setSelectedCategory] = useState(location.state?.category || '전체');
+    
     const [posts, setPosts] = useState([]); 
     const [refreshFlag, setRefreshFlag] = useState(false);
 
-    const categories = ['전체', '공지사항', '자유게시판', '질문답변', '중고거래'];
+    const categories = ['전체', '공지사항', '자유게시판', '질문게시판', '중고거래'];
+
+    // 🌟 location.state가 변경될 때마다 카테고리 업데이트 (필요시)
+    useEffect(() => {
+        if (location.state?.category) {
+            setSelectedCategory(location.state.category);
+        }
+    }, [location.state]);
 
     // 데이터 불러오기
     useEffect(() => {
@@ -97,7 +108,12 @@ export default function BoardWebsite() {
                             className="search-input"
                         />
                     </div>
-                    <Link to="/board/write" className="write-button">
+                    {/* 🌟 [수정] 글쓰기 버튼 클릭 시 현재 선택된 카테고리 정보를 state로 전달 */}
+                    <Link 
+                        to="/board/write" 
+                        state={{ category: selectedCategory }} 
+                        className="write-button"
+                    >
                         <Plus className="w-5 h-5" />
                         글쓰기
                     </Link>
@@ -126,7 +142,7 @@ export default function BoardWebsite() {
                                     {post.category}
                                 </div>
                                 <div style={{gridColumn: '4/9', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                    {/* 🌟 [수정] 이미지가 있으면 썸네일 표시 */}
+                                    {/* 🌟 이미지가 있으면 썸네일 표시 */}
                                     {post.image && (
                                         <img src={post.image} alt="썸네일" className="post-thumbnail" />
                                     )}
@@ -162,7 +178,7 @@ export default function BoardWebsite() {
                                     {post.category}
                                 </div>
                                 <div style={{gridColumn: '4/9', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                    {/* 🌟 [수정] 이미지가 있으면 썸네일 표시 */}
+                                    {/* 🌟 이미지가 있으면 썸네일 표시 */}
                                     {post.image && (
                                         <img src={post.image} alt="썸네일" className="post-thumbnail" />
                                     )}

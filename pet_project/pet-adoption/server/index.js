@@ -873,6 +873,146 @@ app.delete('/api/reviews/:id', async (req, res) => {
 });
 
 
+
+
+// =========================================
+// 🌟 [새로운 API] 내가 작성한 입양공고에 대한 신청 목록 조회
+// =========================================
+app.get('/api/adoption/received/:userId', (req, res) => {
+    const { userId } = req.params;
+    
+    // 1. userId가 작성한 입양공고 목록을 먼저 찾기
+    const postQuery = 'SELECT id FROM adoption_posts WHERE userId = ?';
+    
+    db.all(postQuery, [userId], (err, posts) => {
+        if (err) {
+            console.error('입양공고 조회 오류:', err);
+            return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+        }
+        
+        if (posts.length === 0) {
+            return res.json([]); // 작성한 공고가 없으면 빈 배열 반환
+        }
+        
+        // 2. 해당 공고들에 대한 신청 목록 조회
+        const postIds = posts.map(p => p.id).join(',');
+        const appQuery = `
+            SELECT 
+                aa.id,
+                aa.postId,
+                aa.petName,
+                aa.username,
+                aa.status,
+                aa.createdAt,
+                u.nickname as applicantNickname
+            FROM adoption_applications aa
+            LEFT JOIN users u ON aa.username = u.username
+            WHERE aa.postId IN (${postIds})
+            ORDER BY aa.createdAt DESC
+        `;
+        
+        db.all(appQuery, [], (err, applications) => {
+            if (err) {
+                console.error('신청 목록 조회 오류:', err);
+                return res.status(500).json({ message: '신청 목록 조회에 실패했습니다.' });
+            }
+            
+            res.json(applications);
+        });
+    });
+});
+
+// =========================================
+// 🌟 [새로운 API] 입양 신청 상태 변경 (승인/거절)
+// =========================================
+app.put('/api/adoption/application/:applicationId/status', (req, res) => {
+    const { applicationId } = req.params;
+    const { status, userId } = req.body;
+    
+    // 1. 해당 신청이 내 공고에 대한 것인지 확인
+    const checkQuery = `
+        SELECT aa.id 
+        FROM adoption_applications aa
+        JOIN adoption_posts ap ON aa.postId = ap.id
+        WHERE aa.id = ? AND ap.userId = ?
+    `;
+    
+    db.get(checkQuery, [applicationId, userId], (err, row) => {
+        if (err) {
+            console.error('권한 확인 오류:', err);
+            return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+        }
+        
+        if (!row) {
+            return res.status(403).json({ message: '권한이 없습니다.' });
+        }
+        
+        // 2. 상태 업데이트
+        const updateQuery = 'UPDATE adoption_applications SET status = ? WHERE id = ?';
+        
+        db.run(updateQuery, [status, applicationId], function(err) {
+            if (err) {
+                console.error('상태 변경 오류:', err);
+                return res.status(500).json({ message: '상태 변경에 실패했습니다.' });
+            }
+            
+            res.json({ message: '상태가 변경되었습니다.', status });
+        });
+    });
+});
+
+// =========================================
+// 🌟 [새로운 API] 특정 입양공고의 신청자 목록 조회
+// =========================================
+app.get('/api/adoption/:postId/applicants', (req, res) => {
+    const { postId } = req.params;
+    const { userId } = req.query; // 요청자의 userId (권한 확인용)
+    
+    // 1. 본인이 작성한 공고인지 확인
+    const checkQuery = 'SELECT userId FROM adoption_posts WHERE id = ?';
+    
+    db.get(checkQuery, [postId], (err, post) => {
+        if (err) {
+            console.error('공고 조회 오류:', err);
+            return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+        }
+        
+        if (!post) {
+            return res.status(404).json({ message: '공고를 찾을 수 없습니다.' });
+        }
+        
+        if (post.userId !== parseInt(userId)) {
+            return res.status(403).json({ message: '권한이 없습니다.' });
+        }
+        
+        // 2. 신청자 목록 조회
+        const appQuery = `
+            SELECT 
+                aa.id,
+                aa.username,
+                aa.status,
+                aa.createdAt,
+                u.nickname as applicantNickname,
+                u.email as applicantEmail
+            FROM adoption_applications aa
+            LEFT JOIN users u ON aa.username = u.username
+            WHERE aa.postId = ?
+            ORDER BY aa.createdAt DESC
+        `;
+        
+        db.all(appQuery, [postId], (err, applicants) => {
+            if (err) {
+                console.error('신청자 조회 오류:', err);
+                return res.status(500).json({ message: '신청자 목록 조회에 실패했습니다.' });
+            }
+            
+            res.json(applicants);
+        });
+    });
+});
+
+
+
 /* ====================================================
  * * 6. DB 초기화 및 서버 시작
  * * ==================================================== */

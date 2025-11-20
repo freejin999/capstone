@@ -1,14 +1,20 @@
 import React, { useState, useRef } from 'react'; // 🌟 useRef 추가
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // 🌟 useLocation 추가
 import { ArrowLeft, Send, Upload, X } from 'lucide-react'; // 🌟 아이콘 추가
 
 // 1. App.js로부터 'currentUser'를 props로 받습니다.
 export default function BoardWrite({ currentUser }) {
     const navigate = useNavigate();
+    const location = useLocation(); // 🌟 현재 위치 정보 가져오기
     
+    // 🌟 전달받은 카테고리가 있고 '전체'가 아니면 그 값을, 아니면 '자유게시판'을 기본값으로 설정
+    const initialCategory = location.state?.category && location.state.category !== '전체' 
+        ? location.state.category 
+        : '자유게시판';
+
     const [formData, setFormData] = useState({
         title: '',
-        category: '자유게시판',
+        category: initialCategory, // 🌟 초기값 적용
         content: '',
         image: '', // 🌟 이미지 URL 필드 추가
     });
@@ -22,7 +28,7 @@ export default function BoardWrite({ currentUser }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null); // 🌟 에러 상태 추가
 
-    const categories = ['공지사항', '자유게시판', '질문답변', '중고거래'];
+    const categories = ['공지사항', '자유게시판', '질문게시판', '중고거래'];
 
     const handleChange = (e) => {
         const { name, value } = e.target;

@@ -26,7 +26,7 @@ export default function BoardEdit({ currentUser }) {
     const fileInputRef = useRef(null); // 파일 인풋 참조
 
 
-    const categories = ['공지사항', '자유게시판', '질문답변', '중고거래'];
+    const categories = ['공지사항', '자유게시판', '질문게시판', '중고거래'];
 
     // 3. 기존 게시글 데이터 불러오기
     useEffect(() => {

@@ -1,15 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronRight, Bell, Heart, Bot, Star, MessageSquare, BookOpen, RefreshCw, Send } from 'lucide-react'; // 🌟 RefreshCw, Send 추가
+import { Link, useNavigate } from 'react-router-dom';
+import { ChevronRight, Bell, Heart, Bot, Star, MessageSquare, BookOpen, RefreshCw, Send, Image } from 'lucide-react';
 
-// 🌟 [핵심 수정 1]
-// 로컬 파일 import 시도를 제거합니다. (파일이 해당 경로에 존재하지 않아 오류 발생)
 import bannerImg1 from '../assets/images/banner1.jpg'; 
 import bannerImg2 from '../assets/images/banner2.jpg'; 
 import bannerImg3 from '../assets/images/banner3.jpg'; 
 
-// 🌟 [핵심 수정 1] 로컬 파일 import를 사용하여 로고 이미지를 변수에 저장합니다.
-// 파일이 src/assets/images/ 경로에 있어야 합니다.
 import fallbackLogo from '../assets/images/logo.png'; 
 const FALLBACK_LOGO_URL = fallbackLogo; 
 
@@ -112,22 +108,21 @@ const styles = `
   width: 1.5rem;
 }
 
-/* ( ... 나머지 CSS 스타일 (AnimalCard, MenuBox 등) ... ) */
 .card-wrapper {
   background-color: white;
   border-radius: 0.5rem;
   overflow: hidden;
-  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); /* shadow-sm */
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
   transition: box-shadow 150ms;
   cursor: pointer;
-  text-decoration: none; /* 🌟 [추가] Link 태그 밑줄 제거 */
+  text-decoration: none;
 }
 .card-wrapper:hover {
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.06); /* hover:shadow-md */
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.06);
 }
 .card-image-box {
   aspect-ratio: 1 / 1;
-  background-color: #f3f4f6; /* gray-100, unchanged for placeholder */
+  background-color: #f3f4f6;
   overflow: hidden;
 }
 .card-image {
@@ -137,20 +132,20 @@ const styles = `
   transition: transform 300ms;
 }
 .card-wrapper:hover .card-image {
-  transform: scale(1.05); /* hover:scale-105 */
+  transform: scale(1.05);
 }
 .card-info {
   padding: 0.75rem;
 }
 .card-title {
   font-weight: 600;
-  font-size: 0.875rem; /* text-sm */
+  font-size: 0.875rem;
   margin-bottom: 0.25rem;
-  color: #594C3C; /* C2 */
+  color: #594C3C;
 }
 .card-meta {
-  font-size: 0.75rem; /* text-xs */
-  color: #735048; /* C5: Secondary Text Color */
+  font-size: 0.75rem;
+  color: #735048;
 }
 .menu-box {
   background-color: white;
@@ -163,7 +158,7 @@ const styles = `
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
-@media (min-width: 640px) { /* sm: breakpoint */
+@media (min-width: 640px) {
   .menu-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -179,7 +174,7 @@ const styles = `
   color: inherit;
 }
 .menu-item:hover {
-  background-color: #F2E2CE; /* C3: Light Beige Hover */
+  background-color: #F2E2CE;
 }
 .menu-icon-box {
   width: 3rem;
@@ -189,12 +184,12 @@ const styles = `
   align-items: center;
   justify-content: center;
   margin-bottom: 0.5rem;
-  background-color: #F2E2CE; /* C3: Icon Background */
+  background-color: #F2E2CE;
 }
 .menu-text {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #594C3C; /* 🌟 [추가] 텍스트 색상 */
+  color: #594C3C;
 }
 .notice-wrapper {
   background-color: white;
@@ -214,7 +209,7 @@ const styles = `
 }
 .notice-title {
   font-weight: 700;
-  color: #594C3C; /* C2: Dark Brown Title */
+  color: #594C3C;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -235,45 +230,44 @@ const styles = `
   text-decoration: none; 
 }
 .notice-item:hover {
-  background-color: #F2E2CE; /* C3: Light Beige Hover */
+  background-color: #F2E2CE;
 }
 .notice-left {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex: 1;
-  min-width: 0; /* Ensures truncation works */
+  min-width: 0;
 }
 .notice-new-tag {
   font-size: 0.75rem;
-  background-color: #F2CBBD; /* C4: Warm Pink Accent */
-  color: #594C3C; /* C2: Dark Text on Tag */
+  background-color: #F2CBBD;
+  color: #594C3C;
   padding: 0 0.375rem;
   border-radius: 0.25rem;
   font-weight: 600; 
 }
 .notice-text {
   font-size: 0.875rem;
-  color: #594C3C; /* C2: Dark Brown Text */
+  color: #594C3C;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .notice-date {
   font-size: 0.75rem;
-  color: #735048; /* C5: Secondary date color */
+  color: #735048;
 }
-/* 🌟 [수정] Question/Latest Post List Styles (Image Indicator 추가) */
 .question-list-container {
-    display: flex;
-    flex-direction: column;
+    display: flex;
+    flex-direction: column;
 }
 .question-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 0.5rem;
-    border-bottom: 1px solid #F2E2CE; /* C3 */
+    border-bottom: 1px solid #F2E2CE;
     cursor: pointer;
     transition: background-color 150ms;
     text-decoration: none; 
@@ -282,15 +276,15 @@ const styles = `
     border-bottom: none;
 }
 .question-item:hover {
-    background-color: #F2E2CE; /* C3: Light Beige Hover */
+    background-color: #F2E2CE;
 }
-.question-left-content { /* 🌟 [추가] 이미지와 제목을 묶는 컨테이너 */
+.question-left-content {
     display: flex;
     align-items: center;
     flex: 1;
     min-width: 0;
 }
-.question-image-indicator { /* 🌟 [수정] 이미지 썸네일 스타일 - 크기는 28x28로 유지하며 내부 이미지 fit 보장 */
+.question-image-indicator {
     width: 28px;
     height: 28px;
     border-radius: 6px;
@@ -311,7 +305,7 @@ const styles = `
 .question-title {
     flex: 1;
     font-size: 0.875rem;
-    color: #594C3C; /* C2 */
+    color: #594C3C;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -322,12 +316,11 @@ const styles = `
     display: flex;
     align-items: center;
     font-size: 0.75rem;
-    color: #735048; /* C5 */
+    color: #735048;
     gap: 0.75rem;
     white-space: nowrap; 
 }
 .question-user {
-    /* Simple username display */
 }
 .question-comments {
     white-space: nowrap;
@@ -339,20 +332,20 @@ const styles = `
   margin-bottom: 1rem;
 }
 .section-title {
-  font-size: 1.25rem; /* text-xl */
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #594C3C; /* C2: Dark Brown Title */
+  color: #594C3C;
 }
 .section-link {
   display: flex;
   align-items: center;
   font-size: 0.875rem;
-  color: #735048; /* C5: Accent Link Color */
+  color: #735048;
   text-decoration: none;
   transition: color 150ms;
 }
 .section-link:hover {
-  color: #594C3C; /* C2: Darker Hover Link */
+  color: #594C3C;
 }
 .grid-cols-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -364,23 +357,25 @@ const styles = `
 .grid-cols-5 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-@media (min-width: 640px) { /* sm: breakpoint */
+@media (min-width: 640px) {
   .grid-cols-5 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
-.text-icon-color { color: #594C3C; /* C2 */ }
+.text-icon-color { color: #594C3C; }
 .ad-banner {
-    background: linear-gradient(to bottom right, #F2EDE4, #F2E2CE); /* C1 to C3 */
+    background: linear-gradient(to bottom right, #F2EDE4, #F2E2CE);
     border-radius: 0.5rem;
     padding: 1.5rem;
     text-align: center;
     box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
 }
-.ad-text-1 { color: #735048; /* C5 */ font-size: 0.875rem; margin-bottom: 0.5rem; }
-.ad-text-2 { color: #735048; /* C5 */ font-size: 0.75rem; }
+.ad-text-1 { color: #735048; font-size: 0.875rem; margin-bottom: 0.5rem; }
+.ad-text-2 { color: #735048; font-size: 0.75rem; }
 
-/* 🌟 AI Consultant Styles - Updated for Scroll & Reset */
+.ad-banner a {
+    text-decoration: none;
+}
 .ai-consultant-card {
   background-color: white;
   border-radius: 0.5rem;
@@ -390,7 +385,7 @@ const styles = `
 .ai-input {
   width: 90%;
   padding: 0.75rem;
-  border: 1px solid #F2E2CE; /* C3 */
+  border: 1px solid #F2E2CE;
   border-radius: 0.375rem;
   margin-bottom: 0.5rem;
   color: #594C3C;
@@ -403,7 +398,6 @@ const styles = `
     outline: none;
 }
 
-/* 🌟 [수정] 버튼 그룹 스타일 */
 .ai-button-group {
     display: flex;
     gap: 0.5rem;
@@ -422,41 +416,37 @@ const styles = `
   gap: 0.5rem;
 }
 .ai-button.primary {
-    background-color: #735048; /* C5 */
+    background-color: #735048;
     color: white;
 }
 .ai-button.primary:hover:not(:disabled) {
-    background-color: #594C3C; /* C2 */
+    background-color: #594C3C;
 }
 .ai-button.secondary {
-    background-color: #F2E2CE; /* C3 */
-    color: #735048; /* C5 */
+    background-color: #F2E2CE;
+    color: #735048;
 }
 .ai-button.secondary:hover:not(:disabled) {
-    background-color: #F2CBBD; /* C4 */
+    background-color: #F2CBBD;
 }
 .ai-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* 🌟 [수정] 답변 박스 스타일 (스크롤 추가) */
 .ai-response-box {
   margin-top: 1rem;
   padding: 1rem;
-  background-color: #F2EDE4; /* C1 */
-  border: 1px dashed #F2CBBD; /* C4 */
+  background-color: #F2EDE4;
+  border: 1px dashed #F2CBBD;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   color: #594C3C;
   white-space: pre-wrap;
-  
-  /* 🌟 핵심: 내용이 길어지면 스크롤 생김 (드롭다운 느낌) */
   max-height: 250px; 
   overflow-y: auto;
   line-height: 1.6; 
 }
-/* 스크롤바 커스텀 (선택사항 - 몽글몽글 느낌) */
 .ai-response-box::-webkit-scrollbar {
     width: 8px;
 }
@@ -490,13 +480,10 @@ const styles = `
     margin-bottom: 0.25rem; 
 }
 `; 
-// --- End CSS Block ---
 
 
-// API 키 (비워둠)
 const apiKey = ""; 
 
-// ( ... Gemini API ... )
 const callGeminiApi = async (prompt) => {
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
     const systemPrompt = "당신은 반려동물 전문가입니다. 사용자의 질문에 대해 명확하고 도움이 되는 답변을 제공하며, 항상 사용자 친화적이고 공감하는 태도를 유지해야 합니다. 전문적인 조언이 필요한 경우, 수의사와 상담하도록 안내하세요. 답변은 한국어로 제공합니다.";
@@ -616,7 +603,6 @@ function Carousel() {
   );
 }
 
-// ( ... AnimalCard, NoticeItem, QuestionItem ... )
 const AnimalCard = ({ id, name, imageSrc, age, gender }) => (
   <Link to={`/adoption/${id}`} className="card-wrapper">
     <div className="card-image-box">
@@ -628,6 +614,7 @@ const AnimalCard = ({ id, name, imageSrc, age, gender }) => (
     </div>
   </Link>
 );
+
 const NoticeItem = ({ id, title, date, isNew }) => (
   <Link to={`/board/${id}`} className="notice-item">
     <div className="notice-left">
@@ -637,36 +624,29 @@ const NoticeItem = ({ id, title, date, isNew }) => (
     <span className="notice-date">{date}</span>
   </Link>
 );
-// 🌟 [수정] QuestionItem 컴포넌트: 이미지가 없을 때 아이콘과 공간을 완전히 제거
+
 const QuestionItem = ({ id, title, user, comments, imageSrc }) => (
-  <Link to={`/board/${id}`} className="question-item">
-    {/* 🌟 수정: 이미지 유무에 따라 썸네일/아이콘을 조건부 렌더링 */}
+  <Link to={`/board/${id}`} className="question-item">
     <div className="question-left-content"> 
         {imageSrc ? (
-            // 이미지가 있을 경우: 28x28px 크기의 썸네일 컨테이너를 사용하여 게시글 행 높이에 맞게 표시
             <div className="question-image-indicator">
                 <img 
                     src={imageSrc} 
                     alt="Post thumbnail" 
                     className="question-thumbnail-img"
-                    // 이미지 로드 오류 시 대체 이미지 사용
                     onError={(e) => { e.target.onerror = null; e.target.src = FALLBACK_LOGO_URL; }} 
                 />
             </div>
-        ) : (
-            // 이미지가 없을 경우: null을 반환하여 아이콘과 공간을 완전히 제거
-            null 
-        )}
+        ) : null}
         <span className="question-title">{title}</span>
     </div>
-    <div className="question-meta">
-      <span className="question-user">{user}</span>
-      <span className="question-comments">💬 {comments}</span>
-    </div>
-  </Link>
+    <div className="question-meta">
+      <span className="question-user">{user}</span>
+      <span className="question-comments">💬 {comments}</span>
+    </div>
+  </Link>
 );
 
-// 🌟 [수정] AI 조언가 컴포넌트 (초기화 기능 추가)
 function AiConsultant() {
     const [question, setQuestion] = useState('');
     const [response, setResponse] = useState(null);
@@ -682,7 +662,6 @@ function AiConsultant() {
         setLoading(false);
     }, [question]);
 
-    // 🌟 [추가] 초기화 핸들러
     const handleReset = () => {
         setQuestion('');
         setResponse(null);
@@ -703,7 +682,6 @@ function AiConsultant() {
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                 />
-                {/* 🌟 [수정] 버튼 그룹 (요청/초기화) */}
                 <div className="ai-button-group">
                     <button
                         type="submit"
@@ -745,9 +723,9 @@ function AiConsultant() {
     );
 }
 
-// ( ... Home 컴포넌트 ... )
 export default function Home({ currentUser }) {
   
+  const navigate = useNavigate();
   const [notices, setNotices] = useState([]);
   const [latestPosts, setLatestPosts] = useState([]);
   const [qaPosts, setQaPosts] = useState([]);
@@ -761,13 +739,9 @@ export default function Home({ currentUser }) {
         setLoading(true);
         setError(null);
 
-        // 🌟 [수정] 가짜 이미지를 강제로 생성하는 코드를 제거했습니다.
-        const postsResponse = await fetch('http://localhost:3001/api/posts');
-        if (!postsResponse.ok) throw new Error('게시글 목록을 불러올 수 없습니다.');
-        const allPosts = await postsResponse.json();
-        
-        // --- [삭제됨] Mock Image Data Logic --- 
-        // (여기에 있던 map 함수가 서버 데이터를 덮어쓰고 있었습니다)
+        const postsResponse = await fetch('http://localhost:3001/api/posts');
+        if (!postsResponse.ok) throw new Error('게시글 목록을 불러올 수 없습니다.');
+        const allPosts = await postsResponse.json();
         
         const adoptionResponse = await fetch('http://localhost:3001/api/adoption');
         if (!adoptionResponse.ok) throw new Error('입양 공고를 불러올 수 없습니다.');
@@ -783,7 +757,7 @@ export default function Home({ currentUser }) {
 
         setNotices(noticePosts);
         setLatestPosts(regularPosts.filter(p => p.category === '자유게시판').slice(0, 5));
-        setQaPosts(regularPosts.filter(p => p.category === '질문답변').slice(0, 4));
+        setQaPosts(regularPosts.filter(p => p.category === '질문게시판').slice(0, 4));
         
         const shuffledAnimals = allAdoptionPosts.sort(() => 0.5 - Math.random());
         setRecommendedAnimals(shuffledAnimals.slice(0, 4));
@@ -831,15 +805,12 @@ export default function Home({ currentUser }) {
         <main className="main-content">
           <div className="main-grid">
             
-            {/* 메인 콘텐츠 영역 */}
             <div className="main-section section-spacing">
               
-              {/* 캐러셀 */}
               <div className="carousel-wrapper">
                 <Carousel />
               </div>
 
-              {/* 빠른 메뉴 (이제 실제 <Link>로 작동) */}
               <div className="menu-box">
                 <div className="menu-grid">
                   <Link to="/adoption" className="menu-item">
@@ -860,7 +831,17 @@ export default function Home({ currentUser }) {
                     </div>
                     <span className="menu-text">용품 리뷰</span>
                   </Link>
-                  <Link to="/diary" className="menu-item">
+                  <Link 
+                    to="/diary" 
+                    className="menu-item"
+                    onClick={(e) => {
+                        if (!currentUser) {
+                            e.preventDefault();
+                            alert('로그인이 필요한 서비스입니다.');
+                            navigate('/login');
+                        }
+                    }}
+                  >
                     <div className="menu-icon-box">
                       <BookOpen className="w-6 h-6 text-icon-color" />
                     </div>
@@ -869,11 +850,10 @@ export default function Home({ currentUser }) {
                 </div>
               </div>
 
-              {/* 질문 게시판 (DB 연동) */}
               <div className="menu-box">
                 <div className="section-header">
                   <h2 className="section-title">📝 질문 게시판</h2>
-                  <Link to="/board" className="section-link"> 
+                  <Link to="/board" state={{ category: '질문게시판' }} className="section-link"> 
                     더보기 <ChevronRight className="w-4 h-4" />
                   </Link>
                 </div>
@@ -887,7 +867,7 @@ export default function Home({ currentUser }) {
                         user={post.authorNickname || post.author} 
                         comments={post.comments}
                         imageSrc={post.image} 
-                      />
+                      />
                     ))
                   ) : (
                     <p style={{ padding: '1rem 0.5rem', color: '#735048' }}>등록된 질문이 없습니다.</p>
@@ -895,7 +875,6 @@ export default function Home({ currentUser }) {
                 </div>
               </div>
 
-              {/* 최신글 (DB 연동) */}
               <div className="menu-box">
                 <div className="section-header">
                   <h2 className="section-title">✨ 최신글</h2>
@@ -921,7 +900,6 @@ export default function Home({ currentUser }) {
                 </div>
               </div>
 
-              {/* 오늘의 추천 반려동물 (DB 연동) */}
               <div className="menu-box">
                 <div className="section-header">
                   <h2 className="section-title">🐾 오늘의 만남</h2>
@@ -949,13 +927,10 @@ export default function Home({ currentUser }) {
               
             </div>
 
-            {/* 사이드바 */}
             <aside className="sidebar-section section-spacing">
               
-              {/* AI 건강 조언가 */}
               <AiConsultant />
 
-              {/* 공지사항 (사이드바 버전 - DB 연동) */}
               <div className="notice-wrapper sticky-notice">
                 <div className="notice-header">
                   <h3 className="notice-title">
@@ -983,10 +958,11 @@ export default function Home({ currentUser }) {
                 </div>
               </div>
 
-              {/* 광고 배너 */}
               <div className="ad-banner">
-                <p className="ad-text-1">반려동물 보험, 첫 달 보험료 50% 할인 혜택!</p>
-                <p className="ad-text-2">클릭하고 우리 아이 건강 지켜주세요.</p>
+                <a href='https://www.kiwu.ac.kr/'>
+                  <p className="ad-text-1">반려동물 보험, 첫 달 보험료 50% 할인 혜택!</p>
+                  <p className="ad-text-2">클릭하고 우리 아이 건강 지켜주세요.</p>
+                </a>
               </div>
             </aside>
           </div>

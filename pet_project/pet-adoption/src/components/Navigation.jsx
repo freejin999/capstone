@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LogOut, User, LogIn, UserPlus } from 'lucide-react';
 
 import logoImg from '../assets/images/logo.png'; 
 
 export default function Navigation({ currentUser, handleLogout }) {
+    const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const isLoggedIn = !!currentUser;
 
@@ -16,11 +17,22 @@ export default function Navigation({ currentUser, handleLogout }) {
         { name: '반려일기', href: '/diary' },
     ];
 
+    const handleLinkClick = (e, linkName) => {
+        if (linkName === '반려일기' && !isLoggedIn) {
+            e.preventDefault();
+            alert('로그인이 필요한 서비스입니다.');
+            setIsMenuOpen(false);
+            navigate('/login');
+        } else {
+            setIsMenuOpen(false);
+        }
+    };
+
     const styles = `
         .nav-bar {
-            background-color: rgba(255, 255, 255, 1); /* 🌟 약간의 투명도로 고급스러움 유지 */
-            backdrop-filter: blur(10px); /* 🌟 뒤 콘텐츠 블러 처리 */
-            -webkit-backdrop-filter: blur(10px); /* Safari 지원 */
+            background-color: rgba(255, 255, 255, 1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
@@ -54,12 +66,11 @@ export default function Navigation({ currentUser, handleLogout }) {
             height: 4rem;
         }
 
-        /* Logo and Main Menu */
         .logo-group {
             display: flex;
             align-items: center;
             flex: 1;
-            min-width: 0; /* 🌟 추가: 텍스트 오버플로우 방지 */
+            min-width: 0;
         }
         .logo-link {
             flex-shrink: 0;
@@ -80,7 +91,6 @@ export default function Navigation({ currentUser, handleLogout }) {
             white-space: nowrap;
         }
         
-        /* 🌟 태블릿 사이즈 (아이패드) */
         @media (max-width: 1024px) and (min-width: 768px) {
             .logo-image {
                 height: 3rem;
@@ -90,7 +100,6 @@ export default function Navigation({ currentUser, handleLogout }) {
             }
         }
         
-        /* 🌟 모바일 사이즈 */
         @media (max-width: 767px) {
             .logo-link {
                 gap: 0.25rem;
@@ -103,7 +112,6 @@ export default function Navigation({ currentUser, handleLogout }) {
             }
         }
         
-        /* 🌟 작은 모바일 (360px 이하) */
         @media (max-width: 360px) {
             .logo-image {
                 height: 2rem;
@@ -123,7 +131,6 @@ export default function Navigation({ currentUser, handleLogout }) {
                 gap: 2rem;
             }
         }
-        /* 🌟 태블릿에서 메뉴 간격 조정 */
         @media (max-width: 1024px) and (min-width: 768px) {
             .desktop-menu {
                 margin-left: 1.5rem;
@@ -139,13 +146,12 @@ export default function Navigation({ currentUser, handleLogout }) {
             font-weight: 500;
             transition: color 150ms, background-color 150ms;
             text-decoration: none;
-            white-space: nowrap; /* 🌟 추가: 메뉴 항목 줄바꿈 방지 */
+            white-space: nowrap;
         }
         .menu-link:hover {
             color: #735048;
         }
         
-        /* 🌟 태블릿에서 메뉴 폰트 크기 조정 */
         @media (max-width: 1024px) and (min-width: 768px) {
             .menu-link {
                 font-size: 0.8125rem;
@@ -153,12 +159,11 @@ export default function Navigation({ currentUser, handleLogout }) {
             }
         }
 
-        /* Auth Buttons (Desktop) */
         .desktop-auth {
             display: none;
             align-items: center;
             gap: 1rem;
-            flex-shrink: 0; /* 🌟 추가: 버튼 영역 고정 */
+            flex-shrink: 0;
         }
         @media (min-width: 768px) {
             .desktop-auth {
@@ -166,7 +171,6 @@ export default function Navigation({ currentUser, handleLogout }) {
             }
         }
         
-        /* 🌟 태블릿에서 인증 영역 간격 조정 */
         @media (max-width: 1024px) and (min-width: 768px) {
             .desktop-auth {
                 gap: 0.5rem;
@@ -176,14 +180,13 @@ export default function Navigation({ currentUser, handleLogout }) {
         .welcome-text {
             font-size: 0.875rem;
             color: #594C3C;
-            white-space: nowrap; /* 🌟 추가 */
+            white-space: nowrap;
         }
         .welcome-name {
             font-weight: 600;
             color: #735048;
         }
         
-        /* 🌟 태블릿에서 환영 메시지 폰트 크기 조정 */
         @media (max-width: 1024px) and (min-width: 768px) {
             .welcome-text {
                 font-size: 0.8125rem;
@@ -199,13 +202,12 @@ export default function Navigation({ currentUser, handleLogout }) {
             color: #594C3C;
             transition: color 150ms;
             text-decoration: none;
-            white-space: nowrap; /* 🌟 추가 */
+            white-space: nowrap;
         }
         .auth-link:hover {
             color: #735048;
         }
         
-        /* 🌟 태블릿에서 인증 링크 폰트 크기 조정 */
         @media (max-width: 1024px) and (min-width: 768px) {
             .auth-link {
                 font-size: 0.8125rem;
@@ -225,13 +227,12 @@ export default function Navigation({ currentUser, handleLogout }) {
             font-weight: 500;
             transition: background-color 150ms;
             text-decoration: none;
-            white-space: nowrap; /* 🌟 추가 */
+            white-space: nowrap;
         }
         .desktop-register-button:hover {
             background-color: #594C3C;
         }
         
-        /* 🌟 태블릿에서 회원가입 버튼 크기 조정 */
         @media (max-width: 1024px) and (min-width: 768px) {
             .desktop-register-button {
                 font-size: 0.8125rem;
@@ -253,13 +254,12 @@ export default function Navigation({ currentUser, handleLogout }) {
             transition: background-color 150ms;
             border: none;
             cursor: pointer;
-            white-space: nowrap; /* 🌟 추가 */
+            white-space: nowrap;
         }
         .logout-button:hover {
             background-color: #F2E2CE;
         }
         
-        /* 🌟 태블릿에서 로그아웃 버튼 크기 조정 */
         @media (max-width: 1024px) and (min-width: 768px) {
             .logout-button {
                 font-size: 0.8125rem;
@@ -268,11 +268,10 @@ export default function Navigation({ currentUser, handleLogout }) {
             }
         }
 
-        /* Mobile Toggler */
         .mobile-toggler {
             display: flex;
             align-items: center;
-            margin-left: 0.5rem; /* 🌟 추가: 햄버거 메뉴와 로고 사이 여백 */
+            margin-left: 0.5rem;
         }
         @media (min-width: 768px) {
             .mobile-toggler {
@@ -296,7 +295,6 @@ export default function Navigation({ currentUser, handleLogout }) {
         .h-6 { height: 1.5rem; }
         .w-6 { width: 1.5rem; }
         
-        /* 🌟 작은 모바일에서 햄버거 버튼 크기 조정 */
         @media (max-width: 360px) {
             .toggler-button {
                 padding: 0.25rem;
@@ -305,10 +303,9 @@ export default function Navigation({ currentUser, handleLogout }) {
             .w-6 { width: 1.25rem; }
         }
 
-        /* Mobile Menu */
         .mobile-menu {
             border-top: 1px solid #F2E2CE;
-                background-color: aliceblue;
+            background-color: aliceblue;
         }
         @media (min-width: 768px) {
             .mobile-menu {
@@ -339,7 +336,6 @@ export default function Navigation({ currentUser, handleLogout }) {
             color: #735048;
         }
 
-        /* Mobile Auth */
         .mobile-auth-group {
             padding-top: 1rem;
             padding-bottom: 0.75rem;
@@ -435,7 +431,6 @@ export default function Navigation({ currentUser, handleLogout }) {
             background-color: #F2CBBD;
         }
         
-        /* 🌟 유틸리티 클래스 */
         .hidden { display: none; }
         .block { display: block; }
     `;
@@ -463,6 +458,7 @@ export default function Navigation({ currentUser, handleLogout }) {
                                         key={link.name}
                                         to={link.href}
                                         className="menu-link"
+                                        onClick={(e) => handleLinkClick(e, link.name)}
                                     >
                                         {link.name}
                                     </Link>
@@ -528,7 +524,7 @@ export default function Navigation({ currentUser, handleLogout }) {
                             <Link
                                 key={link.name}
                                 to={link.href}
-                                onClick={() => setIsMenuOpen(false)}
+                                onClick={(e) => handleLinkClick(e, link.name)}
                                 className="mobile-menu-link"
                             >
                                 {link.name}
